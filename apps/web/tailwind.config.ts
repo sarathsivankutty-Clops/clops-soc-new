@@ -186,6 +186,9 @@ const config: Config = {
         control: 'var(--radius-control)',     // 0.75rem
         pill: 'var(--radius-pill)',           // 9999px
       },
+      maxWidth: {
+        content: '1320px',
+      },
       fontSize: {
         eyebrow: ['0.65625rem', { lineHeight: '1.35' }],    // 10.5px
         caption: ['0.6875rem', { lineHeight: '1.35' }],     // 11px

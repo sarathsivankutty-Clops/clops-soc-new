@@ -27,12 +27,11 @@ vi.mock('next/link', () => ({
 import { Sidebar } from './Sidebar';
 
 describe('Sidebar', () => {
-  it('renders the AiSOC mark and the 10 flat nav items', () => {
+  it('renders the ClopsSOC mark and the 10 flat nav items', () => {
     render(<Sidebar />);
 
-    // Brand
-    expect(screen.getByText('Ai')).toBeInTheDocument();
-    expect(screen.getByText('SOC')).toBeInTheDocument();
+    // Brand — [HIDDEN-UI THEME-2 visible product name changed from Ai/SOC to ClopsSOC]
+    expect(screen.getByText('ClopsSOC')).toBeInTheDocument();
 
     const expected: [string, string][] = [
       ['Dashboard', '/dashboard'],

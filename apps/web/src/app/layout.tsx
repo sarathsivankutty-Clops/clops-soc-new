@@ -17,10 +17,17 @@ const siteUrl = getPublicSiteUrl();
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
+  /* [HIDDEN-UI THEME-2 visible product name changed to ClopsSOC]
   applicationName: 'AiSOC',
   title: {
     default: 'AiSOC — Open-Source AI Security Operations Center',
     template: '%s | AiSOC',
+  },
+  */
+  applicationName: 'ClopsSOC',
+  title: {
+    default: 'ClopsSOC — AI Security Operations Center',
+    template: '%s | ClopsSOC',
   },
   description:
     'AiSOC is a free, self-hostable AI-powered Security Operations Center (SOC). Real-time threat detection, alert fusion, purple-team exercises, MITRE ATT&CK-aware autonomous investigation, and detection-as-code — MIT-licensed and community-driven.',

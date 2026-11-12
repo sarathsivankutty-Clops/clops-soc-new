@@ -14,13 +14,18 @@ import { type Branding, brandingApi } from '@/lib/api';
  * every page load flash a nameless product.
  */
 export const DEFAULT_BRANDING: Branding = {
+  /* [HIDDEN-UI THEME-2 visible product name changed to ClopsSOC]
   product_name: 'AiSOC',
+  sender_name: 'AiSOC',
+  footer_text: 'AiSOC — open-source AI Security Operations Center.',
+  */
+  product_name: 'ClopsSOC',
   primary_color: '#2563EB',
   accent_color: '#7C3AED',
   support_email: null,
   support_url: null,
-  sender_name: 'AiSOC',
-  footer_text: 'AiSOC — open-source AI Security Operations Center.',
+  sender_name: 'ClopsSOC',
+  footer_text: 'ClopsSOC — open-source AI Security Operations Center.',
   logo_url: null,
   org_id: null,
   is_white_labelled: false,

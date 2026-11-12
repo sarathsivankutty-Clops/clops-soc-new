@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { clsx } from 'clsx';
 import { LiveQueueBadge } from './LiveQueueBadge';
+import { RoleBadge } from './RoleBadge';
+import { useOptionalTheme } from '@/components/theme/ThemeProvider';
 import { useBrandLogo, useBranding } from '@/hooks/useBranding';
 import { useConsoleVersion } from '@/hooks/useConsoleVersion';
 import { authApi } from '@/lib/api';
@@ -229,12 +231,19 @@ const navSections: NavSection[] = [
   */
 ];
 
-export function Sidebar() {
+interface SidebarProps {
+  /** Desktop collapse state driven by `AppShell` + `TopBar` chevron. */
+  collapsed?: boolean;
+}
+
+export function Sidebar({ collapsed = false }: SidebarProps = {}) {
   // Resolved server-side from the organisation this tenant belongs to. An
   // unbranded deployment gets the platform defaults from the same call, so
   // there is one code path rather than two that drift.
   const { branding } = useBranding();
   const logoSrc = useBrandLogo(branding.logo_url);
+  const themeCtx = useOptionalTheme();
+  const isDark = themeCtx?.resolved !== 'light';
   // Was `packageJson.version`, compiled into the bundle, while Settings →
   // About read a different build-time value. One runtime source now, so the
   // two footers cannot name different releases of the same console.
@@ -254,11 +263,19 @@ export function Sidebar() {
   // viewer/infosec — the server refuses the page's API calls anyway, but
   // showing a door that only opens for someone else is a lie in chrome.
   // Client-side gate is a courtesy; `/api/v1/admin/users` is the real gate.
-  const [meRole, setMeRole] = useState<string | null>(null);
+  const [meUser, setMeUser] = useState<ReturnType<typeof authApi.currentUser>>(null);
   useEffect(() => {
-    setMeRole(authApi.currentUser()?.role ?? null);
+    setMeUser(authApi.currentUser());
   }, []);
-  const isAdmin = meRole === 'admin';
+  const isAdmin = meUser?.role === 'admin';
+  const displayName = (meUser?.username || meUser?.email || 'Operator').trim();
+  const initials =
+    displayName
+      .split(/[\s@._-]+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part: string) => part[0]?.toUpperCase() ?? '')
+      .join('') || 'OP';
 
   const isActive = (href: string) => {
     if (href === '/dashboard') return pathname === '/dashboard';
@@ -272,7 +289,7 @@ export function Sidebar() {
         type="button"
         aria-label="Open navigation"
         onClick={() => setMobileOpen(true)}
-        className="md:hidden fixed top-4 left-4 z-40 p-2 rounded-lg bg-surface-card/90 text-fg-secondary hover:text-fg-primary"
+        className="md:hidden fixed top-4 left-4 z-40 p-2 rounded-control bg-surface-card text-fg-secondary hover:text-fg-primary border border-surface-border"
       >
         <svg className="w-5 h-5" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -290,14 +307,18 @@ export function Sidebar() {
     <aside
       aria-label="Application sidebar"
       className={clsx(
-        'fixed inset-y-0 left-0 w-60 flex flex-col bg-surface-raised/95 border-r border-surface-border z-40 transition-transform duration-200',
-        mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+        'fixed inset-y-0 left-0 w-64 flex flex-col bg-surface-card border-r border-surface-border z-40 transition-transform duration-200',
+        mobileOpen
+          ? 'translate-x-0'
+          : collapsed
+            ? '-translate-x-full'
+            : '-translate-x-full md:translate-x-0'
       )}
     >
       {/* Logo */}
-      <div className="flex items-center gap-3 px-5 h-16 border-b border-surface-border">
+      <div className="flex items-center gap-3 px-4 h-16 border-b border-surface-border">
         <div
-          className="flex-shrink-0 w-8 h-8 rounded-lg bg-brand-600/20 border border-brand-600/30 flex items-center justify-center overflow-hidden"
+          className="flex-shrink-0 w-8 h-8 rounded-control bg-btn-grad flex items-center justify-center overflow-hidden text-white"
           style={brandFrameStyle}
         >
           {logoSrc ? (
@@ -307,38 +328,36 @@ export function Sidebar() {
             // eslint-disable-next-line @next/next/no-img-element
             <img src={logoSrc} alt="" className="w-full h-full object-contain" />
           ) : (
-            <span className="text-brand-400">
-              <ShieldIcon />
-            </span>
+            <ShieldIcon />
           )}
         </div>
-        <div>
+        <div className="min-w-0">
           {branding.is_white_labelled ? (
-            <span className="text-fg-primary font-bold text-base tracking-tight" style={{ color: branding.primary_color }}>
+            <span className="text-fg-primary font-bold text-base tracking-tight truncate block" style={{ color: branding.primary_color }}>
               {branding.product_name}
             </span>
           ) : (
             <>
+              {/* [HIDDEN-UI THEME-2 visible product name changed to ClopsSOC]
               <span className="text-fg-primary font-bold text-base tracking-tight">Ai</span>
               <span className="text-brand-400 font-bold text-base tracking-tight">SOC</span>
               <p className="text-xs text-fg-subtle -mt-0.5">open-source</p>
+              */}
+              <span className="text-fg-primary font-bold text-base tracking-tight">ClopsSOC</span>
             </>
           )}
         </div>
-        {/* No status pill here. There is no data source in this file, so the
-            green animated "Live" dot that used to sit beside the product name
-            rendered on every page including one whose API was entirely down.
-            `LiveFeedPanel` drives the same idea off the realtime socket and
-            distinguishes connected-but-silent from receiving. */}
       </div>
 
       {/* Nav */}
-      <nav aria-label="Main navigation" className="flex-1 overflow-y-auto py-4 px-3 space-y-5">
-        {navSections.map((section, si) => (
+      <nav aria-label="Main navigation" className="flex-1 overflow-y-auto py-3 px-2.5 space-y-4">
+        {navSections.map((section, si) => {
+          const groupLabel = section.title ?? (si === 0 ? 'Navigation' : undefined);
+          return (
           <div key={si}>
-            {section.title && (
-              <p className="px-3 mb-1.5 text-xs font-semibold text-fg-subtle uppercase tracking-wider">
-                {section.title}
+            {groupLabel && (
+              <p className="px-2.5 mb-1.5 text-eyebrow font-semibold text-fg-subtle uppercase tracking-wider">
+                {groupLabel}
               </p>
             )}
             <ul className="space-y-0.5">
@@ -350,19 +369,19 @@ export function Sidebar() {
                       href={item.href}
                       onClick={() => setMobileOpen(false)}
                       className={clsx(
-                        'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150',
+                        'relative flex items-center gap-3 px-3 py-2.5 rounded-control text-body transition-colors duration-150',
                         active
-                          ? 'bg-brand-600/15 text-brand-300 border border-brand-600/20'
-                          : 'text-fg-muted hover:text-fg-secondary hover:bg-surface-hover'
+                          ? 'bg-nav-active-bg text-accent font-semibold before:content-[""] before:absolute before:left-0 before:top-2 before:bottom-2 before:w-0.5 before:rounded-r before:bg-nav-active-bar'
+                          : 'text-fg-secondary font-medium hover:text-fg-primary hover:bg-surface-hover'
                       )}
                     >
-                      <span className={active ? 'text-brand-400' : 'text-fg-subtle'}>{item.icon}</span>
-                      <span>{item.label}</span>
+                      <span className={active ? 'text-accent' : 'text-fg-muted'}>{item.icon}</span>
+                      <span className="truncate">{item.label}</span>
                       {item.liveBadge
                         ? item.liveBadge
                         : typeof item.badge === 'number' && item.badge > 0 && (
                             <span
-                              className={`ml-auto text-xs font-bold px-1.5 py-0.5 rounded-full text-white ${item.badgeColor ?? 'bg-gray-600'}`}
+                              className={`ml-auto text-caption font-bold px-2 py-0.5 rounded-pill ${item.badgeColor ?? 'bg-pill-neutral-bg text-fg-secondary'}`}
                             >
                               {item.badge > 99 ? '99+' : item.badge}
                             </span>
@@ -373,15 +392,79 @@ export function Sidebar() {
               })}
             </ul>
           </div>
-        ))}
+          );
+        })}
       </nav>
 
-      {/* Footer */}
-      <div className="p-4 border-t border-surface-border">
-        <div className="flex items-center gap-2 text-xs text-fg-subtle">
-          {/* Nothing until the answer arrives, then the answer — including
-              "unknown". A placeholder here would be a guess rendered in the
-              same place a real version goes. */}
+      {/* Footer: theme switch, user card with role badge, version attribution */}
+      <div className="p-3 border-t border-surface-border space-y-2.5">
+        <button
+          type="button"
+          role="switch"
+          aria-checked={isDark}
+          aria-label="Toggle dark mode"
+          onClick={() => themeCtx?.toggle()}
+          className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-control bg-surface-elevated border border-surface-border text-body font-semibold text-fg-primary hover:bg-surface-subtle transition-colors"
+        >
+          {isDark ? (
+            <svg className="w-4 h-4 text-tone-warning shrink-0" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" />
+            </svg>
+          ) : (
+            <svg className="w-4 h-4 text-tone-warning shrink-0" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <circle cx="12" cy="12" r="4" strokeWidth={1.8} />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+            </svg>
+          )}
+          <span>{isDark ? 'Light Mode' : 'Dark Mode'}</span>
+          <span
+            aria-hidden="true"
+            className={clsx(
+              'ml-auto inline-flex h-5 w-9 shrink-0 items-center rounded-pill border p-0.5 transition-colors',
+              isDark
+                ? 'bg-accent border-accent justify-end'
+                : 'bg-surface-subtle border-surface-border justify-start',
+            )}
+          >
+            <span className="h-3.5 w-3.5 rounded-pill bg-white" />
+          </span>
+        </button>
+
+        <div className="rounded-control bg-surface-elevated border border-surface-border p-3 space-y-2">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="h-9 w-9 shrink-0 rounded-pill bg-btn-grad flex items-center justify-center text-control-sm font-bold text-white">
+              {initials}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-control font-semibold text-fg-primary truncate">{displayName}</p>
+              <p className="text-eyebrow text-fg-muted truncate">
+                {meUser?.email ?? 'Console session'}
+              </p>
+            </div>
+            {meUser && (
+              <button
+                type="button"
+                title="Sign out"
+                aria-label="Sign out"
+                onClick={() => {
+                  authApi.logout();
+                  window.location.assign('/login');
+                }}
+                className="p-1.5 rounded-control text-tone-danger hover:bg-pill-danger-bg transition-colors"
+              >
+                <svg className="w-4 h-4" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4m7 12l5-5-5-5m5 5H9" />
+                </svg>
+              </button>
+            )}
+          </div>
+          <div className="flex items-center justify-between pt-2 border-t border-surface-border">
+            <span className="font-mono text-eyebrow text-fg-muted">Role:</span>
+            <RoleBadge role={meUser?.role ?? null} />
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 px-1 text-caption text-fg-subtle">
           <span className="font-mono">
             {consoleVersion === null ? '' : consoleVersion === 'unknown' ? 'version unknown' : `v${consoleVersion}`}
           </span>

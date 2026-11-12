@@ -144,3 +144,11 @@ export function useTheme(): ThemeContextValue {
   }
   return ctx;
 }
+
+/**
+ * Optional reader for shared shell chrome that may also be mounted standalone
+ * in unit tests without wrapping in `<ThemeProvider>`.
+ */
+export function useOptionalTheme(): ThemeContextValue | null {
+  return useContext(ThemeContext);
+}

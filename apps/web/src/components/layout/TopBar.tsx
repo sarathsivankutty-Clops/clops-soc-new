@@ -1,10 +1,9 @@
 'use client';
 
-import Link from 'next/link';
-
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
-import { ThemeToggle } from '@/components/theme/ThemeToggle';
+import { useOptionalTheme } from '@/components/theme/ThemeProvider';
+import { useBrandLogo, useBranding } from '@/hooks/useBranding';
 import { TimeWindowSelector } from './TimeWindowSelector';
 import { TenantSwitcher } from './TenantSwitcher';
 import { RoleBadge } from './RoleBadge';
@@ -56,20 +55,27 @@ interface TopBarProps {
    * `AppShell` which reads `isDemoMode()` once at render.
    */
   demoOffset?: boolean;
+  /** Desktop sidebar collapse state and toggle passed from `AppShell`. */
+  sidebarCollapsed?: boolean;
+  onToggleSidebar?: () => void;
 }
 
-export function TopBar({ demoOffset = false }: TopBarProps) {
+export function TopBar({
+  demoOffset = false,
+  sidebarCollapsed = false,
+  onToggleSidebar,
+}: TopBarProps) {
   const pathname = usePathname();
+  /* [HIDDEN-UI THEME-2 clock consolidated out of TopBar chrome]
   const [now, setNow] = useState<Date | null>(null);
+  */
   const [shortcut, setShortcut] = useState<'⌘K' | 'Ctrl K'>('⌘K');
   const { userRole } = useTenant();
-
-  // Update the clock every second on the client only (avoids hydration drift).
-  useEffect(() => {
-    setNow(new Date());
-    const id = window.setInterval(() => setNow(new Date()), 1000);
-    return () => window.clearInterval(id);
-  }, []);
+  const themeCtx = useOptionalTheme();
+  const isDark = themeCtx?.resolved !== 'light';
+  const { branding } = useBranding();
+  const logoSrc = useBrandLogo(branding.logo_url);
+  const fallbackLogo = isDark ? '/brand/logo-dark.png' : '/brand/logo-light.png';
 
   // Show the right OS-specific shortcut hint without breaking SSR.
   useEffect(() => {
@@ -95,7 +101,7 @@ export function TopBar({ demoOffset = false }: TopBarProps) {
           .split('-')
           .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
           .join(' ')
-      : 'AiSOC';
+      : 'ClopsSOC';
     return { title, description: '' };
   })();
 
@@ -113,42 +119,53 @@ export function TopBar({ demoOffset = false }: TopBarProps) {
     window.dispatchEvent(event);
   };
 
-  const timeStr = now
-    ? now.toLocaleTimeString('en-US', {
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: false,
-      })
-    : '—';
-  const dateStr = now
-    ? now.toLocaleDateString('en-US', {
-        weekday: 'short',
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-      })
-    : '';
+  /* [HIDDEN-UI THEME-2 TopBar clock formatting removed] */
 
   return (
     <header
-      className={`fixed left-60 right-0 h-16 flex items-center justify-between px-6 bg-surface-raised/90 backdrop-blur-sm border-b border-surface-border z-20 ${
+      className={`fixed left-0 ${
+        sidebarCollapsed ? 'md:left-0' : 'md:left-64'
+      } right-0 h-16 flex items-center justify-between gap-4 px-5 bg-surface-card border-b border-surface-border z-20 transition-[left] duration-200 ${
         demoOffset ? 'top-9' : 'top-0'
       }`}
     >
-      {/* Page title */}
-      <div>
-        <h1 className="text-base font-semibold text-fg-primary leading-tight">{routeInfo.title}</h1>
-        <p className="text-xs text-fg-subtle">{routeInfo.description}</p>
+      {/* Left: collapse chevron + plain page title */}
+      <div className="flex items-center gap-3 min-w-0">
+        {onToggleSidebar && (
+          <button
+            type="button"
+            onClick={onToggleSidebar}
+            aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            className="hidden md:grid place-items-center w-8 h-8 rounded-control border border-surface-border text-fg-secondary hover:bg-surface-hover hover:text-fg-primary transition-colors"
+          >
+            <svg
+              className={`w-4 h-4 transition-transform duration-200 ${sidebarCollapsed ? 'rotate-180' : ''}`}
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              aria-hidden="true"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 18l-6-6 6-6" />
+            </svg>
+          </button>
+        )}
+        <div className="min-w-0">
+          <h1 className="text-card-title font-semibold text-fg-primary leading-tight truncate">
+            {routeInfo.title}
+          </h1>
+          {/* [HIDDEN-UI THEME-2 description kept sr-only for a11y while TopBar displays plain title] */}
+          <p className="sr-only">{routeInfo.description}</p>
+        </div>
       </div>
 
       {/* Center: command palette launcher */}
-      <div className="flex-1 max-w-lg mx-8">
+      <div className="flex-1 max-w-md mx-4 hidden sm:block">
         <button
           type="button"
           onClick={openPalette}
           aria-label="Open command palette"
-          className="group relative flex w-full items-center gap-3 rounded-lg border border-surface-border bg-surface-card/60 px-3 py-2 text-left text-sm text-fg-muted transition-all hover:border-brand-500/40 hover:bg-surface-card focus:border-brand-500/60 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+          className="group relative flex w-full items-center gap-3 rounded-control border border-surface-border bg-surface-elevated px-3 py-2 text-left text-body text-fg-muted transition-colors hover:border-surface-border-strong hover:text-fg-primary focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
         >
           <svg
             className="h-4 w-4 text-fg-subtle transition-colors group-hover:text-fg-secondary"
@@ -166,87 +183,31 @@ export function TopBar({ demoOffset = false }: TopBarProps) {
           <span className="flex-1 truncate text-fg-muted group-hover:text-fg-secondary">
             Search alerts, cases, rules, or run a command…
           </span>
-          <kbd className="pointer-events-none rounded bg-surface-hover px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wide text-fg-secondary">
+          <kbd className="pointer-events-none rounded-control bg-surface-subtle px-1.5 py-0.5 font-mono text-eyebrow uppercase tracking-wide text-fg-secondary">
             {shortcut}
           </kbd>
         </button>
       </div>
 
-      {/* Right: time window, tenant, role badge, clock, theme toggle, notifications, user */}
-      <div className="flex items-center gap-3">
-        {/*
-          v1.5 W4: Global time-window selector. Lives next to the tenant
-          switcher in the TopBar so every page reads from the same context.
-          Hidden on small screens to keep the bar from wrapping.
-        */}
+      {/* Right: global selectors + brand logo (tenant logo wins; brand PNG fallback) */}
+      <div className="flex items-center gap-2.5 ml-auto">
         <div className="hidden md:block">
           <TimeWindowSelector />
         </div>
-
-        {/*
-          v1.5 W5: Tenant switcher. For MSSP parents this is a dropdown of
-          tenants they can pivot into; for standalone tenants this collapses
-          into a read-only badge.
-        */}
         <div className="hidden md:block">
           <TenantSwitcher />
         </div>
-
-        {/*
-          v1.5 W5: Role badge — surfaces the operator's effective role
-          (analyst / analyst-lead / admin / viewer / mssp-admin) so
-          permission boundaries are visible at a glance. The badge intentionally
-          renders even when userRole is null so the slot doesn't reflow as it
-          resolves.
-        */}
         <div className="hidden lg:block">
           <RoleBadge role={userRole} />
         </div>
-
-        {/* Divider between v1.5 console context and existing top-bar chrome. */}
-        <div className="hidden lg:block h-6 w-px bg-surface-border" aria-hidden />
-
-        {/* Clock */}
-        <div className="text-right hidden lg:block">
-          <p className="text-sm font-mono text-fg-secondary" suppressHydrationWarning>{timeStr}</p>
-          <p className="text-xs text-fg-subtle" suppressHydrationWarning>{dateStr}</p>
-        </div>
-
-        {/* Theme toggle (WS-F1) */}
-        <ThemeToggle />
-
-        {/* Notifications — the alert inbox is the notification surface;
-            the bell deep-links there instead of opening a dead dropdown. */}
-        <Link
-          href="/alerts"
-          aria-label="Open notifications"
-          className="relative p-1.5 text-fg-muted hover:text-fg-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50 rounded"
-        >
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            aria-hidden
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
-          </svg>
-          <span
-            aria-hidden
-            className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full ring-2 ring-surface-raised"
-          />
-        </Link>
-
-        {/* User avatar */}
-        <div className="flex items-center gap-2 cursor-pointer group">
-          <div className="w-8 h-8 rounded-full bg-brand-600 flex items-center justify-center text-xs font-bold text-white">
-            SO
-          </div>
-          <div className="hidden lg:block">
-            <p className="text-xs font-medium text-fg-secondary">SOC Analyst</p>
-            <p className="text-xs text-fg-subtle">Admin</p>
-          </div>
-        </div>
+        <div className="hidden sm:block h-6 w-px bg-surface-border" aria-hidden />
+        {/* [HIDDEN-UI THEME-2 TopBar clock, bell, ThemeToggle, and static SO avatar consolidated to Sidebar footer] */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={logoSrc ?? fallbackLogo}
+          alt={branding.product_name}
+          className="h-9 w-auto max-w-40 object-contain shrink-0"
+        />
       </div>
     </header>
   );
