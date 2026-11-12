@@ -45,10 +45,43 @@ const config: Config = {
           base: 'var(--surface-base)',
           raised: 'var(--surface-raised)',
           card: 'var(--surface-card)',
+          elevated: 'var(--surface-elevated)',
           hover: 'var(--surface-hover)',
           subtle: 'var(--surface-subtle)',
           border: 'var(--surface-border)',
+          'border-strong': 'var(--surface-border-strong)',
           divider: 'var(--surface-divider)',
+        },
+        accent: {
+          DEFAULT: 'var(--accent)',
+          hover: 'var(--accent-hover)',
+          subtle: 'var(--accent-subtle)',
+        },
+        nav: {
+          'active-bg': 'var(--nav-active-bg)',
+          'active-bar': 'var(--nav-active-bar)',
+        },
+        tone: {
+          success: 'var(--tone-success)',
+          warning: 'var(--tone-warning)',
+          danger: 'var(--tone-danger)',
+          purple: 'var(--tone-purple)',
+        },
+        pill: {
+          'success-bg': 'var(--pill-success-bg)',
+          'warning-bg': 'var(--pill-warning-bg)',
+          'danger-bg': 'var(--pill-danger-bg)',
+          'info-bg': 'var(--pill-info-bg)',
+          'purple-bg': 'var(--pill-purple-bg)',
+          'neutral-bg': 'var(--pill-neutral-bg)',
+        },
+        dot: {
+          success: 'var(--dot-success)',
+          warning: 'var(--dot-warning)',
+          danger: 'var(--dot-danger)',
+          info: 'var(--dot-info)',
+          purple: 'var(--dot-purple)',
+          neutral: 'var(--dot-neutral)',
         },
         // Foreground ramp — themeable. `fg-primary` is the highest-contrast
         // token, `fg-subtle` is the lowest. Use these instead of raw
@@ -70,6 +103,28 @@ const config: Config = {
           medium: '#eab308',
           low: '#3b82f6',
           info: '#22c55e',
+        },
+        // Theme-aware 5-tier severity badge tokens (dot + soft tint, no border).
+        'severity-bg': {
+          critical: 'var(--severity-critical-bg)',
+          high: 'var(--severity-high-bg)',
+          medium: 'var(--severity-medium-bg)',
+          low: 'var(--severity-low-bg)',
+          info: 'var(--severity-info-bg)',
+        },
+        'severity-ink': {
+          critical: 'var(--severity-critical-ink)',
+          high: 'var(--severity-high-ink)',
+          medium: 'var(--severity-medium-ink)',
+          low: 'var(--severity-low-ink)',
+          info: 'var(--severity-info-ink)',
+        },
+        'severity-dot': {
+          critical: 'var(--severity-critical-dot)',
+          high: 'var(--severity-high-dot)',
+          medium: 'var(--severity-medium-dot)',
+          low: 'var(--severity-low-dot)',
+          info: 'var(--severity-info-dot)',
         },
         // Connection / health status — used by LiveFeedPanel, connector cards, etc.
         status: {
@@ -126,7 +181,24 @@ const config: Config = {
           info: '#60A5FA',
         },
       },
+      borderRadius: {
+        container: 'var(--radius-container)', // 1.25rem
+        control: 'var(--radius-control)',     // 0.75rem
+        pill: 'var(--radius-pill)',           // 9999px
+      },
+      fontSize: {
+        eyebrow: ['0.65625rem', { lineHeight: '1.35' }],    // 10.5px
+        caption: ['0.6875rem', { lineHeight: '1.35' }],     // 11px
+        'control-sm': ['0.75rem', { lineHeight: '1.45' }],  // 12px
+        control: ['0.78125rem', { lineHeight: '1.45' }],    // 12.5px
+        body: ['0.8125rem', { lineHeight: '1.5' }],         // 13px
+        'card-title': ['1rem', { lineHeight: '1.35' }],     // 16px
+        'page-title': ['1.375rem', { lineHeight: '1.25' }], // 22px
+        kpi: ['1.75rem', { lineHeight: '1.1' }],            // 28px
+      },
       backgroundImage: {
+        // Primary CTA & floating AI launcher gradient (SREOps --btn-grad).
+        'btn-grad': 'var(--btn-grad)',
         // Three brand-tinted gradients used by the landing page only. Resolve
         // to CSS variables defined in `globals.css` so a future light-mode
         // landing variant can flip the stops without touching components.
@@ -145,6 +217,9 @@ const config: Config = {
           'radial-gradient(ellipse at center, rgba(159,18,57,0.28) 0%, rgba(15,15,20,0) 70%), linear-gradient(135deg, #0A0A0E 0%, #0F0F14 100%)',
       },
       boxShadow: {
+        // Console cards: flat 1px border, no drop shadow; overlays float cleanly.
+        card: 'var(--card-shadow)',
+        overlay: 'var(--shadow-overlay)',
         // VelvetEdge jewel-tone glows (spec §Elevation). One glow color per
         // element per spec rule 2; pair these with `motion-safe:` (or wrap in
         // a `prefers-reduced-motion` media query) so the glow does not render
