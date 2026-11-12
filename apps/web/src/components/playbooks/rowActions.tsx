@@ -89,7 +89,7 @@ export function RunButton({ playbook }: { playbook: Playbook }) {
 
 /** Delete a playbook (used only for user-created playbooks, not shipped packs). */
 export async function deletePlaybook(id: string) {
-  if (!confirm('Delete this playbook?')) return;
+  if (!confirm('Delete this runbook?')) return;
   await apiFetch(`/api/v1/playbooks/${id}`, { method: 'DELETE' });
   await mutate('/api/v1/playbooks');
 }

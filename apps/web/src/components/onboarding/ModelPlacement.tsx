@@ -86,7 +86,7 @@ export function ModelPlacement() {
       )}
 
       <Link
-        href="/settings?tab=deployment"
+        href="/settings?section=deployment"
         className="mt-1 inline-block rounded-md border border-slate-600 px-3 py-1.5 text-sm text-slate-200 transition hover:border-slate-400 hover:bg-slate-800"
       >
         Use my own provider

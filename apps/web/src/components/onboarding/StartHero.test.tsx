@@ -52,16 +52,17 @@ vi.mock('@/lib/api', () => ({
 import { StartHero } from './StartHero';
 
 describe('StartHero', () => {
-  it('renders the three onboarding CTAs from WS-A2', () => {
+  it('renders the active onboarding CTAs and hides the retired /onboarding link', () => {
     render(<StartHero />);
 
     // 1. Try the demo — silent demo login button.
     expect(screen.getByTestId('cta-try-demo')).toHaveTextContent(/Try the demo/i);
 
-    // 2. Connect first source — links to /onboarding gallery.
-    const connect = screen.getByTestId('cta-connect-source');
-    expect(connect).toHaveTextContent(/Connect first source/i);
-    expect(connect).toHaveAttribute('href', '/onboarding');
+    // [HIDDEN-UI NAV-6 /onboarding route hidden]
+    // const connect = screen.getByTestId('cta-connect-source');
+    // expect(connect).toHaveTextContent(/Connect first source/i);
+    // expect(connect).toHaveAttribute('href', '/onboarding');
+    expect(screen.queryByTestId('cta-connect-source')).not.toBeInTheDocument();
 
     // 3. Skip & explore — links to dashboard with the welcome querystring so
     //    the `DashboardWelcome` empty-state coach card mounts.

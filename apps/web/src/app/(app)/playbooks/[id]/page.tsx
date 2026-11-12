@@ -3,7 +3,7 @@ import { ClientOnly } from '@/components/util/ClientOnly';
 import { SkeletonCard } from '@/components/ui/Skeleton';
 
 export const metadata = {
-  title: 'Playbook Editor',
+  title: 'Runbook Editor',
 };
 
 export default async function PlaybookEditorPage({

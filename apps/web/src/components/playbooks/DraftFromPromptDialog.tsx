@@ -86,7 +86,7 @@ export function DraftFromPromptDialog({ open, onClose }: DraftFromPromptDialogPr
   const handleSubmit = useCallback(async () => {
     const trimmed = prompt.trim();
     if (!trimmed) {
-      setError('Add a description of the playbook you want.');
+      setError('Add a description of the runbook you want.');
       return;
     }
     if (trimmed.length > MAX_PROMPT_LEN) {
@@ -153,7 +153,7 @@ export function DraftFromPromptDialog({ open, onClose }: DraftFromPromptDialogPr
         <div className="flex items-start justify-between">
           <div>
             <h2 id="nl-draft-title" className="text-base font-semibold text-white">
-              Draft a playbook from a prompt
+              Draft a runbook from a prompt
             </h2>
             <p className="mt-0.5 text-xs text-gray-500">
               Describe what should happen — AiSOC drafts the DAG, you review and save.
@@ -232,7 +232,7 @@ export function DraftFromPromptDialog({ open, onClose }: DraftFromPromptDialogPr
             disabled={busy || !prompt.trim()}
             className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {busy ? 'Drafting…' : 'Draft playbook'}
+            {busy ? 'Drafting…' : 'Draft runbook'}
           </button>
         </div>
       </div>

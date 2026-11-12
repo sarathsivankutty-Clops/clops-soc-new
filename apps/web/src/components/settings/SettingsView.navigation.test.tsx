@@ -1,5 +1,4 @@
-import { act, render, screen, within } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { act, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NavigationTestProvider } from '@/test/NavigationTestProvider';
 import { ThemeProvider } from '@/components/theme/ThemeProvider';
@@ -24,12 +23,13 @@ afterEach(() => {
 });
 
 describe('Settings URL navigation', () => {
-  it('opens Deployment & AI directly from the onboarding deep link', () => {
-    window.history.replaceState(null, '', '/settings?tab=deployment');
+  it('opens Deployment & AI directly from the onboarding deep link without colliding with ?tab=', () => {
+    window.history.replaceState(null, '', '/settings?tab=general&section=deployment');
     renderSettings();
 
     expect(screen.getByRole('heading', { name: 'Deployment & AI' })).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Profile' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('navigation', { name: 'Settings sections' })).not.toBeInTheDocument();
   });
 
   it.each([
@@ -47,16 +47,15 @@ describe('Settings URL navigation', () => {
     ['appearance', 'Appearance'],
     ['deployment', 'Deployment & AI'],
     ['audit', 'Audit log'],
-    ['about', 'About'],
-  ])('selects the %s section from its URL', (tab, label) => {
-    window.history.replaceState(null, '', `/settings?tab=${tab}`);
+    ['about', 'About AiSOC'],
+  ])('selects the %s section from its ?section= URL', (section, heading) => {
+    window.history.replaceState(null, '', `/settings?section=${section}`);
     renderSettings();
 
-    const nav = within(screen.getByRole('navigation', { name: 'Settings sections' }));
-    expect(nav.getByRole('button', { current: 'page' })).toHaveTextContent(label);
+    expect(screen.getByRole('heading', { level: 2, name: heading })).toBeInTheDocument();
   });
 
-  it.each(['', '?tab=', '?tab=unknown', '?tab=constructor', '?tab=%2Fsettings'])
+  it.each(['', '?section=', '?section=unknown', '?section=constructor', '?section=%2Fsettings'])
   ('falls back to Profile for %s', (query) => {
     window.history.replaceState(null, '', `/settings${query}`);
     renderSettings();
@@ -64,34 +63,23 @@ describe('Settings URL navigation', () => {
     expect(screen.getByRole('heading', { name: 'Profile' })).toBeInTheDocument();
   });
 
-  it('updates the URL on a click and keeps unrelated query values and the fragment', async () => {
-    window.history.replaceState(null, '', '/settings?window=7d&filter=a&filter=b#details');
-    renderSettings();
-    await userEvent.click(screen.getByRole('button', { name: /^Deployment & AI/ }));
-
-    expect(await screen.findByRole('heading', { name: 'Deployment & AI' })).toBeInTheDocument();
-    const url = new URL(window.location.href);
-    expect(url.searchParams.get('tab')).toBe('deployment');
-    expect(url.searchParams.get('window')).toBe('7d');
-    expect(url.searchParams.getAll('filter')).toEqual(['a', 'b']);
-    expect(url.hash).toBe('#details');
-  });
-
   it('follows a query-only navigation without remounting', async () => {
     renderSettings();
-    act(() => window.history.pushState(null, '', '/settings?tab=deployment'));
+    act(() => window.history.replaceState(null, '', '/settings?section=deployment'));
     expect(await screen.findByRole('heading', { name: 'Deployment & AI' })).toBeInTheDocument();
 
-    act(() => window.history.replaceState(null, '', '/settings?tab=invalid'));
+    act(() => window.history.replaceState(null, '', '/settings?section=invalid'));
     expect(await screen.findByRole('heading', { name: 'Profile' })).toBeInTheDocument();
   });
 
-  it('does not add history entries when the selected section is clicked again', async () => {
-    window.history.replaceState(null, '', '/settings?tab=deployment');
-    renderSettings();
-    const push = vi.spyOn(window.history, 'pushState');
-    await userEvent.click(screen.getByRole('button', { name: /^Deployment & AI/ }));
-
-    expect(push).not.toHaveBeenCalled();
+  // [HIDDEN-UI NAV-6 inner tab bar hidden; click-based inner nav tests disabled]
+  /*
+  it('updates the URL on a click and keeps unrelated query values and the fragment', async () => {
+    ...
   });
+
+  it('does not add history entries when the selected section is clicked again', async () => {
+    ...
+  });
+  */
 });

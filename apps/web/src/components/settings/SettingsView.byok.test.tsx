@@ -174,14 +174,9 @@ async function renderDeploymentTab(options: {
     swrErrors.delete(CRED_KEY);
   }
 
-  window.history.replaceState(null, '', '/settings');
+  // [HIDDEN-UI NAV-6 inner tab bar hidden; navigate via ?section=deployment]
+  window.history.replaceState(null, '', '/settings?section=deployment');
   render(<SettingsView />, { wrapper: NavigationTestProvider });
-
-  // Navigate to the Deployment & AI tab
-  const deploymentTab = await screen.findByRole('button', {
-    name: /deployment.*ai/i,
-  });
-  await userEvent.click(deploymentTab);
 }
 
 function clearSwrMaps() {

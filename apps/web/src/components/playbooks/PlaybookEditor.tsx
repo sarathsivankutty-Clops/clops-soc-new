@@ -90,7 +90,7 @@ interface PlaybookEditorProps {
 
 const EMPTY_PLAYBOOK: Playbook = {
   id: '',
-  name: 'Untitled Playbook',
+  name: 'Untitled Runbook',
   description: '',
   version: '1.0.0',
   tags: [],
@@ -265,7 +265,7 @@ export function PlaybookEditor({ playbookId }: PlaybookEditorProps) {
 
   const handleRun = async () => {
     if (!playbook.id) {
-      setRunResult('Save the playbook first');
+      setRunResult('Save the runbook first');
       return;
     }
     setRunning(true);
@@ -291,7 +291,7 @@ export function PlaybookEditor({ playbookId }: PlaybookEditorProps) {
   if (!isNew && isLoading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="text-gray-500">Loading playbook…</div>
+        <div className="text-gray-500">Loading runbook…</div>
       </div>
     );
   }
@@ -425,7 +425,7 @@ export function PlaybookEditor({ playbookId }: PlaybookEditorProps) {
                 name: s.name,
               })),
             }}
-            eyebrow="Ask AiSOC about this playbook"
+            eyebrow="Ask AiSOC about this runbook"
           />
         </div>
       ) : null}
@@ -553,7 +553,7 @@ export function PlaybookEditor({ playbookId }: PlaybookEditorProps) {
           {playbook.steps.length === 0 ? (
             <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-700">
               <div className="text-lg font-medium text-gray-500">
-                Empty playbook
+                Empty runbook
               </div>
               <div className="text-sm mt-1 mb-6">
                 Add your first step to get started

@@ -220,12 +220,13 @@ export function OnboardingView() {
                 cases, and the assistant are all reading from your live signal now.
               </p>
             </div>
-            <Link
+            {/* [HIDDEN-UI NAV-6 /cases route hidden] */}
+            {/* <Link
               href="/cases"
               className="shrink-0 text-sm bg-green-600/90 hover:bg-green-500 text-white px-4 py-2 rounded-lg transition-colors"
             >
               Open cases →
-            </Link>
+            </Link> */}
           </div>
         </motion.div>
       )}

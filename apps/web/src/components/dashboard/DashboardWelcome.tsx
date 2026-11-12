@@ -55,11 +55,12 @@ export function DashboardWelcome() {
   if (!open) return null;
 
   const tips: TipContent[] = [
-    {
-      title: 'Connect a source',
-      body: `Pick from ${CONNECTOR_COUNT} vendors. EDR + cloud + IAM gives the agent enough signal to start triaging.`,
-      cta: { label: 'Open the connector gallery →', href: '/onboarding' },
-    },
+    // [HIDDEN-UI NAV-6 /onboarding route hidden]
+    // {
+    //   title: 'Connect a source',
+    //   body: `Pick from ${CONNECTOR_COUNT} vendors. EDR + cloud + IAM gives the agent enough signal to start triaging.`,
+    //   cta: { label: 'Open the connector gallery →', href: '/onboarding' },
+    // },
     // Seeded data, and a link that only resolves once it has been seeded.
     ...(isDemoMode()
       ? [
@@ -71,9 +72,9 @@ export function DashboardWelcome() {
         ]
       : []),
     {
-      title: 'Browse playbooks',
+      title: 'Browse runbooks',
       body: 'Named runbooks for ransomware, BEC, account takeover, cloud takeover, and more.',
-      cta: { label: 'Open the playbook gallery →', href: '/playbooks' },
+      cta: { label: 'Open the runbook gallery →', href: '/playbooks' },
     },
   ];
 

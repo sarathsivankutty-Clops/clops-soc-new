@@ -179,7 +179,7 @@ const TABS: { id: DetectionsTab; label: string; description: string }[] = [
 const PAGE_SIZE = 50;
 
 export function DetectionsView() {
-  const [tab, setTab] = useState<DetectionsTab>('rules');
+  const [tab /* [HIDDEN-UI NAV-6] , setTab */] = useState<DetectionsTab>('rules');
   const [search, setSearch] = useState('');
   const [language, setLanguage] = useState<DetectionLanguage | 'all'>('all');
   const [enabledFilter, setEnabledFilter] = useState<'all' | 'on' | 'off'>(
@@ -399,12 +399,13 @@ export function DetectionsView() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Link
+          {/* [HIDDEN-UI NAV-6 /detection/proposals route hidden] */}
+          {/* <Link
             href="/detection/proposals"
             className="inline-flex items-center justify-center gap-2 rounded-md border border-gray-800 px-3 py-2 text-sm text-gray-300 hover:bg-gray-800"
           >
             Proposals
-          </Link>
+          </Link> */}
           <Link
             href="/detection/new"
             className="inline-flex items-center justify-center gap-2 rounded-md bg-blue-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-600"
@@ -423,8 +424,8 @@ export function DetectionsView() {
         </div>
       </div>
 
-      {/* Tabs */}
-      <div
+      {/* [HIDDEN-UI NAV-6 hide inner tab bar so only SectionTabs shows] */}
+      {/* <div
         className="flex gap-1 rounded-md border border-gray-800 bg-gray-950 p-0.5 text-sm"
         role="tablist"
         aria-label="Detection management views"
@@ -449,7 +450,7 @@ export function DetectionsView() {
             {t.label}
           </button>
         ))}
-      </div>
+      </div> */}
 
       {/* Demo banner */}
       {useFallback && (

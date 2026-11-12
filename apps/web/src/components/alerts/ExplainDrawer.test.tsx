@@ -513,7 +513,7 @@ describe('ExplainDrawer', () => {
     await handle.enqueue({ kind: 'done', alert_id: 'ALERT-WS-D1-0001' });
     await handle.close();
 
-    const runBtn = await screen.findByRole('button', { name: /Run playbook/i });
+    const runBtn = await screen.findByRole('button', { name: /Run runbook/i });
     await user.click(runBtn);
 
     expect(onRunPlaybook).toHaveBeenCalledWith('identity-compromise-v1');

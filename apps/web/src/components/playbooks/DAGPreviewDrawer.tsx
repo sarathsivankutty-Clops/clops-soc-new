@@ -55,7 +55,7 @@ export function DAGPreviewDrawer({ playbook, onClose, onFork, forking }: DAGPrev
   const triggerLabel = describeTrigger(playbook.trigger);
 
   return (
-    <div className="fixed inset-0 z-50 flex" role="dialog" aria-modal="true" aria-label="Playbook preview">
+    <div className="fixed inset-0 z-50 flex" role="dialog" aria-modal="true" aria-label="Runbook preview">
       {/* Backdrop */}
       <button
         type="button"
@@ -114,7 +114,7 @@ export function DAGPreviewDrawer({ playbook, onClose, onFork, forking }: DAGPrev
         <div className="flex-1 min-h-0 bg-gray-950">
           {playbook.steps.length === 0 ? (
             <div className="h-full flex items-center justify-center text-sm text-gray-600">
-              This playbook has no steps yet.
+              This runbook has no steps yet.
             </div>
           ) : (
             <Suspense
@@ -148,7 +148,7 @@ export function DAGPreviewDrawer({ playbook, onClose, onFork, forking }: DAGPrev
                 disabled={forking}
                 className="px-3 py-1.5 rounded-md bg-purple-700 hover:bg-purple-600 text-white text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {forking ? 'Forking…' : 'Fork to my playbooks'}
+                {forking ? 'Forking…' : 'Fork to my runbooks'}
               </button>
             )}
             <Link

@@ -55,7 +55,8 @@ import { RetentionPanel } from './RetentionPanel';
 import { RulePacksPanel } from './RulePacksPanel';
 import { DelegationsPanel } from './DelegationsPanel';
 import { LanguagePanel } from './LanguagePanel';
-import { useLocale } from '@/components/i18n/LocaleProvider';
+// [HIDDEN-UI NAV-6 inner tab bar and duplicate header hidden]
+// import { useLocale } from '@/components/i18n/LocaleProvider';
 import { useTheme, type ThemePreference } from '@/components/theme/ThemeProvider';
 import { useConsoleVersion } from '@/hooks/useConsoleVersion';
 import { useUrlTab } from '@/hooks/useUrlTab';
@@ -400,6 +401,8 @@ const TABS: { id: TabId; label: string; description: string }[] = [
  * make adding a settings tab a translation task, and the English fallback
  * is the designed behaviour rather than an oversight.
  */
+// [HIDDEN-UI NAV-6 inner tab bar hidden; tabLabel unused]
+/*
 function tabLabel(id: TabId, t: (key: string) => string, english: string): string {
   switch (id) {
     case 'branding':
@@ -414,35 +417,37 @@ function tabLabel(id: TabId, t: (key: string) => string, english: string): strin
       return english;
   }
 }
+*/
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
 const TAB_IDS = TABS.map(({ id }) => id);
 
 export function SettingsView() {
-  const [tab, setTab] = useUrlTab(TAB_IDS, 'profile');
-  const { t } = useLocale();
+  // [HIDDEN-UI NAV-6 use 'section' param so SectionTabs (?tab=) and SettingsView do not collide]
+  const [tab /* [HIDDEN-UI NAV-6] , setTab */] = useUrlTab(TAB_IDS, 'profile', 'section');
+  // [HIDDEN-UI NAV-6] const { t } = useLocale();
 
   return (
     <div className="space-y-5">
-      <header className="flex flex-col gap-2">
+      {/* [HIDDEN-UI NAV-6 remove duplicate heading in Settings General] */}
+      {/* <header className="flex flex-col gap-2">
         <h1 className="text-2xl font-semibold text-gray-100">{t('settings.title')}</h1>
         <p className="max-w-2xl text-sm text-gray-500">
           Configure your account, the workspace, and the integrations that feed
           the SOC. Most preferences sync across devices; appearance and
           notification preferences live on this device only.
         </p>
-      </header>
+      </header> */}
 
       <div className="flex flex-col gap-5 lg:flex-row lg:items-start">
-        {/* ── Sidebar ── */}
+        {/* [HIDDEN-UI NAV-6 hide inner tab bar so only SectionTabs shows] */}
+        {/* ── Sidebar ──
         <nav
           aria-label="Settings sections"
           className="lg:sticky lg:top-4 lg:w-64 lg:shrink-0"
         >
           <ul className="space-y-1 rounded-xl border border-gray-800 bg-gray-900/40 p-2">
-            {/* `entry`, not `t` — the loop variable used to be `t`, which
-                now shadows the translator this component binds. */}
             {TABS.map((entry) => {
               const active = tab === entry.id;
               return (
@@ -467,7 +472,7 @@ export function SettingsView() {
               );
             })}
           </ul>
-        </nav>
+        </nav> */}
 
         {/* ── Panel ── */}
         <div className="flex-1 min-w-0">

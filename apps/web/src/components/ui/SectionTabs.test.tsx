@@ -39,9 +39,10 @@ describe('SectionTabs', () => {
     expect(counts).toEqual({ catalog: 1 });
   });
 
-  it('updates ?tab= in the URL on click and preserves other query params', async () => {
+  it('updates ?tab= in the URL on click via replaceState and preserves other query params', async () => {
     window.history.replaceState(null, '', '/detection?window=7d');
     const counts: Record<string, number> = {};
+    const pushSpy = vi.spyOn(window.history, 'pushState');
     render(<SectionTabs tabs={makeTabs(counts)} defaultTab="rules" />, {
       wrapper: NavigationTestProvider,
     });
@@ -49,6 +50,7 @@ describe('SectionTabs', () => {
     await userEvent.click(screen.getByRole('tab', { name: 'Tuning' }));
     expect(screen.getByText('Panel tuning')).toBeInTheDocument();
     expect(screen.queryByText('Panel rules')).not.toBeInTheDocument();
+    expect(pushSpy).not.toHaveBeenCalled();
     const url = new URL(window.location.href);
     expect(url.searchParams.get('tab')).toBe('tuning');
     expect(url.searchParams.get('window')).toBe('7d');

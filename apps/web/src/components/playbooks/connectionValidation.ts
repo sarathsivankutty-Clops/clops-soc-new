@@ -107,7 +107,7 @@ export function validateConnection(
   if (hasPath(steps, targetId, sourceId)) {
     return {
       ok: false,
-      reason: 'That connection would create a cycle. Playbooks must be acyclic.',
+      reason: 'That connection would create a cycle. Runbooks must be acyclic.',
     };
   }
 
