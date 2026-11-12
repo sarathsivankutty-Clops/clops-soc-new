@@ -189,6 +189,9 @@ const config: Config = {
       maxWidth: {
         content: '1320px',
       },
+      gridTemplateColumns: {
+        'detail-grid': 'minmax(0, 1fr) 340px',
+      },
       fontSize: {
         eyebrow: ['0.65625rem', { lineHeight: '1.35' }],    // 10.5px
         caption: ['0.6875rem', { lineHeight: '1.35' }],     // 11px

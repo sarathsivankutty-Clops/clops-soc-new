@@ -25,10 +25,10 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorState } from '@/components/ui/ErrorState';
 
 const RISK_STYLE: Record<ApprovalRequest['risk_level'], string> = {
-  critical: 'bg-red-500/10 text-red-300 border-red-500/30',
-  high: 'bg-orange-500/10 text-orange-300 border-orange-500/30',
-  medium: 'bg-yellow-500/10 text-yellow-300 border-yellow-500/30',
-  low: 'bg-blue-500/10 text-blue-300 border-blue-500/30',
+  critical: 'bg-severity-bg-critical text-severity-ink-critical',
+  high: 'bg-severity-bg-high text-severity-ink-high',
+  medium: 'bg-severity-bg-medium text-severity-ink-medium',
+  low: 'bg-severity-bg-low text-severity-ink-low',
 };
 
 const RISK_ORDER: ReadonlyArray<ApprovalRequest['risk_level']> = [
@@ -65,26 +65,26 @@ export function ResponseActionsPanel() {
   return (
     <section
       aria-labelledby="ops-approvals-heading"
-      className="rounded-xl border border-gray-800/60 bg-gray-900/40"
+      className="rounded-container border border-surface-border bg-surface-card shadow-card overflow-hidden"
     >
-      <div className="flex items-baseline justify-between px-4 py-3">
+      <div className="flex items-baseline justify-between px-5 py-4 border-b border-surface-divider">
         <div>
-          <h2 id="ops-approvals-heading" className="text-sm font-medium text-gray-300">
+          <h2 id="ops-approvals-heading" className="text-card-title font-semibold text-fg-primary">
             Actions awaiting approval
           </h2>
-          <p className="mt-0.5 text-[11px] text-gray-500">
+          <p className="mt-0.5 text-caption text-fg-muted">
             Containment the agent has proposed and paused on.
           </p>
         </div>
         {data && data.total > 0 && (
-          <span className="shrink-0 rounded-full bg-amber-500/10 px-2 py-0.5 text-[11px] font-medium text-amber-300">
+          <span className="shrink-0 rounded-pill bg-pill-warning-bg px-2.5 py-0.5 text-caption font-medium text-tone-warning">
             {`${data.total} pending`}
           </span>
         )}
       </div>
 
       {isLoading && !data ? (
-        <div className="m-4 h-20 animate-pulse rounded bg-gray-800/40" />
+        <div className="m-4 h-20 animate-pulse rounded-control bg-surface-subtle" />
       ) : error ? (
         <ErrorState
           title="Approval queue unavailable"
@@ -103,11 +103,11 @@ export function ResponseActionsPanel() {
         />
       ) : (
         <>
-          <ul>
+          <ul className="divide-y divide-surface-divider">
             {sorted.slice(0, 6).map((item) => (
               <li
                 key={item.id}
-                className="border-t border-gray-800/40 px-4 py-2.5 first:border-t-0"
+                className="px-5 py-3"
               >
                 <Link
                   href="/responder/approvals"
@@ -115,29 +115,29 @@ export function ResponseActionsPanel() {
                 >
                   <span
                     className={clsx(
-                      'mt-0.5 shrink-0 rounded border px-1.5 py-0.5 text-[10px] font-medium uppercase',
+                      'mt-0.5 shrink-0 rounded-pill px-2 py-0.5 text-eyebrow font-medium uppercase',
                       RISK_STYLE[item.risk_level],
                     )}
                   >
                     {item.risk_level}
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm text-gray-200">{item.title}</span>
-                    <span className="block truncate text-[11px] text-gray-500">
+                    <span className="block truncate text-body font-medium text-fg-primary">{item.title}</span>
+                    <span className="block truncate text-caption text-fg-muted">
                       {item.summary}
                     </span>
                   </span>
-                  <span className="shrink-0 text-[11px] text-gray-500">
+                  <span className="shrink-0 text-caption font-mono text-fg-muted">
                     {formatWaitingFor(item.created_at)}
                   </span>
                 </Link>
               </li>
             ))}
           </ul>
-          <div className="border-t border-gray-800/40 px-4 py-2.5">
+          <div className="border-t border-surface-divider px-5 py-3">
             <Link
               href="/responder/approvals"
-              className="text-xs text-blue-400 underline underline-offset-2 hover:text-blue-300"
+              className="text-control-sm text-accent underline underline-offset-2 hover:text-accent-hover"
             >
               {sorted.length > 6
                 ? `Review all ${data?.total ?? sorted.length} in the approvals queue`

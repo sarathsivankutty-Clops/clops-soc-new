@@ -32,26 +32,26 @@ export function RejectedEventsPanel() {
   return (
     <section
       aria-labelledby="ops-dlq-heading"
-      className="rounded-xl border border-gray-800/60 bg-gray-900/40"
+      className="rounded-container border border-surface-border bg-surface-card shadow-card overflow-hidden"
     >
-      <div className="flex items-baseline justify-between px-4 py-3">
+      <div className="flex items-baseline justify-between px-5 py-4 border-b border-surface-divider">
         <div>
-          <h2 id="ops-dlq-heading" className="text-sm font-medium text-gray-300">
+          <h2 id="ops-dlq-heading" className="text-card-title font-semibold text-fg-primary">
             Rejected events
           </h2>
-          <p className="mt-0.5 text-[11px] text-gray-500">
+          <p className="mt-0.5 text-caption text-fg-muted">
             Last {WINDOW_HOURS} hours, grouped by reason.
           </p>
         </div>
         {data && (
-          <span className="shrink-0 text-sm font-medium text-gray-200">
+          <span className="shrink-0 text-control font-mono font-semibold text-fg-primary">
             {data.total.toLocaleString()}
           </span>
         )}
       </div>
 
       {isLoading && !data ? (
-        <div className="m-4 h-20 animate-pulse rounded bg-gray-800/40" />
+        <div className="m-4 h-20 animate-pulse rounded-control bg-surface-subtle" />
       ) : error ? (
         <ErrorState
           title="Dead-letter counts unavailable"
@@ -68,25 +68,25 @@ export function RejectedEventsPanel() {
           className="m-4"
         />
       ) : (
-        <ul className="space-y-2 px-4 pb-4">
+        <ul className="space-y-2.5 p-5">
           {byReason.map((row) => (
             <li key={row.reason}>
               <div className="mb-1 flex items-baseline justify-between gap-3">
-                <span className="truncate text-xs text-gray-300">{row.reason}</span>
-                <span className="shrink-0 text-xs text-gray-500">
+                <span className="truncate text-control-sm text-fg-primary">{row.reason}</span>
+                <span className="shrink-0 text-caption font-mono text-fg-muted">
                   {row.count.toLocaleString()}
                 </span>
               </div>
-              <div className="h-1 rounded-full bg-gray-800">
+              <div className="h-1.5 rounded-pill bg-surface-subtle overflow-hidden">
                 <div
-                  className="h-1 rounded-full bg-amber-500/60"
+                  className="h-1.5 rounded-pill bg-dot-warning"
                   style={{ width: `${Math.round((row.count / maxCount) * 100)}%` }}
                 />
               </div>
             </li>
           ))}
           {data?.truncated && (
-            <li className="pt-1 text-[11px] text-gray-600">
+            <li className="pt-1 text-caption text-fg-subtle">
               Sample capped; counts above are complete for the window.
             </li>
           )}

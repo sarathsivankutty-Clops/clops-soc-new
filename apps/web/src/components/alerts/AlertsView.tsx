@@ -11,6 +11,9 @@ import { EntityRiskQueue } from './EntityRiskQueue';
 import { InvestigationRail } from './InvestigationRail';
 import { EmptyState, EmptyStateIcons } from '@/components/ui/EmptyState';
 import { ErrorState } from '@/components/ui/ErrorState';
+import { KpiStrip } from '@/components/ui/KpiStrip';
+import { PageHead } from '@/components/ui/PageHead';
+import { Badge } from '@/components/ui/Badge';
 import { SavedViewsBar } from '@/components/saved-views/SavedViewsBar';
 import { useLocale } from '@/components/i18n/LocaleProvider';
 import { demoFallback } from '@/lib/demoFallback';
@@ -33,19 +36,20 @@ type ViewMode = 'entities' | 'alerts';
 // ─── Config ───────────────────────────────────────────────────────────────────
 
 const SEVERITY_CONFIG = {
-  critical: { label: 'Critical', dot: 'bg-red-500', text: 'text-red-400', bg: 'bg-red-500/10 border-red-500/20' },
-  high: { label: 'High', dot: 'bg-orange-500', text: 'text-orange-400', bg: 'bg-orange-500/10 border-orange-500/20' },
-  medium: { label: 'Medium', dot: 'bg-yellow-500', text: 'text-yellow-400', bg: 'bg-yellow-500/10 border-yellow-500/20' },
-  low: { label: 'Low', dot: 'bg-blue-500', text: 'text-blue-400', bg: 'bg-blue-500/10 border-blue-500/20' },
-  info: { label: 'Info', dot: 'bg-gray-500', text: 'text-gray-400', bg: 'bg-gray-500/10 border-gray-500/20' },
+  /* [HIDDEN-UI THEME-4 kept all 5 severity tiers distinct with dot + soft tint, no border] */
+  critical: { label: 'Critical', dot: 'bg-severity-dot-critical', text: 'text-severity-ink-critical', bg: 'bg-severity-bg-critical' },
+  high: { label: 'High', dot: 'bg-severity-dot-high', text: 'text-severity-ink-high', bg: 'bg-severity-bg-high' },
+  medium: { label: 'Medium', dot: 'bg-severity-dot-medium', text: 'text-severity-ink-medium', bg: 'bg-severity-bg-medium' },
+  low: { label: 'Low', dot: 'bg-severity-dot-low', text: 'text-severity-ink-low', bg: 'bg-severity-bg-low' },
+  info: { label: 'Info', dot: 'bg-severity-dot-info', text: 'text-severity-ink-info', bg: 'bg-severity-bg-info' },
 };
 
 const STATUS_CONFIG = {
-  new: { label: 'New', color: 'text-purple-400 bg-purple-500/10 border-purple-500/20' },
-  triaged: { label: 'Triaged', color: 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20' },
-  investigating: { label: 'Investigating', color: 'text-blue-400 bg-blue-500/10 border-blue-500/20' },
-  resolved: { label: 'Resolved', color: 'text-green-400 bg-green-500/10 border-green-500/20' },
-  false_positive: { label: 'False Positive', color: 'text-gray-400 bg-gray-500/10 border-gray-500/20' },
+  new: { label: 'New', color: 'text-tone-purple bg-pill-purple-bg', dot: 'bg-dot-purple' },
+  triaged: { label: 'Triaged', color: 'text-accent bg-pill-info-bg', dot: 'bg-dot-info' },
+  investigating: { label: 'Investigating', color: 'text-tone-warning bg-pill-warning-bg', dot: 'bg-dot-warning' },
+  resolved: { label: 'Resolved', color: 'text-tone-success bg-pill-success-bg', dot: 'bg-dot-success' },
+  false_positive: { label: 'False Positive', color: 'text-fg-muted bg-pill-neutral-bg', dot: 'bg-dot-neutral' },
 };
 
 // ─── Mock Data ────────────────────────────────────────────────────────────────
@@ -178,7 +182,8 @@ function SeverityBadge({ severity }: { severity: string }) {
   const { t } = useLocale();
   const cfg = SEVERITY_CONFIG[severity as keyof typeof SEVERITY_CONFIG] || SEVERITY_CONFIG.info;
   return (
-    <span className={clsx('text-xs px-2 py-0.5 rounded border', cfg.text, cfg.bg)}>
+    <span className={clsx('inline-flex items-center gap-1.5 text-caption font-medium px-2.5 py-0.5 rounded-pill whitespace-nowrap', cfg.text, cfg.bg)}>
+      <span aria-hidden="true" className={clsx('w-1.5 h-1.5 rounded-pill shrink-0', cfg.dot)} />
       {severityLabel(severity, t) ?? cfg.label}
     </span>
   );
@@ -187,7 +192,8 @@ function SeverityBadge({ severity }: { severity: string }) {
 function StatusBadge({ status }: { status: string }) {
   const cfg = STATUS_CONFIG[status as keyof typeof STATUS_CONFIG] || STATUS_CONFIG.new;
   return (
-    <span className={clsx('text-xs px-2 py-0.5 rounded border', cfg.color)}>
+    <span className={clsx('inline-flex items-center gap-1.5 text-caption font-medium px-2.5 py-0.5 rounded-pill whitespace-nowrap', cfg.color)}>
+      <span aria-hidden="true" className={clsx('w-1.5 h-1.5 rounded-pill shrink-0', cfg.dot)} />
       {cfg.label}
     </span>
   );
@@ -206,41 +212,41 @@ function FiltersBar({
   const statuses = ['all', 'new', 'investigating', 'triaged', 'resolved', 'false_positive'] as const;
 
   return (
-    <div className="flex items-center gap-3 flex-wrap py-3 px-4 bg-gray-900/40 border border-gray-800/60 rounded-xl">
-      <div className="flex items-center gap-1">
+    <div className="flex items-center gap-3 flex-wrap py-3 px-4 bg-surface-card border border-surface-border rounded-container">
+      <div className="flex items-center gap-1 flex-wrap">
         {severities.map((s) => (
           <button
             key={s}
             onClick={() => onChange({ ...filters, severity: s === 'all' ? undefined : s, page: 1 })}
             className={clsx(
-              'text-xs px-2.5 py-1 rounded-lg transition-colors',
+              'text-control-sm font-medium px-2.5 py-1 rounded-control transition-colors',
               (s === 'all' && !filters.severity) || filters.severity === s
-                ? 'bg-blue-600 text-white'
-                : 'text-gray-500 hover:text-gray-300 hover:bg-gray-800/60'
+                ? 'bg-pill-info-bg text-accent font-semibold'
+                : 'text-fg-muted hover:text-fg-primary hover:bg-surface-hover'
             )}
           >
             {s === 'all' ? 'All severities' : SEVERITY_CONFIG[s].label}
           </button>
         ))}
       </div>
-      <div className="w-px h-4 bg-gray-700" />
-      <div className="flex items-center gap-1">
+      <div className="w-px h-4 bg-surface-border" />
+      <div className="flex items-center gap-1 flex-wrap">
         {statuses.map((s) => (
           <button
             key={s}
             onClick={() => onChange({ ...filters, status: s === 'all' ? undefined : s, page: 1 })}
             className={clsx(
-              'text-xs px-2.5 py-1 rounded-lg transition-colors',
+              'text-control-sm font-medium px-2.5 py-1 rounded-control transition-colors',
               (s === 'all' && !filters.status) || filters.status === s
-                ? 'bg-gray-700 text-gray-200'
-                : 'text-gray-500 hover:text-gray-300 hover:bg-gray-800/60'
+                ? 'bg-surface-subtle text-fg-primary font-semibold'
+                : 'text-fg-muted hover:text-fg-primary hover:bg-surface-hover'
             )}
           >
             {s === 'all' ? 'All statuses' : STATUS_CONFIG[s].label}
           </button>
         ))}
       </div>
-      <span className="ml-auto text-xs text-gray-600">{total} total</span>
+      <span className="ml-auto text-caption font-mono text-fg-muted">{total} total</span>
     </div>
   );
 }
@@ -278,10 +284,10 @@ function AlertRow({
       }}
       aria-current={selected ? 'true' : undefined}
       className={clsx(
-        'flex items-center gap-4 px-4 py-3 transition-colors border-b border-gray-800/40 last:border-0 border-l-2',
+        'flex items-center gap-4 px-4 py-3 transition-colors border-b border-surface-divider last:border-0 border-l-2',
         selected
-          ? 'border-l-blue-500 bg-blue-500/5 hover:bg-blue-500/10'
-          : 'border-l-transparent hover:bg-gray-800/20',
+          ? 'border-l-accent bg-nav-active-bg'
+          : 'border-l-transparent hover:bg-surface-elevated',
       )}
     >
       {/*
@@ -299,28 +305,26 @@ function AlertRow({
           e.stopPropagation();
           onToggleChecked(alert.id);
         }}
-        className="accent-blue-500 shrink-0"
+        className="accent-accent shrink-0"
       />
 
       <SeverityDot severity={alert.severity} />
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <p className="text-sm text-gray-200 truncate hover:text-white">{alert.title}</p>
+          <p className="text-body font-medium text-fg-primary truncate">{alert.title}</p>
           {alert.mitreAttack && alert.mitreAttack.length > 0 && (
-            <span className="text-xs bg-orange-500/10 text-orange-400 border border-orange-500/20 px-1.5 py-0.5 rounded shrink-0">
+            <Badge tone="severity-high" dot={false}>
               {alert.mitreAttack[0].techniqueId}
-            </span>
+            </Badge>
           )}
         </div>
         <div className="flex items-center gap-2 mt-0.5">
-          <span className="text-xs text-gray-600">{alert.source}</span>
+          <span className="text-caption text-fg-muted">{alert.source}</span>
           {alert.assignee && (
             <>
-              <span className="text-gray-700">·</span>
-              {/* The row shows a bare email with nothing saying what it
-                  is. Labelling it for assistive tech costs no pixels. */}
-              <span className="text-xs text-gray-600" title={t('alerts.assignee')}>
+              <span className="text-fg-subtle">·</span>
+              <span className="text-caption text-fg-muted" title={t('alerts.assignee')}>
                 {alert.assignee}
               </span>
             </>
@@ -332,7 +336,7 @@ function AlertRow({
         {alert.confidenceLabel && <ConfidencePill label={alert.confidenceLabel} />}
         <SeverityBadge severity={alert.severity} />
         <StatusBadge status={alert.status} />
-        <span className="text-xs text-gray-600 w-24 text-right" suppressHydrationWarning>
+        <span className="text-caption font-mono text-fg-muted w-24 text-right" suppressHydrationWarning>
           {formatDistanceToNow(new Date(alert.createdAt), { addSuffix: true })}
         </span>
       </div>
@@ -392,65 +396,63 @@ export function AlertsView() {
 
   return (
     <div className="space-y-4">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-semibold text-gray-100">{t('alerts.title')}</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
-            {viewMode === 'entities'
-              ? 'Risk-Based Alerting · entity-centric triage queue'
-              : 'Real-time security event monitoring and triage'}
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <div
-            role="tablist"
-            aria-label="View mode"
-            className="inline-flex items-center bg-gray-900/60 border border-gray-800/60 rounded-lg p-0.5"
-          >
-            <button
-              type="button"
-              role="tab"
-              aria-selected={viewMode === 'entities'}
-              onClick={() => setViewMode('entities')}
-              className={clsx(
-                'text-xs px-3 py-1.5 rounded-md transition-colors',
-                viewMode === 'entities'
-                  ? 'bg-blue-600 text-white'
-                  : 'text-gray-400 hover:text-gray-200',
-              )}
+      <PageHead
+        className="mb-0"
+        title={t('alerts.title')}
+        description={
+          viewMode === 'entities'
+            ? 'Risk-Based Alerting · entity-centric triage queue'
+            : 'Real-time security event monitoring and triage'
+        }
+        actions={
+          <div className="flex items-center gap-2 flex-wrap">
+            <div
+              role="tablist"
+              aria-label="View mode"
+              className="inline-flex items-center bg-surface-card border border-surface-border rounded-control p-1 gap-0.5"
             >
-              Entities
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={viewMode === 'alerts'}
-              onClick={() => setViewMode('alerts')}
-              className={clsx(
-                'text-xs px-3 py-1.5 rounded-md transition-colors',
-                viewMode === 'alerts'
-                  ? 'bg-gray-700 text-gray-100'
-                  : 'text-gray-400 hover:text-gray-200',
-              )}
-            >
-              Alerts
-            </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={viewMode === 'entities'}
+                onClick={() => setViewMode('entities')}
+                className={clsx(
+                  'text-control-sm font-medium px-3 py-1 rounded-control transition-colors',
+                  viewMode === 'entities'
+                    ? 'bg-surface-subtle text-fg-primary font-semibold'
+                    : 'text-fg-muted hover:text-fg-primary',
+                )}
+              >
+                Entities
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={viewMode === 'alerts'}
+                onClick={() => setViewMode('alerts')}
+                className={clsx(
+                  'text-control-sm font-medium px-3 py-1 rounded-control transition-colors',
+                  viewMode === 'alerts'
+                    ? 'bg-surface-subtle text-fg-primary font-semibold'
+                    : 'text-fg-muted hover:text-fg-primary',
+                )}
+              >
+                Alerts
+              </button>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                disabled
+                title="Manual alert creation is planned for v1.1"
+                className="bg-surface-subtle text-fg-muted border border-surface-border text-control-sm font-medium px-3.5 py-2 rounded-control cursor-not-allowed select-none"
+              >
+                + Create Alert
+              </button>
+              <Badge tone="warning">Planned for v1.1</Badge>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <button
-              disabled
-              title="Manual alert creation is planned for v1.1"
-              className="bg-gray-700 text-gray-400 text-sm px-4 py-2 rounded-lg cursor-not-allowed select-none"
-            >
-              + Create Alert
-            </button>
-            <span className="text-xs font-medium rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30 px-2 py-0.5">
-              Planned for v1.1
-            </span>
-          </div>
-        </div>
-      </div>
+        }
+      />
 
       {viewMode === 'entities' ? (
         <EntityRiskQueue />
@@ -510,23 +512,29 @@ function AlertsTable({
 
   return (
     <div className="space-y-4">
-      {/* Stats strip (full width) */}
-      <div className="grid grid-cols-4 gap-3" role="group" aria-label="Alert counts">
-        {[
-          { label: 'Total', value: total, color: 'text-gray-200' },
-          // A key the server omitted from the map means it counted and found
-          // none, so `?? 0` is a real zero. No facets at all means nobody
-          // counted, and the em-dash says so rather than publishing the
-          // page-derived figure that was the original defect.
-          { label: 'Critical', value: facets ? (facets.bySeverity.critical ?? 0) : '—', color: 'text-red-400' },
-          { label: 'High', value: facets ? (facets.bySeverity.high ?? 0) : '—', color: 'text-orange-400' },
-          { label: 'Unresolved', value: facets ? facets.unresolved : '—', color: 'text-purple-400' },
-        ].map((stat) => (
-          <div key={stat.label} className="bg-gray-900/60 border border-gray-800/60 rounded-xl px-4 py-3">
-            <p className="text-xs text-gray-500">{stat.label}</p>
-            <p className={clsx('text-2xl font-bold mt-1', stat.color)}>{stat.value}</p>
-          </div>
-        ))}
+      {/* Stats strip (full width, 1px divider KPI strip) */}
+      <div role="group" aria-label="Alert counts">
+        <KpiStrip
+          cols={4}
+          items={[
+            { label: 'Total', value: total, tone: 'default' },
+            {
+              label: 'Critical',
+              value: facets ? (facets.bySeverity.critical ?? 0) : '—',
+              tone: 'bad',
+            },
+            {
+              label: 'High',
+              value: facets ? (facets.bySeverity.high ?? 0) : '—',
+              tone: 'warn',
+            },
+            {
+              label: 'Unresolved',
+              value: facets ? facets.unresolved : '—',
+              tone: 'purple',
+            },
+          ]}
+        />
       </div>
 
       {/*
@@ -629,13 +637,8 @@ function AlertsTableGrid({
   const allOnPageChecked = pageIds.length > 0 && pageIds.every((id) => checkedIds.has(id));
 
   return (
-    <div className="bg-gray-900/60 border border-gray-800/60 rounded-xl overflow-hidden">
-      <div className="flex items-center gap-4 px-4 py-2 border-b border-gray-800/60 bg-gray-900/80">
-        {/*
-          Selects this page only, never "everything matching the filter".
-          A control that silently selects rows the analyst cannot see is the
-          shape that turns a bulk action into an incident.
-        */}
+    <div className="bg-surface-card border border-surface-border rounded-container overflow-hidden">
+      <div className="flex items-center gap-4 px-4 py-3 border-b border-surface-border bg-surface-elevated">
         <input
           type="checkbox"
           aria-label="Select all alerts on this page"
@@ -647,32 +650,21 @@ function AlertsTableGrid({
             else pageIds.forEach((id) => next.delete(id));
             onSetChecked(next);
           }}
-          className="accent-blue-500"
+          className="accent-accent"
         />
-        <span className="text-xs text-gray-500 flex-1">ALERT</span>
-        {/* `uppercase` keeps the column heading looking like a column
-            heading now that the text comes from the catalogue in sentence
-            case — and it is what makes the Arabic render correctly too,
-            since a hardcoded ALL-CAPS English string could not. */}
-        <span className="text-xs uppercase text-gray-500 w-20">{t('alerts.severity')}</span>
-        <span className="text-xs uppercase text-gray-500 w-24">{t('alerts.status')}</span>
-        <span className="text-xs text-gray-500 w-24 text-end">TIME</span>
+        <span className="text-eyebrow font-bold uppercase tracking-wider text-fg-muted flex-1">ALERT</span>
+        <span className="text-eyebrow font-bold uppercase tracking-wider text-fg-muted w-20">{t('alerts.severity')}</span>
+        <span className="text-eyebrow font-bold uppercase tracking-wider text-fg-muted w-24">{t('alerts.status')}</span>
+        <span className="text-eyebrow font-bold uppercase tracking-wider text-fg-muted w-24 text-end">TIME</span>
       </div>
 
       {isLoading ? (
         <div className="flex items-center justify-center h-32">
-          <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-          {/* A bare spinning div announces nothing. */}
+          <div className="w-6 h-6 border-2 border-accent border-t-transparent rounded-pill animate-spin" />
           <span className="sr-only">{t('common.loading')}</span>
         </div>
       ) : error ? (
         <div className="p-4">
-          {/*
-            The catalogue's wording, which is deliberately sharper than what
-            stood here: "we could not read the queue" and "the queue is
-            empty" are different facts about a SOC and only one of them
-            means there is nothing to do.
-          */}
           <ErrorState
             title={t('alerts.loadFailed')}
             description={t('alerts.loadFailedHint')}
@@ -681,11 +673,6 @@ function AlertsTableGrid({
         </div>
       ) : alerts.length === 0 ? (
         <div className="p-4">
-          {/*
-            WS-F5 — distinguish "no data at all" from "filtered out". The
-            filter-aware copy is the difference between an analyst thinking
-            "the system is broken" and "I should clear my filters".
-          */}
           {filters.severity || filters.status ? (
             <EmptyState
               icon={EmptyStateIcons.search}
@@ -694,7 +681,7 @@ function AlertsTableGrid({
               action={
                 <button
                   onClick={() => onFilterChange({ page: 1, pageSize: filters.pageSize ?? 25 })}
-                  className="text-xs px-3 py-1.5 rounded-md border border-blue-500/40 bg-blue-500/10 text-blue-300 hover:bg-blue-500/20 transition-colors"
+                  className="text-control-sm font-medium px-3 py-1.5 rounded-control border border-surface-border bg-surface-card text-accent hover:bg-surface-hover transition-colors"
                 >
                   Clear filters
                 </button>

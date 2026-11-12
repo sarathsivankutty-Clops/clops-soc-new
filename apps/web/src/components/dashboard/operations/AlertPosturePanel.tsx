@@ -72,20 +72,20 @@ export function AlertPosturePanel() {
   return (
     <section
       aria-labelledby="ops-posture-heading"
-      className="rounded-xl border border-gray-800/60 bg-gray-900/40"
+      className="rounded-container border border-surface-border bg-surface-card shadow-card overflow-hidden"
     >
-      <div className="px-4 py-3">
-        <h2 id="ops-posture-heading" className="text-sm font-medium text-gray-300">
+      <div className="px-5 py-4 border-b border-surface-divider">
+        <h2 id="ops-posture-heading" className="text-card-title font-semibold text-fg-primary">
           Alert posture
         </h2>
-        <p className="mt-0.5 text-[11px] text-gray-500">
+        <p className="mt-0.5 text-caption text-fg-muted">
           Current distribution. A snapshot, not a trend — no endpoint buckets
           disposition over time.
         </p>
       </div>
 
       {isLoading && !data ? (
-        <div className="m-4 h-28 animate-pulse rounded bg-gray-800/40" />
+        <div className="m-4 h-28 animate-pulse rounded-control bg-surface-subtle" />
       ) : error ? (
         <ErrorState
           title="Alert statistics unavailable"
@@ -102,26 +102,26 @@ export function AlertPosturePanel() {
           className="m-4"
         />
       ) : (
-        <div className="space-y-4 px-4 pb-4">
+        <div className="space-y-4 p-5">
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <p className="text-[11px] uppercase tracking-wider text-gray-500">Total</p>
-              <p className="text-2xl font-semibold text-gray-100">
+              <p className="text-eyebrow uppercase tracking-wider text-fg-muted">Total</p>
+              <p className="text-kpi font-bold font-mono text-fg-primary">
                 {data.total.toLocaleString()}
               </p>
             </div>
             <div>
-              <p className="text-[11px] uppercase tracking-wider text-gray-500">New (24h)</p>
-              <p className="text-2xl font-semibold text-blue-300">
+              <p className="text-eyebrow uppercase tracking-wider text-fg-muted">New (24h)</p>
+              <p className="text-kpi font-bold font-mono text-accent">
                 {data.new_last_24h.toLocaleString()}
               </p>
             </div>
             <div>
-              <p className="text-[11px] uppercase tracking-wider text-gray-500">Critical open</p>
+              <p className="text-eyebrow uppercase tracking-wider text-fg-muted">Critical open</p>
               <p
                 className={clsx(
-                  'text-2xl font-semibold',
-                  data.critical_open > 0 ? 'text-red-300' : 'text-gray-100',
+                  'text-kpi font-bold font-mono',
+                  data.critical_open > 0 ? 'text-tone-danger' : 'text-fg-primary',
                 )}
               >
                 {data.critical_open.toLocaleString()}
@@ -133,13 +133,13 @@ export function AlertPosturePanel() {
             label="By severity"
             entries={severities}
             total={severityTotal}
-            colorFor={(k) => SEVERITY_COLOR[k] ?? 'bg-slate-600'}
+            colorFor={(k) => SEVERITY_COLOR[k] ?? 'bg-dot-neutral'}
           />
           <StackedBar
             label="By disposition"
             entries={statuses}
             total={statusTotal}
-            colorFor={(k) => (k === 'false_positive' ? 'bg-violet-500' : 'bg-teal-500')}
+            colorFor={(k) => (k === 'false_positive' ? 'bg-tone-purple' : 'bg-dot-success')}
           />
         </div>
       )}

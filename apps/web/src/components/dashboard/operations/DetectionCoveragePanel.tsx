@@ -68,19 +68,19 @@ export function DetectionCoveragePanel() {
   return (
     <section
       aria-labelledby="ops-coverage-heading"
-      className="rounded-xl border border-gray-800/60 bg-gray-900/40"
+      className="rounded-container border border-surface-border bg-surface-card shadow-card overflow-hidden"
     >
-      <div className="px-4 py-3">
-        <h2 id="ops-coverage-heading" className="text-sm font-medium text-gray-300">
+      <div className="px-5 py-4 border-b border-surface-divider">
+        <h2 id="ops-coverage-heading" className="text-card-title font-semibold text-fg-primary">
           Detection coverage
         </h2>
-        <p className="mt-0.5 text-[11px] text-gray-500">
+        <p className="mt-0.5 text-caption text-fg-muted">
           Techniques with at least one enabled rule. A disabled rule covers nothing.
         </p>
       </div>
 
       {isLoading && !data ? (
-        <div className="m-4 h-24 animate-pulse rounded bg-gray-800/40" />
+        <div className="m-4 h-24 animate-pulse rounded-control bg-surface-subtle" />
       ) : error ? (
         <ErrorState
           title="Coverage unavailable"
@@ -97,7 +97,7 @@ export function DetectionCoveragePanel() {
           action={
             <Link
               href="/detection"
-              className="text-sm text-blue-400 underline underline-offset-2 hover:text-blue-300"
+              className="text-body text-accent underline underline-offset-2 hover:text-accent-hover"
             >
               Browse detection rules
             </Link>
@@ -105,23 +105,23 @@ export function DetectionCoveragePanel() {
           className="m-4"
         />
       ) : (
-        <div className="space-y-4 px-4 pb-4">
+        <div className="space-y-4 p-5">
           <div className="flex items-end gap-6">
             <div>
-              <p className="text-[11px] uppercase tracking-wider text-gray-500">
+              <p className="text-eyebrow uppercase tracking-wider text-fg-muted">
                 Techniques covered
               </p>
-              <p className="text-2xl font-semibold text-gray-100">
+              <p className="text-kpi font-bold font-mono text-fg-primary">
                 {`${summary.coveredTechniques} / ${summary.techniques}`}
               </p>
             </div>
             <div>
-              <p className="text-[11px] uppercase tracking-wider text-gray-500">Active rules</p>
-              <p className="text-2xl font-semibold text-gray-100">
+              <p className="text-eyebrow uppercase tracking-wider text-fg-muted">Active rules</p>
+              <p className="text-kpi font-bold font-mono text-fg-primary">
                 {summary.activeRules.toLocaleString()}
               </p>
               {summary.inactiveRules > 0 && (
-                <p className="text-[11px] text-amber-300/80">
+                <p className="text-caption text-tone-warning">
                   {`${summary.inactiveRules.toLocaleString()} disabled`}
                 </p>
               )}
@@ -130,16 +130,16 @@ export function DetectionCoveragePanel() {
 
           {ratio !== null && (
             <div>
-              <div className="h-1.5 rounded-full bg-gray-800">
+              <div className="h-1.5 rounded-pill bg-surface-subtle overflow-hidden">
                 <div
                   className={clsx(
-                    'h-1.5 rounded-full',
-                    ratio >= 0.6 ? 'bg-green-500/70' : ratio >= 0.3 ? 'bg-yellow-500/70' : 'bg-red-500/70',
+                    'h-1.5 rounded-pill',
+                    ratio >= 0.6 ? 'bg-dot-success' : ratio >= 0.3 ? 'bg-dot-warning' : 'bg-dot-danger',
                   )}
                   style={{ width: `${Math.round(ratio * 100)}%` }}
                 />
               </div>
-              <p className="mt-1 text-[11px] text-gray-500">
+              <p className="mt-1.5 text-caption text-fg-muted">
                 {`${Math.round(ratio * 100)}% of the ${summary.techniques} techniques your rules reference have an enabled rule — coverage of your own corpus, not of ATT&CK.`}
               </p>
             </div>
@@ -147,14 +147,14 @@ export function DetectionCoveragePanel() {
 
           {data && (
             <div>
-              <p className="mb-2 text-[11px] uppercase tracking-wider text-gray-500">
+              <p className="mb-2 text-eyebrow uppercase tracking-wider text-fg-muted">
                 Thinnest tactics
               </p>
               <ul className="space-y-1.5">
                 {thinnestTactics(data).map((t) => (
                   <li key={t.tactic} className="flex items-baseline justify-between gap-3">
-                    <span className="truncate text-xs text-gray-300">{t.tactic}</span>
-                    <span className="shrink-0 text-[11px] text-gray-500">
+                    <span className="truncate text-control-sm text-fg-primary">{t.tactic}</span>
+                    <span className="shrink-0 text-caption font-mono text-fg-muted">
                       {`${t.covered}/${t.total} covered`}
                     </span>
                   </li>

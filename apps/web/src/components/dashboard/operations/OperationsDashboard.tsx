@@ -35,18 +35,17 @@ import { AgentThroughputPanel } from './AgentThroughputPanel';
 import { ResponseActionsPanel } from './ResponseActionsPanel';
 import { DetectionCoveragePanel } from './DetectionCoveragePanel';
 import { AgreementPanel } from './AgreementPanel';
+import { PageHead } from '@/components/ui/PageHead';
 
 export function OperationsDashboard() {
   return (
     <div className="space-y-5">
-      <header>
-        <h1 className="text-xl font-semibold text-gray-100">SOC operations</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Whether the detection pipeline is working, independent of whether it is
-          finding anything. Every panel is driven by a live API response; a panel
-          with no data says so rather than showing a placeholder.
-        </p>
-      </header>
+      {/* [HIDDEN-UI THEME-4 replaced inline header with shared PageHead] */}
+      <PageHead
+        className="mb-0"
+        title="SOC operations"
+        description="Whether the detection pipeline is working, independent of whether it is finding anything. Every panel is driven by a live API response; a panel with no data says so rather than showing a placeholder."
+      />
 
       <FunnelKpiBar period="24h" />
 

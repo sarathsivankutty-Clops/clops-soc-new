@@ -58,24 +58,22 @@ export function KpiStrip({ items, cols = 4, className }: KpiStripProps) {
             key={item.id ?? `${item.label}-${idx}`}
             {...(clickable ? { type: 'button' as const, onClick: item.onClick } : {})}
             className={clsx(
-              'bg-surface-card p-5 text-left flex flex-col justify-between gap-1.5 min-w-0 transition-colors',
+              'relative bg-surface-card p-5 text-left flex flex-col justify-between gap-1.5 min-w-0 transition-colors',
               clickable && 'cursor-pointer hover:bg-surface-elevated',
               item.active && 'bg-nav-active-bg',
             )}
           >
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-caption font-medium text-fg-muted truncate">
-                {item.label}
+            {clickable && (
+              <span className="absolute top-5 right-5 text-eyebrow font-semibold text-accent shrink-0">
+                {item.active ? 'Active' : 'Filter'}
               </span>
-              {clickable && (
-                <span className="text-eyebrow font-semibold text-accent shrink-0">
-                  {item.active ? 'Active' : 'Filter'}
-                </span>
-              )}
-            </div>
-            <div className="text-kpi font-bold font-mono tabular-nums text-fg-primary leading-tight">
+            )}
+            <p className={clsx('text-caption font-medium text-fg-muted truncate', clickable && 'pr-12')}>
+              {item.label}
+            </p>
+            <p className="text-kpi font-bold font-mono tabular-nums text-fg-primary leading-tight">
               {item.value}
-            </div>
+            </p>
             {item.sub && (
               <div className={clsx('text-caption truncate', TONE_TEXT[tone])}>
                 {item.sub}

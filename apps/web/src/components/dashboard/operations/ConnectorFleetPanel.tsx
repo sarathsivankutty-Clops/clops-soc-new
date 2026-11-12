@@ -24,11 +24,11 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorState } from '@/components/ui/ErrorState';
 
 const STATE_STYLE: Record<FleetHealthState, { dot: string; text: string; label: string }> = {
-  healthy: { dot: 'bg-green-500', text: 'text-green-300', label: 'Healthy' },
-  degraded: { dot: 'bg-yellow-500', text: 'text-yellow-300', label: 'Degraded' },
-  failed: { dot: 'bg-red-500', text: 'text-red-300', label: 'Failed' },
-  unproven: { dot: 'bg-blue-500', text: 'text-blue-300', label: 'Never synced' },
-  disabled: { dot: 'bg-gray-600', text: 'text-gray-400', label: 'Disabled' },
+  healthy: { dot: 'bg-dot-success', text: 'text-tone-success', label: 'Healthy' },
+  degraded: { dot: 'bg-dot-warning', text: 'text-tone-warning', label: 'Degraded' },
+  failed: { dot: 'bg-dot-danger', text: 'text-tone-danger', label: 'Failed' },
+  unproven: { dot: 'bg-dot-info', text: 'text-accent', label: 'Never synced' },
+  disabled: { dot: 'bg-dot-neutral', text: 'text-fg-muted', label: 'Disabled' },
 };
 
 /** Order worst-first so the answer is the first thing read. */
@@ -57,23 +57,21 @@ function ConnectorRow({ row }: { row: FleetConnectorHealth }) {
   const style = STATE_STYLE[row.state] ?? STATE_STYLE.unproven;
   return (
     <li
-      className="flex items-start gap-3 border-t border-gray-800/40 px-4 py-2.5 first:border-t-0"
+      className="flex items-start gap-3 px-5 py-3"
       data-testid={`fleet-row-${row.connector_id}`}
     >
-      <span className={clsx('mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full', style.dot)} aria-hidden="true" />
+      <span className={clsx('mt-1.5 h-2 w-2 shrink-0 rounded-pill', style.dot)} aria-hidden="true" />
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-baseline gap-x-2">
-          <span className="truncate text-sm text-gray-200">{row.name}</span>
-          <span className="text-[11px] text-gray-500">{row.connector_type}</span>
-          <span className={clsx('text-[11px]', style.text)}>{style.label}</span>
+          <span className="truncate text-body font-medium text-fg-primary">{row.name}</span>
+          <span className="text-caption text-fg-muted">{row.connector_type}</span>
+          <span className={clsx('text-caption font-medium', style.text)}>{style.label}</span>
         </div>
-        {/* The server writes operator-actionable wording; render it verbatim
-            rather than re-deriving a status string from the same fields. */}
-        <p className="mt-0.5 text-[11px] text-gray-500">{row.reason}</p>
+        <p className="mt-0.5 text-caption text-fg-muted">{row.reason}</p>
       </div>
-      <div className="shrink-0 text-right text-[11px] text-gray-500">
+      <div className="shrink-0 text-right text-caption text-fg-muted">
         <div>{formatStaleness(row)}</div>
-        <div className="mt-0.5">
+        <div className="mt-0.5 font-mono">
           {row.events_ingested.toLocaleString()} events
           {row.error_count > 0 ? ` · ${row.error_count} errors` : ''}
         </div>
@@ -99,29 +97,24 @@ export function ConnectorFleetPanel() {
   return (
     <section
       aria-labelledby="ops-fleet-heading"
-      className="rounded-xl border border-gray-800/60 bg-gray-900/40"
+      className="rounded-container border border-surface-border bg-surface-card shadow-card overflow-hidden"
     >
-      <div className="flex items-baseline justify-between px-4 py-3">
+      <div className="flex items-baseline justify-between px-5 py-4 border-b border-surface-divider">
         <div>
-          <h2 id="ops-fleet-heading" className="text-sm font-medium text-gray-300">
+          <h2 id="ops-fleet-heading" className="text-card-title font-semibold text-fg-primary">
             Connector fleet
           </h2>
-          <p className="mt-0.5 text-[11px] text-gray-500">
+          <p className="mt-0.5 text-caption text-fg-muted">
             Staleness measured against each connector&apos;s own poll cadence.
           </p>
         </div>
-        {/* With no connectors the badge read "All sources reporting" in green,
-            directly above an empty state saying nothing was configured. Zero
-            sources reporting is not the same statement as all of them
-            reporting, and the green is the part an operator scans for. There
-            is nothing to summarise until there is a fleet. */}
         {data && connectors.length > 0 && (
           <span
             className={clsx(
-              'shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium',
+              'shrink-0 rounded-pill px-2.5 py-0.5 text-caption font-medium',
               needsAttention > 0
-                ? 'bg-red-500/10 text-red-300'
-                : 'bg-green-500/10 text-green-300',
+                ? 'bg-pill-danger-bg text-tone-danger'
+                : 'bg-pill-success-bg text-tone-success',
             )}
           >
             {needsAttention > 0
@@ -132,7 +125,7 @@ export function ConnectorFleetPanel() {
       </div>
 
       {isLoading && !data ? (
-        <div className="m-4 h-24 animate-pulse rounded bg-gray-800/40" />
+        <div className="m-4 h-24 animate-pulse rounded-control bg-surface-subtle" />
       ) : error ? (
         <ErrorState
           title="Fleet health unavailable"
@@ -150,7 +143,7 @@ export function ConnectorFleetPanel() {
           action={
             <Link
               href="/connectors"
-              className="text-sm text-blue-400 underline underline-offset-2 hover:text-blue-300"
+              className="text-body text-accent underline underline-offset-2 hover:text-accent-hover"
             >
               Connect a source
             </Link>
@@ -158,7 +151,7 @@ export function ConnectorFleetPanel() {
           className="m-4"
         />
       ) : (
-        <ul>
+        <ul className="divide-y divide-surface-divider">
           {sorted.map((row) => (
             <ConnectorRow key={row.connector_id} row={row} />
           ))}
