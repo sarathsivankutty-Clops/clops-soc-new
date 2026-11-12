@@ -1,5 +1,7 @@
 import { Suspense } from 'react';
-import { SettingsView } from '@/components/settings/SettingsView';
+import { SettingsTabs } from '@/components/settings/SettingsTabs';
+// [HIDDEN-UI NAV-4 moved into Settings SectionTabs]
+// import { SettingsView } from '@/components/settings/SettingsView';
 import { SkeletonCard } from '@/components/ui/Skeleton';
 
 export const metadata = {
@@ -9,7 +11,9 @@ export const metadata = {
 export default function SettingsPage() {
   return (
     <Suspense fallback={<SkeletonCard />}>
-      <SettingsView />
+      {/* [HIDDEN-UI NAV-4 wrapped SettingsView in SectionTabs] */}
+      {/* <SettingsView /> */}
+      <SettingsTabs />
     </Suspense>
   );
 }
