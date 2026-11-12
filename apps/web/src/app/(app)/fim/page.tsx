@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
-import { FimDashboard } from '@/components/fim/FimDashboard';
+import { redirect } from 'next/navigation';
+// [HIDDEN-UI NAV-5 route hidden from navigation]
+// import { FimDashboard } from '@/components/fim/FimDashboard';
 
 export const metadata: Metadata = {
   title: 'File Integrity Monitoring',
@@ -8,5 +10,7 @@ export const metadata: Metadata = {
 };
 
 export default function FimPage() {
-  return <FimDashboard />;
+  // [HIDDEN-UI NAV-5 redirect with permanent:false (307) to /dashboard]
+  // return <FimDashboard />;
+  redirect('/dashboard');
 }

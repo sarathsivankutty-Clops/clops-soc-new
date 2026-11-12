@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { Suspense, useMemo, useSyncExternalStore, type ReactNode } from 'react';
 import { clsx } from 'clsx';
 import { SkeletonCard } from '@/components/ui/Skeleton';
 import { useUrlTab } from '@/hooks/useUrlTab';
@@ -19,15 +19,16 @@ export interface SectionTabsProps {
   ariaLabel?: string;
 }
 
+const subscribeNoop = () => () => {};
+const getClientRole = () => authApi.currentUser()?.role ?? null;
+const getServerRole = () => null;
+
 function SectionTabsInner({
   tabs,
   defaultTab,
   ariaLabel = 'Section navigation',
 }: SectionTabsProps) {
-  const [meRole, setMeRole] = useState<string | null>(null);
-  useEffect(() => {
-    setMeRole(authApi.currentUser()?.role ?? null);
-  }, []);
+  const meRole = useSyncExternalStore(subscribeNoop, getClientRole, getServerRole);
   const isAdmin = meRole === 'admin';
 
   const visibleTabs = useMemo(
