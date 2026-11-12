@@ -104,7 +104,7 @@ wait_healthy "kafka"      60
 
 # Also wait for the API (HTTP health endpoint)
 wait_api() {
-  local url="http://localhost:8000/api/v1/health"
+  local url="http://localhost:${API_PORT:-18000}/api/v1/health"
   local max=120; local i=0
   printf "  Waiting for %-20s" "api..."
   while [ $i -lt $max ]; do
@@ -133,7 +133,7 @@ fi
 # ── Inject Conti ransomware scenario ──────────────────────────────────────────
 banner "Injecting Conti-style ransomware scenario..."
 if [ -f "$SCENARIO_SCRIPT" ]; then
-  python3 "$SCENARIO_SCRIPT" --api-url http://localhost:8000 2>/dev/null && \
+  python3 "$SCENARIO_SCRIPT" --api-url "http://localhost:${API_PORT:-18000}" 2>/dev/null && \
     ok "Conti ransomware scenario injected — check the Cases dashboard" || \
     warn "Scenario injection failed — you can run it manually: python3 scripts/inject_scenario.py"
 else
@@ -144,10 +144,10 @@ fi
 banner "AiSOC Demo Lab is ready"
 echo ""
 echo -e "  ${BOLD}Service URLs${NC}"
-echo -e "  ${CYAN}Web App           ${NC} http://localhost:3000"
-echo -e "  ${CYAN}API (REST)        ${NC} http://localhost:8000  (spec: docs/openapi.yaml)"
-echo -e "  ${CYAN}API (GraphQL)     ${NC} http://localhost:8000/graphql"
-echo -e "  ${CYAN}Agent Orchestrator${NC} http://localhost:8001/docs"
+echo -e "  ${CYAN}Web App           ${NC} http://localhost:${WEB_PORT:-13000}"
+echo -e "  ${CYAN}API (REST)        ${NC} http://localhost:${API_PORT:-18000}  (spec: docs/openapi.yaml)"
+echo -e "  ${CYAN}API (GraphQL)     ${NC} http://localhost:${API_PORT:-18000}/graphql"
+echo -e "  ${CYAN}Agent Orchestrator${NC} http://localhost:${AGENTS_PORT:-18001}/docs"
 echo -e "  ${CYAN}Jaeger Tracing    ${NC} http://localhost:16686"
 echo -e "  ${CYAN}Kafka UI          ${NC} http://localhost:8080"
 echo -e "  ${CYAN}OpenSearch        ${NC} http://localhost:9200"

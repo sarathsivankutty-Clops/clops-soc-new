@@ -280,7 +280,7 @@ def build_bundle(*, api_url: str, include_logs: bool) -> dict[str, Any]:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--out", type=Path, help="Write here instead of stdout.")
-    parser.add_argument("--api-url", default=os.getenv("AISOC_API_URL", "http://localhost:8000"))
+    parser.add_argument("--api-url", default=os.getenv("AISOC_API_URL", f"http://localhost:{os.getenv('API_PORT', '18000')}"))
     parser.add_argument(
         "--no-logs",
         action="store_true",

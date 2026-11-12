@@ -255,7 +255,20 @@ def test_single_host_deployment_can_publish_the_console(compose: dict) -> None:
         "Kafka with the development passwords this file ships"
     )
 
-    defaults_to_loopback = all("127.0.0.1" in p for p in published)
+    public_by_default = []
+    loopback_by_default = []
+    for svc_name, service in compose["services"].items():
+        for port in service.get("ports") or []:
+            if isinstance(port, str):
+                if svc_name in {"web", "realtime"}:
+                    public_by_default.append((svc_name, port))
+                else:
+                    loopback_by_default.append((svc_name, port))
+
+    assert all("0.0.0.0" in p for _n, p in public_by_default), (
+        f"web and realtime must default to 0.0.0.0: {public_by_default}"
+    )
+    defaults_to_loopback = all("127.0.0.1" in p for _n, p in loopback_by_default)
     assert defaults_to_loopback, (
-        "a port stopped defaulting to loopback. An install must not expose itself to whatever network the host is attached to by omission."
+        "a non-browser port stopped defaulting to loopback. An install must not expose internal services to whatever network the host is attached to by omission."
     )

@@ -135,8 +135,8 @@ container that exited or is crash-looping fails the wait rather than passing
 it, so `make up` returning 0 means the services are actually up.
 
 ```
-  Console:  http://localhost:3000
-  API:      http://localhost:8000  (spec: docs/openapi.yaml; interactive
+  Console:  http://localhost:13000
+  API:      http://localhost:18000  (spec: docs/openapi.yaml; interactive
             docs are off in this production-class stack)
 ```
 
@@ -156,7 +156,7 @@ make smoke
 ```
 
 The runner POSTs a single suspicious-PowerShell event to
-`http://localhost:8081/v1/ingest/batch` and then observes every stage from
+`http://localhost:18081/v1/ingest/batch` and then observes every stage from
 the outside — Kafka, fusion, detection, promotion, Postgres, and finally the
 public API. It does not insert an alert, stub Kafka or reach into fusion's
 internals, because a test that reaches past a component cannot tell you that
@@ -171,7 +171,7 @@ command that investigates each one.
 
 ### 4. Sign in
 
-Open [http://localhost:3000](http://localhost:3000).
+Open [http://localhost:13000](http://localhost:13000).
 
 There are no default credentials. `make up` runs `make bootstrap`, which
 creates `admin@aisoc.internal` with a password generated on your machine and
@@ -254,13 +254,13 @@ does not.
 
 | Profile | Services |
 | --- | --- |
-| *(default — CORE)* | **postgres** (5432) · **redis** (6379) · **zookeeper** · **kafka** (9092) · **qdrant** (6333) · **litellm** (4000, LLM gateway) · **ollama** (11434, local model) · **ollama-pull** (one-shot model fetch) · **ingest-worker** (8081, Go) · **fusion** (8003) · **api** (8000) · **agents** (8001) · **threatintel** (8005) · **realtime** (8086) · **web** (3000) · **connectors** (8088) · **actions** (8002) |
-| `full` | **clickhouse** (8123/9000) · **neo4j** (7474/7687) · **opensearch** (9200) · **ueba** (8007) · **enrichment** (8080, Go) · **kafka-ui** (8090) |
-| `extras` | **honeytokens** (8008) · **purple-team** (8006) |
-| `chatops` | **slack-bot** (8009) · **teams-bot** (8010) |
-| `monitoring` | **prometheus** (9091) · **grafana** (3001) · **alertmanager** (9094) · **tempo** (3200) · **otel-collector** (4317/4318) |
-| `osquery` | **osquery-tls** (8091) |
-| `mcp` | **mcp** (8096, streamable-HTTP MCP server, off by default) |
+| *(default — CORE)* | **postgres** · **redis** · **zookeeper** · **kafka** · **qdrant** (16333) · **litellm** (14000, LLM gateway) · **ollama** (21434, local model) · **ollama-pull** (one-shot model fetch) · **ingest-worker** (18081, Go) · **fusion** (18003) · **api** (18000) · **agents** (18001) · **threatintel** (18005) · **realtime** (18086) · **web** (13000) · **connectors** (18088) · **actions** (18002) |
+| `full` | **clickhouse** (18123/19000) · **neo4j** (17474/17687) · **opensearch** (19200) · **ueba** (18007) · **enrichment** (18080, Go) · **kafka-ui** (18090) |
+| `extras` | **honeytokens** (18008) · **purple-team** (18006) |
+| `chatops` | **slack-bot** (18009) · **teams-bot** (18010) |
+| `monitoring` | **prometheus** (19091) · **grafana** (13001) · **alertmanager** (19094) · **tempo** (13200) · **otel-collector** (14317/14318) |
+| `osquery` | **osquery-tls** (18091) |
+| `mcp` | **mcp** (18096, streamable-HTTP MCP server, off by default) |
 | `escalations` | **escalations** (ack-clock bridge: Teams cards for unacknowledged CRITICAL/HIGH cases; off by default, needs `AISOC_ESCALATION_TEAMS_URL`) |
 
 CORE is 16 long-running services, or 17 counting `ollama-pull`, which fetches
@@ -571,10 +571,10 @@ connectors and the CLI in production:
 
 ```bash
 # List alerts via the API
-curl -s http://localhost:8000/api/v1/alerts | jq
+curl -s http://localhost:18000/api/v1/alerts | jq
 
 # Or open the UI and watch /alerts populate
-open http://localhost:3000/alerts
+open http://localhost:13000/alerts
 ```
 
 Within a couple of seconds you should see the synthesised alert

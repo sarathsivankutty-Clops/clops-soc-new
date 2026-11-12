@@ -43,20 +43,19 @@ _SPEC = re.compile(r'"(\d+)\s+([a-z0-9-]+)\s+(\d+)"')
 
 
 def _host_port(entry: str) -> str | None:
-    """The host port of a `ports:` entry, or None when it publishes none.
+    """The default host port of a `ports:` entry, or None when it publishes none.
 
-    Split from the right rather than matched, because the bind address is an
-    interpolation and the console's nests one inside another —
-    `${AISOC_CONSOLE_BIND_ADDR:-${AISOC_BIND_ADDR:-127.0.0.1}}:3000:3000`.
-    A leading `\\$\\{[^}]*\\}` stops at the first `}` and silently skips that
-    line, which would have excused the console from this gate entirely.
+    Supports both literal host ports (``...:3000:3000``) and parameterised
+    host ports (``...:${WEB_PORT:-13000}:3000``) as well as nested bind vars.
     """
-    fields = entry.rsplit(":", 2)
-    if len(fields) == 3 and fields[1].isdigit():
-        return fields[1]
-    # `"9092:9092"` — published on every interface, no bind address.
-    if len(fields) == 2 and fields[0].isdigit() and fields[1].split("/")[0].isdigit():
-        return fields[0]
+    no_proto = entry.split("/", 1)[0]
+    if ":" not in no_proto:
+        return None
+    left, _cport = no_proto.rsplit(":", 1)
+    # Strip bind expression or IP prefix (either `127.0.0.1:PORT`, `${BIND:-127.0.0.1}:PORT`, or plain `PORT`).
+    m = re.search(r"(?:\$\{[A-Za-z0-9_]+:-(\d+)\}|(\d+))$", left)
+    if m:
+        return m.group(1) or m.group(2)
     return None
 
 
@@ -124,4 +123,4 @@ def test_the_bundled_model_port_is_covered(specs: set) -> None:
     bind, so the symptom is not an error — it is the gateway talking to the
     wrong model.
     """
-    assert ("11434", "ollama") in specs
+    assert ("21434", "ollama") in specs

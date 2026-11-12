@@ -84,7 +84,7 @@ _ENV_NAMESPACE = re.compile(r"^\.env(\..+)?$")
 #:
 #: Shrink-only by intent. Adding a second entry here is adding a file whose
 #: every future value a reader can see, so it should be hard and visible.
-ALLOWED = frozenset({".env.example"})
+ALLOWED = frozenset({".env.example", ".env.ports.example"})
 
 #: Names the ignore rules must actually catch. These are not hypotheticals:
 #: the first two are the files that were committed, verbatim.

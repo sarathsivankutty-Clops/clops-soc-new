@@ -53,8 +53,11 @@ ENV REALTIME_URL=${REALTIME_URL}
 # In Fly the values come from infra/fly/web/fly.toml's [build.args].
 ARG NEXT_PUBLIC_API_URL=""
 ARG NEXT_PUBLIC_WS_URL=""
+# [PORTS allow build-time realtime HTTP URL configuration via compose build args]
+ARG NEXT_PUBLIC_REALTIME_URL=""
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 ENV NEXT_PUBLIC_WS_URL=${NEXT_PUBLIC_WS_URL}
+ENV NEXT_PUBLIC_REALTIME_URL=${NEXT_PUBLIC_REALTIME_URL}
 
 # ─── Build-time demo-mode flags (client-side bundle) ────────────────────────
 # These drive the in-bundle demo experience read by `apps/web/src/lib/demoMode.ts`:

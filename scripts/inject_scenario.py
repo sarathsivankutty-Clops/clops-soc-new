@@ -138,7 +138,7 @@ def _post(url: str, payload: dict, timeout: int = 10) -> dict:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Inject Conti ransomware scenario into AiSOC")
-    parser.add_argument("--api-url", default="http://localhost:8000", help="AiSOC API base URL")
+    parser.add_argument("--api-url", default="http://localhost:18000", help="AiSOC API base URL")
     parser.add_argument("--delay", type=float, default=0.5, help="Delay between alerts (seconds)")
     args = parser.parse_args()
 

@@ -143,42 +143,42 @@ jobs:
         include:
           - store: postgres
             profile: core
-            readiness_url: http://127.0.0.1:8000/api/v1/health/ready
+            readiness_url: http://127.0.0.1:18000/api/v1/health/ready
             dependent_urls: >-
-              api=http://127.0.0.1:8000/api/v1/health/ready
-              fusion=http://127.0.0.1:8003/readyz
-              agents=http://127.0.0.1:8001/readyz
-              actions=http://127.0.0.1:8002/readyz
+              api=http://127.0.0.1:18000/api/v1/health/ready
+              fusion=http://127.0.0.1:18003/readyz
+              agents=http://127.0.0.1:18001/readyz
+              actions=http://127.0.0.1:18002/readyz
           - store: redis
             profile: core
-            readiness_url: http://127.0.0.1:8000/api/v1/health/ready
+            readiness_url: http://127.0.0.1:18000/api/v1/health/ready
             dependent_urls: >-
-              api=http://127.0.0.1:8000/api/v1/health/ready
-              agents=http://127.0.0.1:8001/readyz
+              api=http://127.0.0.1:18000/api/v1/health/ready
+              agents=http://127.0.0.1:18001/readyz
           - store: qdrant
             profile: core
-            readiness_url: http://127.0.0.1:8005/health
+            readiness_url: http://127.0.0.1:18005/health
             dependent_urls: >-
-              threatintel=http://127.0.0.1:8005/health
+              threatintel=http://127.0.0.1:18005/health
           - store: kafka
             profile: core
-            readiness_url: http://127.0.0.1:8081/readyz
+            readiness_url: http://127.0.0.1:18081/readyz
             dependent_urls: >-
-              ingest=http://127.0.0.1:8081/readyz
-              fusion=http://127.0.0.1:8003/readyz
-              realtime=http://127.0.0.1:8086/readyz
+              ingest=http://127.0.0.1:18081/readyz
+              fusion=http://127.0.0.1:18003/readyz
+              realtime=http://127.0.0.1:18086/readyz
           - store: clickhouse
             profile: full
-            readiness_url: http://127.0.0.1:8003/readyz
+            readiness_url: http://127.0.0.1:18003/readyz
             dependent_urls: >-
-              fusion=http://127.0.0.1:8003/readyz
-              api=http://127.0.0.1:8000/api/v1/health/ready
+              fusion=http://127.0.0.1:18003/readyz
+              api=http://127.0.0.1:18000/api/v1/health/ready
           - store: neo4j
             profile: full
-            readiness_url: http://127.0.0.1:8081/readyz
+            readiness_url: http://127.0.0.1:18081/readyz
             dependent_urls: >-
-              ingest=http://127.0.0.1:8081/readyz
-              api=http://127.0.0.1:8000/api/v1/health/ready
+              ingest=http://127.0.0.1:18081/readyz
+              api=http://127.0.0.1:18000/api/v1/health/ready
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
@@ -276,7 +276,7 @@ jobs:
           python3 scripts/ensure_env.py
           docker compose up -d postgres redis zookeeper kafka ingest-worker fusion api
           for _ in $(seq 1 60); do
-            if docker compose ps --format '{{.Name}} {{.Health}}' | grep -q 'aisoc-api healthy'; then break; fi
+            if docker compose ps --format '{{.Service}} {{.Health}}' | grep -q '^api healthy'; then break; fi
             sleep 10
           done
           docker compose ps
