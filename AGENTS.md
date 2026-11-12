@@ -1,185 +1,123 @@
-# Working in this repository
+# AGENTS.md
 
-AiSOC is an open-source, AI-assisted Security Operations Center: telemetry comes
-in from your own security tools, gets normalized, matched against a detection
-corpus, correlated into alerts, triaged by an agent, and acted on through
-governed response verbs. It runs on your own infrastructure — cloud or
-on-premises — under the MIT license.
+Repository guide for AiSOC (`aisoc-monorepo`), verified against files on disk.
 
-This file is for anyone changing the code, human or AI. It is the short version;
-each section points at the thing that is authoritative. If this file and the
-tree disagree, **the tree is right and this file is a bug**.
+## 1. Repo Layout
 
-## Get it running
+### `apps/`
+- `apps/docs`: Docusaurus 3 documentation site (`apps/docs/package.json`).
+- `apps/mobile`: React Native / Expo responder app, excluded from root pnpm workspace (`pnpm-workspace.yaml`, `apps/mobile/package.json`).
+- `apps/web`: Next.js 16 SOC console, marketing site, free tools, and responder PWA (`apps/web/package.json`).
 
-```bash
-make up        # CORE profile: 16 long-running services, ~8 GB memory, ~20 GB disk
-make doctor    # what is up, what is not, and what to do about it
-make smoke     # the golden pipeline, eight stages, end to end
-```
+### `services/`
+- `services/actions`: Python/FastAPI blast-radius-gated response action executor with rollback (`services/actions/pyproject.toml`).
+- `services/agents`: Python LangGraph orchestrator for autonomous triage, investigation, copilot, and hunts (`services/agents/pyproject.toml`).
+- `services/api`: Python/FastAPI core API for auth, alerts, cases, RBAC, and vault-encrypted connectors (`services/api/pyproject.toml`).
+- `services/connectors`: Python/FastAPI polling service normalizing vendor telemetry to OCSF (`services/connectors/README.md`).
+- `services/demo-producer`: Go CLI emitting synthetic security events into ingest for demos (`services/demo-producer/README.md`).
+- `services/enrichment`: Go parallel IOC enrichment fan-out service (`services/enrichment/README.md`).
+- `services/escalations`: Python ack-clock escalation bridge for unacknowledged critical/high cases (`services/escalations/README.md`).
+- `services/fusion`: Python alert deduplication, correlation, detection engine, and entity-risk service (`services/fusion/pyproject.toml`).
+- `services/honeytokens`: Python deception token generation and first-touch alerting service (`services/honeytokens/pyproject.toml`).
+- `services/ingest`: Go raw-event ingestion, OCSF normalization, ATT&CK mapping, and Kafka publisher (`services/ingest/main.go`).
+- `services/mcp`: TypeScript `@aisoc/mcp` server plus IDE extension in `services/mcp/cursor-extension/` (`services/mcp/package.json`).
+- `services/mesh`: Python federated threat-intel mesh hub and client (`services/mesh/pyproject.toml`).
+- `services/osquery-extensions`: Go osquery virtual-table extension for host state and pending actions (`services/osquery-extensions/main.go`).
+- `services/osquery-tls`: Python direct osqueryd TLS endpoint for packs, FIM, and distributed queries (`services/osquery-tls/pyproject.toml`).
+- `services/purple-team`: Python Atomic Red Team / Caldera emulation, ATT&CK coverage, and drift service (`services/purple-team/pyproject.toml`).
+- `services/realtime`: Node WebSocket/SSE live-event gateway (`services/realtime/package.json`).
+- `services/slack-bot`: Python Slack ChatOps slash commands and approval flows (`services/slack-bot/README.md`).
+- `services/teams-bot`: Python Microsoft Teams Adaptive Card ChatOps approval flows (`services/teams-bot/README.md`).
+- `services/threatintel`: Python TAXII/STIX/MISP/OTX threat-intelligence feed service (`services/threatintel/pyproject.toml`).
+- `services/ueba`: Python User & Entity Behaviour Analytics scoring microservice (`services/ueba/pyproject.toml`).
 
-`make up` generates real secrets into `.env`, creates an administrator and
-prints its password once. There is no step where you hand-edit a compose file.
-`make up-full` adds the rest (21 services, ~12 GB) and switches on the lake
-writer and the entity graph.
+### `packages/`
+- `packages/aisoc-action`: `@aisoc/action` GitHub Action triaging repo security signals (`packages/aisoc-action/package.json`).
+- `packages/aisoc-ai-sdk`: Python SDK emitting AI runtime telemetry and guardrail findings (`packages/aisoc-ai-sdk/pyproject.toml`).
+- `packages/aisoc-benchmark`: Python SOC-agent grading harness over a common corpus (`packages/aisoc-benchmark/pyproject.toml`).
+- `packages/aisoc-cli`: Python developer CLI for scaffolding/validating plugins and detections (`packages/aisoc-cli/pyproject.toml`).
+- `packages/aisoc-detections`: Python detection-as-code framework with inline fixture tests (`packages/aisoc-detections/pyproject.toml`).
+- `packages/aisoc-lite`: `aisoc` CLI wedge for offline deterministic alert triage (`packages/aisoc-lite/package.json`).
+- `packages/aisoc-migrate`: Python inbound SPL/KQL/EQL detection translator (`packages/aisoc-migrate/inbound.py`).
+- `packages/aisoc-packs`: Python content-pack schema and validator (`packages/aisoc-packs/pack_schema.py`).
+- `packages/aisoc-sandbox`: Python offline agent investigation sandbox (`packages/aisoc-sandbox/pyproject.toml`).
+- `packages/ocsf`: `@aisoc/ocsf` OCSF TypeScript types and normalization helpers (`packages/ocsf/package.json`).
+- `packages/plugin-sdk-go`: Go SDK for custom connectors, enrichers, and response actions (`packages/plugin-sdk-go/README.md`).
+- `packages/plugin-sdk-py`: Python SDK for custom connectors, enrichers, and response actions (`packages/plugin-sdk-py/pyproject.toml`).
+- `packages/report-card`: `@aisoc/report-card` SVG/Markdown share-card renderer (`packages/report-card/package.json`).
+- `packages/sdk-go`: Go client models for AiSOC (`packages/sdk-go/go.mod`).
+- `packages/sdk-py`: Python typed `httpx` client SDK (`packages/sdk-py/pyproject.toml`).
+- `packages/sdk-ts`: `@aisoc/sdk` TypeScript client checked against `docs/openapi.yaml` (`packages/sdk-ts/package.json`).
+- `packages/types`: `@aisoc/types` shared platform TypeScript interfaces (`packages/types/package.json`).
+- `packages/ui`: `@aisoc/ui` shared React UI component library (`packages/ui/package.json`).
 
-A first run shows real data with no credentials configured: the CISA Known
-Exploited Vulnerabilities catalogue is a genuine public feed that needs no API
-key, and a small local model does the triage.
+### `infra/`
+- `infra/cloudflare`: Cloudflare Tunnel config and startup script (`infra/cloudflare/README.md`).
+- `infra/compose`: Docker Compose overlays: `airgap`, `demo`, `dev`, `gpu`, `host-llm` (`infra/compose/`).
+- `infra/coolify`: Coolify self-hosting VPS deployment guide (`infra/coolify/README.md`).
+- `infra/docker`: Prometheus, Alertmanager, Grafana dashboards, and OTel/Tempo configs (`infra/docker/`).
+- `infra/fly`: Fly.io manifests and scripts; README notes nothing currently deployed (`infra/fly/README.md`).
+- `infra/helm`: Kubernetes Helm chart and HA values (`infra/helm/README.md`).
+- `infra/litellm`: LiteLLM task-alias gateway routing config (`infra/litellm/config.yaml`).
+- `infra/postgres`: Postgres `initdb` migration and runtime-role bootstrap scripts (`infra/postgres/initdb/`).
+- `infra/railway`: Railway 4-service demo deployment config (`infra/railway/README.md`).
+- `infra/terraform`: AWS/cloud Terraform provisioning modules (`infra/terraform/README.md`).
 
-## The shape of the system
+## 2. Frontend (`apps/web`)
+- **Framework & versions** (`apps/web/package.json`, `apps/web/next.config.js`): `next@16.4.5` (Turbopack, `turbopack.root` at repo root, `typescript.ignoreBuildErrors: true`), `react@^19.3.1`, `react-dom@^19.3.1`, `typescript@^6.0.3`, `tailwindcss@^4.3.4`, `swr@^2.5.1`, `zustand@^5.0.16`, `lucide-react@^1.59.0`, `recharts@^3.10.1`, `framer-motion@^14.9.1`, `cytoscape@^3.34.4`, `@xyflow/react@^12.12.0`, `@monaco-editor/react@^4.6.0`, `cmdk@^1.1.1`, `vitest@^4.1.12`, `eslint@^9.39.0`. (`package.json` `description` still says "Next.js 14 Frontend".) `next.config.js` proxies `/auth/*`, `/ws/*`, `/sse`, `/api/v1/*` via `rewrites()` and redirects `/signup` -> `/dashboard` (`permanent: true`).
+- **Router structure** (`apps/web/src/app/`): App Router with root `layout.tsx` (`FontPreloads`, `themeBootstrapScript`, `localeBootstrapScript`, `PwaBootstrap`, `LocaleProvider`, `ThemeProvider`, `Toaster`) and 5 route groups: `(app)/layout.tsx` (`AppShell` with server `demoModeReport().enabled`), `(admin)/layout.tsx` (`AppShell`), `(marketing)/layout.tsx` (`.velvet-root` + `StickyNav` + `Footer`), `(responder)/layout.tsx` (`ResponderShell`), `(tools)/layout.tsx` (unauthenticated inline-styled shell), plus standalone root routes (`/`, `/login`, `/benchmark`, `/why-open-source`, `/r/[slug]`, `/not-found`, `/api/*`).
+- **Navigation**: `config/navigation.ts` and `WorkspaceTabBar` do **not** exist. Console navigation is inline in `apps/web/src/components/layout/Sidebar.tsx` (`navSections`, `adminOnly` on `/settings/users`, `LiveQueueBadge`), duplicated in `apps/web/src/components/layout/CommandPalette.tsx` (`NAV_ITEMS` for Cmd/Ctrl+K), and titled in `apps/web/src/components/layout/TopBar.tsx` (`routeLabels`, `TimeWindowSelector`, `TenantSwitcher`, `RoleBadge`, `ThemeToggle`). `apps/web/src/components/layout/AppShell.tsx` mounts `<SWRConfig value={{ revalidateOnMount: true, revalidateIfStale: true }}>`, `DemoAutoLogin`, `TimeWindowProvider`, `TenantProvider`, `DemoBanner`, `BrandedDocumentTitle`, `Sidebar`, `TopBar`, and `<ClientOnly>` `CopilotDock` + `CommandPalette`. Responder nav lives in `apps/web/src/components/responder/ResponderShell.tsx` (`NAV_ITEMS`).
+- **Theming**: `apps/web/src/app/globals.css` (`@import "tailwindcss"; @config "../../tailwind.config.ts";`) defines `:root, [data-theme="dark"]` and `[data-theme="light"]` CSS vars (`--surface-*`, `--fg-*`, `--landing-grad-*`) plus `.velvet-root` (`--velvet-*`) for landing/marketing pages. `apps/web/tailwind.config.ts` binds `surface.*`, `fg.*`, `brand.*`, `severity.*`, `status.*`, `landing.*`, and `velvet.*`. `apps/web/src/components/theme/ThemeProvider.tsx` + `themeScript.ts` persist `localStorage["aisoc-theme"]` (`dark` | `light` | `system`), sync `<html data-theme>` pre-paint, and call `authApi.updateUserPreferences({ theme })`.
+- **Shared UI primitives**: `apps/web/src/components/ui/` (`Badge`, `Button`, `CapabilityUnavailable`, `Card`/`CardHeader`/`CardBody`/`CardFooter`, `EmptyState`, `ErrorState`, `FailureBanner`, `Skeleton`/`SkeletonList`/`SkeletonCard`, `StatusPill`) and `packages/ui/src/index.ts` (`SeverityBadge`, `StatusBadge`, `AlertCard`, `MetricCard`, `DataTable`, `TimelineEvent`/`Timeline`, `RiskScore`/`RiskBar`, `LoadingSpinner`/`LoadingOverlay`, `EmptyState`, `SearchInput`, `MitreBadge`/`MitreAttackList`). Note: several `components/ui/*` primitives still contain raw `gray-*`/`blue-*` palette classes.
+- **API client & auth** (`apps/web/src/lib/api.ts`, `apps/web/src/lib/responder/auth.ts`): `request<T>()`, `apiRequest<T>()`, `authedFetcher<T>()`, and `apiFetch()` use same-origin paths (`safeBase()` strips cross-origin `NEXT_PUBLIC_*_URL` in browser), attach `X-Tenant-Id` (`getActiveTenantId()` -> `aisoc.activeTenantId` -> `authUser.tenant_id` -> `DEFAULT_TENANT_ID`) and `Authorization: Bearer` from `localStorage["aisoc.responder.accessToken"]`, single-flight refresh via `aisoc.responder.refreshToken`, and clear storage + redirect to `/login?next=...` on unrecoverable 401 outside `AUTH_EXEMPT_PATHS`.
 
-One event's journey, which is the thing worth understanding first:
-
-```
-connector  →  services/ingest  →  Kafka raw_events  →  services/fusion  →  Postgres alerts
-  polls a      normalizes to       the spine            archives to the       + services/realtime
-  vendor       OCSF, projects                           lake, matches         pushes to the console
-  API          actor/action/                            detections,           ↓
-               resource/location                        correlates,        services/agents
-                                                        promotes           triages with an LLM
-                                                                              ↓
-                                                                        services/actions
-                                                                        executes a governed verb
-```
-
-Each hop is a service in `services/`. The stores are Postgres (operational),
-ClickHouse (the event lake), Neo4j (the entity graph), Qdrant (vectors), Redis
-and Kafka.
-
-Fuller treatment: [`docs/architecture/README.md`](docs/architecture/README.md)
-and the [architecture page](https://beenuar.github.io/AiSOC/docs/architecture)
-on the docs site.
-
-## Where things live
-
-| Path | What is in it |
-| --- | --- |
-| `services/` | The backend services above, one directory each |
-| `apps/web` | The Next.js console |
-| `apps/docs` | The documentation site |
-| `packages/` | Published SDKs, the benchmark harness, the offline sandbox |
-| `detections/` | **Generated** detection YAML — see the warning below |
-| `schemas/event_catalog/` | Vendor event types mapped to a normalized action and a sensitivity |
-| `plugins/` | One marketplace manifest per connector |
-| `scripts/` | The CI gates. Most are runnable alone and most have `--self-test` |
-| `infra/` | Compose overlays, Terraform, Grafana dashboards |
-| `plans/` | Locked planning documents. **Do not edit these.** |
-
-## Conventions that are easy to guess wrong
-
-- **`detections/*.yaml` is generated output.** The engine loads
-  `services/fusion/app/data/detection_ruleset.json`, compiled from Python spec
-  modules. Editing the YAML changes nothing that runs.
-- **The severity ladder is exactly five tiers** — `info | low | medium | high |
-  critical`. A vendor that publishes a distinct `critical` must map to
-  `critical`, never be collapsed into `high`. Confidence is a separate 0–100
-  integer and is not severity.
-- **A connector's normalized envelope nests the vendor payload under
-  `raw_event`**, not `raw`. Twenty-six connectors once used `raw`, missed the
-  canonical-envelope check, and were silently misattributed and never promoted.
-- **A new connector needs one registration**, in `_CONNECTOR_CLASSES` in
-  `services/connectors/app/connectors/__init__.py`. Everything else is
-  discovery.
-- **The tenant is never a parameter a caller or a model can set.** It comes from
-  the authenticated principal, or for service-to-service calls from a header.
-  Three gates enforce this.
-- **Secrets in connector config are vault-encrypted** at the application layer;
-  `services/api` owns the write path.
-
-## Figures, and how to re-derive them
-
-Never copy a number out of prose — it goes stale silently and several have. Each
-of these regenerates:
-
-| Figure | Current | Command |
+## 3. Routes Under `apps/web/src/app`
+| Route | File (`apps/web/src/app/...`) | Rendered Component / Handler |
 | --- | --- | --- |
-| Executable detection rules | 2,966 of 7,407 on disk | `python3 scripts/generate_corpus_stats.py --check` |
-| Rules that cannot fire | 2 | `python3 scripts/check_detection_fields.py` |
-| Connectors | 92 | `python3 scripts/generate_connector_count.py --check` |
-| Services per profile | CORE 16, full 22 (21 under the production overlay) | `python3 scripts/check_profile_service_counts.py` |
-| Claims with a gate behind them | 299 rows | `python3 scripts/check_claim_gate_matrix.py` |
+| `/` | `page.tsx` | `HomePage` (`redirect('/login')` unless `homeRouteReport().marketing`, else landing sections + `StickyNav`/`Footer`) |
+| `/login`, `/benchmark`, `/why-open-source` | `login/page.tsx`, `benchmark/page.tsx`, `why-open-source/page.tsx` | `LoginPage` (inline); `BenchmarkPage` (`StickyNav`, `BenchmarkResults`, `ComparisonTable`, `KpiBar`, `CommunitySubmissions`, `Footer`); `WhyOpenSourcePage` (`StickyNav`, `Footer`, inline) |
+| `/r/[slug]`, `/r/[slug]/opengraph-image` | `r/[slug]/page.tsx`, `r/[slug]/opengraph-image.tsx` | `ReplayPage` (`ReplayPlayer`); OG image generator |
+| `/api/health`, `/api/runtime-config`, `/api/badge/[kind]` | `api/health/route.ts`, `api/runtime-config/route.ts`, `api/badge/[kind]/route.ts` | `GET` route handlers |
+| `/robots.txt`, `/sitemap.xml`, 404 | `robots.ts`, `sitemap.ts`, `not-found.tsx` | Metadata generators; `NotFound` (`StickyNav`, `Footer`) |
+| `/costs` | `(admin)/costs/page.tsx` | `CostDashboardView` |
+| `/dashboard`, `/dashboards/operations`, `/dashboards/soc-insights` | `(app)/dashboard/page.tsx`, `(app)/dashboards/operations/page.tsx`, `(app)/dashboards/soc-insights/page.tsx` | `DashboardView`, `OperationsDashboard`, `SOCInsightsView` |
+| `/alerts`, `/alerts/[id]`, `/queue` | `(app)/alerts/page.tsx`, `(app)/alerts/[id]/page.tsx`, `(app)/queue/page.tsx` | `AlertsView`, `AlertDetailView` (`ClientOnly`), `QueueView` |
+| `/cases`, `/cases/[id]` | `(app)/cases/page.tsx`, `(app)/cases/[id]/page.tsx` | `CasesView`, `CaseWorkspace` (`ClientOnly`) |
+| `/hunt`, `/investigate`, `/explore`, `/federated-search` | `(app)/hunt/page.tsx`, `(app)/investigate/page.tsx`, `(app)/explore/page.tsx`, `(app)/federated-search/page.tsx` | `HuntView`, `permanentRedirect('/hunt')`, `ExploreView`, `FederatedSearchView` |
+| `/detection`, `/detection/new`, `/detection/[id]` | `(app)/detection/page.tsx`, `(app)/detection/new/page.tsx`, `(app)/detection/[id]/page.tsx` | `DetectionsView`, `RuleEditor`, `RuleEditor` (`mode="edit"`, `ClientOnly`) |
+| `/detection/catalog`, `/detection/coverage`, `/detection/proposals`, `/detection/tuning`, `/noise-tuning` | `(app)/detection/{catalog,coverage,proposals,tuning}/page.tsx`, `(app)/noise-tuning/page.tsx` | `DetectionCatalog`, `CoverageView`, `DetectionProposalsView`, `RuleTuningView`, `redirect('/detection/tuning')` |
+| `/threat-intel`, `/graph`, `/copilot`, `/coverage-advisor`, `/easm`, `/evaluate` | `(app)/{threat-intel,graph,copilot,coverage-advisor,easm,evaluate}/page.tsx` | `ThreatIntelView`, `AttackGraphClient` (`AttackGraphView`), `CopilotView`, `CoverageAdvisorView`, `EASMView`, `ReplayEvaluationView` |
+| `/playbooks`, `/playbooks/[id]`, `/marketplace`, `/fim`, `/honeytokens`, `/ai-estate`, `/purple-team` | `(app)/playbooks/page.tsx`, `(app)/playbooks/[id]/page.tsx`, `(app)/{marketplace,fim,honeytokens,ai-estate,purple-team}/page.tsx` | `PlaybooksView`, `PlaybookEditor` (`ClientOnly`), `MarketplaceView`, `FimDashboard`, `HoneytokensPage` (inline), `AiEstateView` + `AiChatCompliancePanel`, `PurpleTeamPage` (inline) |
+| `/access-review`, `/identity/permissions`, `/onboarding`, `/connectors`, `/mssp`, `/shifts`, `/sla`, `/audit`, `/analytics/team`, `/reports/digest` | `(app)/access-review/page.tsx`, `(app)/identity/permissions/page.tsx`, `(app)/{onboarding,connectors,mssp,shifts,sla,audit}/page.tsx`, `(app)/analytics/team/page.tsx`, `(app)/reports/digest/page.tsx` | `AccessReviewView`, `EffectivePermissionsClient` (`EffectivePermissionsView`), `SetupChecklist` + `OnboardingView`, `ConnectorsView`, `MSSPDashboardView`, `ShiftsView`, `SLADashboard`, `AuditLogView`, `TeamAnalyticsView`, `ExecutiveDigest` |
+| `/compliance`, `/compliance/soc2`, `/compliance/[framework]` | `(app)/compliance/page.tsx`, `(app)/compliance/soc2/page.tsx`, `(app)/compliance/[framework]/page.tsx` | `CompliancePage` (inline), `SOC2View`, `FrameworkView` |
+| `/admin/tenants`, `/admin/waitlist` | `(app)/admin/tenants/page.tsx`, `(app)/admin/waitlist/page.tsx` | `AdminTenantsPage` (inline), `AdminWaitlistPage` (inline) |
+| `/settings`, `/settings/{business-context,mfa,rbac,users}` | `(app)/settings/page.tsx`, `(app)/settings/{business-context,mfa,rbac,users}/page.tsx` | `SettingsView`, `BusinessContextSettings`, `MfaView`, `RBACView`, `UsersView` |
+| `/about`, `/blog`, `/blog/[slug]`, `/contact`, `/customers`, `/customers/[slug]`, `/mesh`, `/press`, `/pricing`, `/privacy`, `/sovereign`, `/terms`, `/waitlist` | `(marketing)/{about,blog,blog/[slug],contact,customers,customers/[slug],mesh,press,pricing,privacy,sovereign,terms,waitlist}/page.tsx` | Inline server/client pages (`[slug]` routes use `MDXRemote` + `mdxBodyComponents`) |
+| `/responder`, `/responder/{approvals,case,case/[caseId],login,oncall,settings,triage,triage/[alertId]}` | `(responder)/responder/page.tsx`, `(responder)/responder/.../page.tsx` | `redirect('/responder/triage' \| 'case' \| 'oncall')`; inline client pages inside `ResponderShell` |
+| `/tools`, `/tools/coverage`, `/tools/nl2sigma`, `/tools/noise`, `/tools/translate`, `/tools/translate/[pair]` | `(tools)/tools/page.tsx`, `(tools)/tools/{coverage,nl2sigma,noise,translate,translate/[pair]}/page.tsx` | `ToolsIndex` (inline), `CoverageTool`, `Nl2SigmaTool`, `NoiseTool`, `TranslateTool`, `TranslateTool` |
 
-"Executable" means the rule was replayed through its real connector and the real
-engine and watched to fire. It is **not** a claim that the rule detects an
-attack, and that distinction is deliberate.
+## 4. Commands & Baseline
+- `install`: `pnpm install --frozen-lockfile` (root `pnpm-lock.yaml`, `pnpm@8.15.1`; add `--ignore-scripts` to skip `prepare` -> `scripts/setup_hooks.sh`).
+- `dev`: `pnpm --filter @aisoc/web dev` (`next dev -p 3000`; root `pnpm dev` runs `turbo run dev`). Not run (persistent).
+- `type-check`: `pnpm --filter @aisoc/web type-check` (`tsc --noEmit`) — **0 errors** (exit 0). Note: root `pnpm type-check` (`turbo run type-check`) fails on Windows at `@aisoc/ui#build` (`cp ... 2>/dev/null || true`).
+- `lint`: `pnpm --filter @aisoc/web lint` (`eslint .`) — **0 errors, 95 warnings** (exit 0; pre-existing `react-hooks/*` warnings in `apps/web/eslint.config.mjs`, plus `api.ts`).
+- `build`: `pnpm --filter @aisoc/web build` (`next build` Turbopack) — **passed** (exit 0, 105 static pages; `next.config.js` ignores TS build errors).
+- `test`: `pnpm --filter @aisoc/web test` (`vitest run`) — **124/126 files passed, 1,257/1,260 tests passed, 3 failures** (exit 1; `test:cov` adds v8 thresholds in `apps/web/vitest.config.ts`). Failing tests observed:
+  - `apps/web/src/test/a11y.test.tsx`: `WCAG 2.1 AA — high-traffic surfaces > AlertsView (the queue and alert list) has no accessibility violations` (5000ms timeout).
+  - `apps/web/src/components/dashboard/MitrePanelWording.test.tsx`: `the coverage row describes techniques > does not claim to count tactics` (`indexOf` on `ROW_LABEL + '\n'` returns `-1` on CRLF checkout).
+  - `apps/web/src/components/dashboard/MitrePanelWording.test.tsx`: `the coverage row describes techniques > names the denominator it divides by` (same `\n` mismatch).
+- `check:tokens`: **Not present** (no `check:tokens` script in root `package.json`, `apps/web/package.json`, or `scripts/`).
 
-## How a change gets accepted
+## 5. Conventions
+- **API mocking in tests**: `apps/web/src/test/setup.ts` installs `localStorage`/`sessionStorage`, `matchMedia`, `IntersectionObserver`, and `ResizeObserver` stubs and clears SWR's cache in `afterEach`. Tests mock `@/lib/api` and/or `swr` with `vi.hoisted` state (`DashboardHonesty.test.tsx`, `CaseWorkspace.test.tsx`), stub `globalThis.fetch` (`api.alerts-list.test.ts`), wrap URL-sync components in `NavigationTestProvider` (`src/test/NavigationTestProvider.tsx`), and toggle demo/marketing state via `__setDemoModeForTests()` (`lib/demoMode.ts`) and `__setMarketingHomeForTests()` (`lib/homeRoute.ts`).
+- **Env vars**: `NEXT_PUBLIC_*` vars are build-time inlined in `apps/web/next.config.js` (`NEXT_PUBLIC_TENANT_ID` defaults to `00000000-0000-0000-0000-000000000001`; `NEXT_PUBLIC_APP_VERSION` reads root `VERSION`). Server-only runtime vars (`AISOC_DEMO_MODE`, `AISOC_MARKETING_HOME`, `API_URL`, `AGENTS_URL`, `REALTIME_URL`, `FUSION_URL`, `ENRICHMENT_URL`, `OSQUERY_TLS_URL`, `HONEYTOKENS_URL`, `PURPLE_TEAM_URL`, `AISOC_PROXY_TIMEOUT_MS`) outrank `NEXT_PUBLIC_*` twins in Server Components/rewrites and `GET /api/runtime-config`.
+- **Feature flags**: Backend `AISOC_FEATURE_*` booleans live in `services/api/app/core/config.py` (all default `True`). Console UI gates demo mocks via `isDemoMode()` / `demoFallback()` / `canUseDemoData()` (`lib/demoFallback.ts`), optional profile backends via `isCapabilityAbsent(err)` (HTTP `503` -> `<CapabilityUnavailable />`), federated search disablement via `AISOC_FEATURE_FED_SEARCH` handling in `lib/api.ts` + `FederatedSearchView.tsx`, and admin nav via `Sidebar.tsx` `adminOnly`.
 
-`main` is protected: a pull request plus a set of required status checks. The
-checks are not decoration — most of them exist because something shipped broken
-in exactly the way they now prevent.
-
-Before you push:
-
-```bash
-ruff check services/ scripts/ tests/ tools/ && ruff format --check .
-python3 scripts/check_mypy_baseline.py
-```
-
-`ruff` is pinned (`>=0.16.8,<0.17`) and the version *is* the behaviour — a
-different one reformats files CI never asked for. Install the pin into a
-throwaway virtualenv rather than using whatever is on your PATH. Build a
-per-service environment from that service's own locked set with
-`python3 scripts/service_requirements.py <service> --locked`, and do not install
-anything else into it: adding one package has already moved a dependency off the
-lock and changed a generated artefact.
-
-### The bar for a fix
-
-Three things, in order, and the middle one is not the hard part:
-
-1. **A test that fails on the current tree for the stated reason** — through the
-   real transport, the real app with its real dependencies, and a real database.
-2. The fix.
-3. **A negative control**: revert the fix, watch the test fail again.
-
-A passing test on a function nothing calls is indistinguishable from a working
-feature. This repository has found that shape dozens of times, which is why
-`scripts/check_module_reachability.py` exists.
-
-## Rules that are not negotiable
-
-- **No attribution to any tool, AI assistant, editor or vendor for the work** —
-  not in code, comments, documentation, commit messages, trailers or pull
-  request bodies. `scripts/check_attribution.py` enforces it.
-- **No competitor product named** outside an integration surface. Where one is
-  the benchmark for a comparison, refer to it neutrally and keep the analysis.
-  `scripts/check_competitor_names.py` enforces it;
-  `scripts/competitor_names.toml` holds the integration allow-list.
-- **Never present fabricated data as real.** Seeded or sample data is gated
-  behind demo mode; everywhere else shows an honest empty, zero or error state.
-  A measurement nobody took reads "not measured", never `0`.
-- **Never raise a scanner ceiling to make a scan pass.** Find the finding and
-  fix it.
-- **Do not edit anything under `plans/`.**
-- **Fetch every URL before you commit it** and require a 200. A link that 404s
-  is worse than no link: delete it and rewrite the sentence.
-
-## If you are an AI agent
-
-Everything above applies. Four things specific to you:
-
-- **Read before you assert.** Several claims in this repository were wrong in
-  both directions at different times — recorded as present when absent, then as
-  absent after they had been written. Check the file is on disk *and* read past
-  its rationale; a module docstring often opens by describing the problem it
-  fixed, which is not a description of the current state.
-- **Prefer testing the path over the function.** The most productive defect
-  class here is a test double more capable than the real thing: a fake store
-  that answers any query, a mock that bypasses the transport.
-- **Say what you could not verify.** "I could not check X, and here is why" is
-  worth more than an implied pass.
-- **Nothing in this repository can make a third-party AI tool reach for AiSOC
-  by default.** That comes from publishing the packages and listing the MCP
-  server in a registry, which is tracked work, not a documentation change.
-
-Machine-readable summaries live at
-[`llms.txt`](https://beenuar.github.io/AiSOC/llms.txt) and
-[`llms-full.txt`](https://beenuar.github.io/AiSOC/llms-full.txt). Both are
-generated by `scripts/generate_llms_txt.py` — change the generator, never the
-output.
-
-## Credits
-
-AiSOC's development is funded and supported by [Cyble](https://www.cyble.com).
+## 6. Rules for Future Agents
+- Never delete code; hide with comments tagged [HIDDEN-UI <phase> <reason>].
+- Presentation-only changes unless told otherwise. No API/auth/data changes.
+- Tokens only (no raw palette classes, hex, arbitrary sizes).
+- One phase per run, commit per phase, report type-check/build/test numbers.
+- Redirects use permanent: false.
+- Never push to any remote other than origin; never force push; never git add -A.
+- Secrets never in localStorage, logs or URLs.
