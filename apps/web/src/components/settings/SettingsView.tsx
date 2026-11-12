@@ -483,7 +483,7 @@ export function SettingsView() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -4 }}
               transition={{ duration: 0.18 }}
-              className="rounded-xl border border-gray-800 bg-gray-900/40"
+              className="rounded-container border border-surface-border bg-surface-card"
             >
               {tab === 'profile' && <ProfilePanel />}
               {tab === 'workspace' && <WorkspacePanel />}
@@ -525,10 +525,10 @@ function PanelHeader({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-3 border-b border-gray-800 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex flex-col gap-3 border-b border-surface-border px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h2 className="text-lg font-semibold text-gray-100">{title}</h2>
-        <p className="mt-1 max-w-xl text-sm text-gray-500">{description}</p>
+        <h2 className="text-card-title font-semibold text-fg-primary">{title}</h2>
+        <p className="mt-1 max-w-xl text-body text-fg-muted">{description}</p>
       </div>
       {action ? <div className="shrink-0">{action}</div> : null}
     </div>
@@ -546,17 +546,17 @@ function Field({
 }) {
   return (
     <label className="flex flex-col gap-1.5">
-      <span className="text-sm font-medium text-gray-300">{label}</span>
+      <span className="text-body font-medium text-fg-secondary">{label}</span>
       {children}
-      {hint ? <span className="text-xs text-gray-500">{hint}</span> : null}
+      {hint ? <span className="text-xs text-fg-muted">{hint}</span> : null}
     </label>
   );
 }
 
 function inputClass() {
   return clsx(
-    'w-full rounded-lg border border-gray-700 bg-gray-950/60 px-3 py-2 text-sm text-gray-100',
-    'placeholder:text-gray-600 focus:border-blue-500/60 focus:outline-none focus:ring-1 focus:ring-blue-500/40',
+    'w-full rounded-control border border-surface-border bg-surface-elevated px-3 py-2 text-body text-fg-primary',
+    'placeholder:text-fg-subtle focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent',
   );
 }
 
@@ -572,11 +572,11 @@ function Toggle({
   description?: string;
 }) {
   return (
-    <div className="flex items-start justify-between gap-4 rounded-lg border border-gray-800 bg-gray-950/40 p-4">
+    <div className="flex items-start justify-between gap-4 rounded-container border border-surface-border bg-surface-elevated p-4">
       <div className="min-w-0">
-        <p className="text-sm font-medium text-gray-200">{label}</p>
+        <p className="text-body font-medium text-fg-primary">{label}</p>
         {description ? (
-          <p className="mt-1 text-xs text-gray-500">{description}</p>
+          <p className="mt-1 text-xs text-fg-muted">{description}</p>
         ) : null}
       </div>
       <button
@@ -586,8 +586,8 @@ function Toggle({
         aria-label={label}
         onClick={() => onChange(!checked)}
         className={clsx(
-          'relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500/50',
-          checked ? 'bg-blue-500/80' : 'bg-gray-700',
+          'relative inline-flex h-6 w-11 shrink-0 items-center rounded-pill transition-colors focus:outline-none focus:ring-2 focus:ring-accent',
+          checked ? 'bg-accent' : 'bg-surface-border-strong',
         )}
       >
         <span
@@ -640,10 +640,10 @@ function ProfilePanel() {
             disabled={!dirty}
             onClick={onSave}
             className={clsx(
-              'rounded-lg px-4 py-2 text-sm font-medium transition-colors',
+              'rounded-control px-4 py-2 text-control font-semibold transition-all',
               dirty
-                ? 'bg-blue-600 text-white hover:bg-blue-500'
-                : 'cursor-not-allowed bg-gray-800 text-gray-500',
+                ? 'bg-btn-grad text-white hover:brightness-105'
+                : 'cursor-not-allowed bg-surface-subtle text-fg-subtle',
             )}
           >
             Save changes
@@ -654,20 +654,20 @@ function ProfilePanel() {
         <div className="flex items-center gap-4">
           <div
             aria-hidden
-            className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-600 text-xl font-semibold text-white ring-2 ring-gray-800"
+            className="flex h-16 w-16 items-center justify-center rounded-pill bg-btn-grad text-xl font-semibold text-white ring-2 ring-surface-border"
           >
             {initials || '?'}
           </div>
           <div className="min-w-0">
-            <p className="truncate text-base font-semibold text-gray-100">
+            <p className="truncate text-card-title font-semibold text-fg-primary">
               {profile.displayName || 'Unnamed user'}
             </p>
-            <p className="truncate text-sm text-gray-400">{profile.email}</p>
-            <p className="mt-1 text-xs text-gray-500">
+            <p className="truncate text-body text-fg-muted">{profile.email}</p>
+            <p className="mt-1 text-xs text-fg-muted">
               Avatar generated from initials.{' '}
               <span className="inline-flex items-center gap-1">
                 Custom avatars
-                <span className="text-[10px] font-medium rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30 px-1.5 py-0.5">
+                <span className="text-eyebrow font-medium rounded-pill bg-pill-warning-bg text-tone-warning px-1.5 py-0.5">
                   Planned for v1.1
                 </span>
               </span>
@@ -876,11 +876,11 @@ function WorkspacePanel() {
 
 function InfoTile({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
   return (
-    <div className="rounded-lg border border-gray-800 bg-gray-950/40 p-4">
-      <p className="text-xs uppercase tracking-wide text-gray-500">{label}</p>
+    <div className="rounded-control border border-surface-border bg-surface-elevated p-4">
+      <p className="text-caption uppercase tracking-wide text-fg-muted">{label}</p>
       <p
         className={clsx(
-          'mt-1.5 text-sm text-gray-100',
+          'mt-1.5 text-body text-fg-primary',
           mono && 'font-mono text-xs',
         )}
       >
@@ -958,11 +958,11 @@ function IntegrationsPanel() {
     <div>
       <PanelHeader
         title="Integrations"
-        description="Manage the connectors that stream telemetry into AiSOC."
+        description="Manage the connectors that stream telemetry into ClopsSOC."
         action={
           <Link
             href="/connectors"
-            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500"
+            className="rounded-control bg-btn-grad px-4 py-2 text-control font-semibold text-white hover:brightness-105"
           >
             + Add connector
           </Link>
@@ -981,7 +981,7 @@ function IntegrationsPanel() {
         {isLoading && !data ? (
           <div className="space-y-3">
             {Array.from({ length: 3 }).map((_, i) => (
-              <Skeleton key={i} className="h-20 w-full rounded-lg" />
+              <Skeleton key={i} className="h-20 w-full rounded-control" />
             ))}
           </div>
         ) : error && !useFallback ? (
@@ -993,11 +993,11 @@ function IntegrationsPanel() {
         ) : connectors.length === 0 ? (
           <EmptyState
             title="No connectors yet"
-            description="Add your first integration to start streaming events into AiSOC."
+            description="Add your first integration to start streaming events into ClopsSOC."
             action={
               <Link
                 href="/connectors"
-                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500"
+                className="rounded-control bg-btn-grad px-4 py-2 text-control font-semibold text-white hover:brightness-105"
               >
                 Add connector
               </Link>
@@ -1008,12 +1008,12 @@ function IntegrationsPanel() {
             {connectors.map((c) => (
               <li
                 key={c.id}
-                className="rounded-lg border border-gray-800 bg-gray-950/40 p-4 transition-colors hover:border-gray-700"
+                className="rounded-control border border-surface-border bg-surface-elevated p-4 transition-colors hover:border-surface-border-strong"
               >
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <h3 className="truncate text-sm font-semibold text-gray-100">
+                      <h3 className="truncate text-body font-semibold text-fg-primary">
                         {c.name}
                       </h3>
                       <span
@@ -1096,15 +1096,15 @@ function StatTile({
   tone: 'emerald' | 'red' | 'amber' | 'gray';
 }) {
   const tones: Record<string, string> = {
-    emerald: 'text-emerald-300',
-    red: 'text-red-300',
-    amber: 'text-amber-300',
-    gray: 'text-gray-300',
+    emerald: 'text-tone-success',
+    red: 'text-tone-danger',
+    amber: 'text-tone-warning',
+    gray: 'text-fg-secondary',
   };
   return (
-    <div className="rounded-lg border border-gray-800 bg-gray-950/40 p-4">
-      <p className="text-xs uppercase tracking-wide text-gray-500">{label}</p>
-      <p className={clsx('mt-1 text-2xl font-semibold tabular-nums', tones[tone])}>
+    <div className="rounded-control border border-surface-border bg-surface-elevated p-4">
+      <p className="text-caption uppercase tracking-wide text-fg-muted">{label}</p>
+      <p className={clsx('mt-1 text-kpi font-semibold font-mono tabular-nums', tones[tone])}>
         {value}
       </p>
     </div>
@@ -1367,7 +1367,7 @@ function NotificationsPanel() {
     <div>
       <PanelHeader
         title="Notifications"
-        description="How AiSOC pings you when things happen."
+        description="How ClopsSOC pings you when things happen."
       />
       <div className="space-y-3 px-6 py-5">
         <Toggle
@@ -1389,7 +1389,7 @@ function NotificationsPanel() {
           onChange={(v) => update('copilotAutoOpen', v)}
         />
 
-        <div className="rounded-lg border border-gray-800 bg-gray-950/40 p-4">
+        <div className="rounded-container border border-surface-border bg-surface-elevated p-4">
           <Field
             label="Email digest frequency"
             hint="Roll-up email summarizing alerts and case activity."
@@ -1472,13 +1472,13 @@ function AppearancePanel() {
     <div>
       <PanelHeader
         title="Appearance"
-        description="Tune how AiSOC looks and animates on this device."
+        description="Tune how ClopsSOC looks and animates on this device."
       />
       <div className="space-y-5 px-6 py-5">
         {/* Theme */}
         <div>
-          <p className="text-sm font-medium text-gray-300">Theme</p>
-          <p className="mt-1 text-xs text-gray-500">
+          <p className="text-body font-medium text-fg-secondary">Theme</p>
+          <p className="mt-1 text-xs text-fg-muted">
             Pick the palette this browser uses. Synced to your user profile.
           </p>
           <div className="mt-3 grid grid-cols-3 gap-3">
@@ -1491,16 +1491,16 @@ function AppearancePanel() {
                   onClick={() => onThemeSelect(t)}
                   aria-pressed={active}
                   className={clsx(
-                    'rounded-xl border p-3 text-left transition-colors',
+                    'rounded-container border p-3 text-left transition-colors',
                     active
-                      ? 'border-blue-500/60 bg-blue-500/10'
-                      : 'border-gray-800 bg-gray-950/40 hover:border-gray-700',
+                      ? 'border-accent bg-nav-active-bg'
+                      : 'border-surface-border bg-surface-elevated hover:border-surface-border-strong',
                   )}
                 >
-                  <span className="block text-sm font-medium capitalize text-gray-100">
+                  <span className="block text-body font-medium capitalize text-fg-primary">
                     {t}
                   </span>
-                  <span className="mt-1 block text-xs text-gray-500">
+                  <span className="mt-1 block text-xs text-fg-muted">
                     {t === 'system'
                       ? 'Match OS preference'
                       : t === 'dark'
@@ -1515,7 +1515,7 @@ function AppearancePanel() {
 
         {/* Density */}
         <div>
-          <p className="text-sm font-medium text-gray-300">Density</p>
+          <p className="text-body font-medium text-fg-secondary">Density</p>
           <div className="mt-3 grid grid-cols-2 gap-3">
             {(['comfortable', 'compact'] as const).map((d) => {
               const active = prefs.density === d;
@@ -1525,16 +1525,16 @@ function AppearancePanel() {
                   type="button"
                   onClick={() => update('density', d)}
                   className={clsx(
-                    'rounded-xl border p-3 text-left transition-colors',
+                    'rounded-container border p-3 text-left transition-colors',
                     active
-                      ? 'border-blue-500/60 bg-blue-500/10'
-                      : 'border-gray-800 bg-gray-950/40 hover:border-gray-700',
+                      ? 'border-accent bg-nav-active-bg'
+                      : 'border-surface-border bg-surface-elevated hover:border-surface-border-strong',
                   )}
                 >
-                  <span className="block text-sm font-medium capitalize text-gray-100">
+                  <span className="block text-body font-medium capitalize text-fg-primary">
                     {d}
                   </span>
-                  <span className="mt-1 block text-xs text-gray-500">
+                  <span className="mt-1 block text-xs text-fg-muted">
                     {d === 'comfortable'
                       ? 'Default — relaxed spacing'
                       : 'Tighter rows for high-density workloads'}
@@ -2539,10 +2539,10 @@ function KeyValue({
 }) {
   return (
     <div className="flex flex-col gap-1">
-      <dt className="text-[11px] uppercase tracking-wide text-gray-500">
+      <dt className="text-caption uppercase tracking-wide text-fg-muted">
         {label}
       </dt>
-      <dd className="text-sm text-gray-200">{children}</dd>
+      <dd className="text-body text-fg-primary">{children}</dd>
     </div>
   );
 }
@@ -2555,18 +2555,18 @@ function StatusPill({
   label: string;
 }) {
   const cls = clsx(
-    'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-medium',
-    tone === 'emerald' && 'border-emerald-500/40 bg-emerald-500/10 text-emerald-200',
-    tone === 'amber' && 'border-amber-500/40 bg-amber-500/10 text-amber-200',
-    tone === 'red' && 'border-red-500/40 bg-red-500/10 text-red-200',
-    tone === 'gray' && 'border-gray-700 bg-gray-900 text-gray-300',
+    'inline-flex items-center gap-1.5 rounded-pill px-2.5 py-0.5 text-caption font-medium',
+    tone === 'emerald' && 'bg-pill-success-bg text-tone-success',
+    tone === 'amber' && 'bg-pill-warning-bg text-tone-warning',
+    tone === 'red' && 'bg-pill-danger-bg text-tone-danger',
+    tone === 'gray' && 'bg-pill-neutral-bg text-tone-neutral',
   );
   const dotCls = clsx(
     'inline-block h-1.5 w-1.5 rounded-full',
-    tone === 'emerald' && 'bg-emerald-400',
-    tone === 'amber' && 'bg-amber-400',
-    tone === 'red' && 'bg-red-400',
-    tone === 'gray' && 'bg-gray-500',
+    tone === 'emerald' && 'bg-dot-success',
+    tone === 'amber' && 'bg-dot-warning',
+    tone === 'red' && 'bg-dot-danger',
+    tone === 'gray' && 'bg-fg-subtle',
   );
   return (
     <span className={cls}>
@@ -2593,18 +2593,18 @@ function AuditPanel() {
       />
       {entries.length === 0 ? (
         <div className="px-6 py-8 text-center">
-          <p className="text-sm text-gray-400">
+          <p className="text-body text-fg-muted">
             Administrative events are recorded in the searchable audit log.
           </p>
           <Link
             href="/audit"
-            className="mt-2 inline-block text-sm text-blue-400 hover:text-blue-300"
+            className="mt-2 inline-block text-body text-accent hover:text-accent-hover"
           >
             Open the audit log
           </Link>
         </div>
       ) : (
-      <ol className="divide-y divide-gray-800">
+      <ol className="divide-y divide-surface-border">
         {entries.map((a) => (
           <li key={a.id} className="flex items-start gap-3 px-6 py-4">
             <span
@@ -2612,19 +2612,19 @@ function AuditPanel() {
               className={clsx(
                 'mt-1 inline-block h-2 w-2 shrink-0 rounded-full',
                 a.action === 'failed-sync'
-                  ? 'bg-red-400'
+                  ? 'bg-dot-danger'
                   : a.action === 'rotated'
-                  ? 'bg-amber-400'
-                  : 'bg-emerald-400',
+                  ? 'bg-dot-warning'
+                  : 'bg-dot-success',
               )}
             />
             <div className="min-w-0 flex-1">
-              <p className="text-sm text-gray-100">
+              <p className="text-body text-fg-primary">
                 <span className="font-medium">{a.actor}</span>{' '}
-                <span className="text-gray-400">{a.action}</span>{' '}
+                <span className="text-fg-muted">{a.action}</span>{' '}
                 <span>{a.target}</span>
               </p>
-              <p className="text-xs text-gray-500" suppressHydrationWarning>
+              <p className="text-xs text-fg-muted" suppressHydrationWarning>
                 {formatDistanceToNow(new Date(a.at), { addSuffix: true })}
               </p>
             </div>
@@ -2647,7 +2647,7 @@ function AboutPanel() {
   return (
     <div>
       <PanelHeader
-        title="About AiSOC"
+        title="About ClopsSOC"
         description="Open-source SOC platform — community-built, MIT licensed."
       />
       <div className="grid gap-4 px-6 py-5 sm:grid-cols-2">
@@ -2659,12 +2659,12 @@ function AboutPanel() {
         <InfoTile label="License" value="MIT" />
         <InfoTile label="Source" value="github.com/beenuar/AiSOC" mono />
       </div>
-      <div className="border-t border-gray-800 px-6 py-5 text-sm text-gray-400">
+      <div className="border-t border-surface-border px-6 py-5 text-body text-fg-muted">
         <p>
-          AiSOC is community-driven. Issues, ideas, and PRs welcome on GitHub.
+          ClopsSOC is community-driven. Issues, ideas, and PRs welcome on GitHub.
           See the{' '}
           <a
-            className="text-blue-400 hover:text-blue-300"
+            className="text-accent hover:text-accent-hover"
             href="https://github.com/beenuar/AiSOC/blob/main/CONTRIBUTING.md"
             target="_blank"
             rel="noreferrer"
@@ -2675,7 +2675,7 @@ function AboutPanel() {
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
           <a
-            className="rounded-lg border border-gray-700 bg-gray-900 px-3 py-1.5 text-xs text-gray-200 hover:bg-gray-800"
+            className="rounded-control border border-surface-border bg-surface-elevated px-3 py-1.5 text-xs text-fg-primary hover:bg-surface-hover"
             href="https://github.com/beenuar/AiSOC"
             target="_blank"
             rel="noreferrer"
@@ -2683,7 +2683,7 @@ function AboutPanel() {
             GitHub →
           </a>
           <a
-            className="rounded-lg border border-gray-700 bg-gray-900 px-3 py-1.5 text-xs text-gray-200 hover:bg-gray-800"
+            className="rounded-control border border-surface-border bg-surface-elevated px-3 py-1.5 text-xs text-fg-primary hover:bg-surface-hover"
             href="https://github.com/beenuar/AiSOC/blob/main/CHANGELOG.md"
             target="_blank"
             rel="noreferrer"
@@ -2691,7 +2691,7 @@ function AboutPanel() {
             Changelog →
           </a>
           <a
-            className="rounded-lg border border-gray-700 bg-gray-900 px-3 py-1.5 text-xs text-gray-200 hover:bg-gray-800"
+            className="rounded-control border border-surface-border bg-surface-elevated px-3 py-1.5 text-xs text-fg-primary hover:bg-surface-hover"
             href="https://github.com/beenuar/AiSOC/blob/main/SECURITY.md"
             target="_blank"
             rel="noreferrer"

@@ -139,8 +139,8 @@ export function CostDashboardView() {
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Cost Dashboard</h1>
-          <p className="mt-1 text-sm text-gray-400">
+          <h1 className="text-page-title font-bold text-fg-primary">Cost Dashboard</h1>
+          <p className="mt-1 text-body text-fg-muted">
             LLM spend, automation activity, and BYOK savings for the current tenant. Spend figures
             are what the LLM gateway reported it charged. Anything it could not price is shown as
             an estimate or as not measured — never as zero.
@@ -154,7 +154,7 @@ export function CostDashboardView() {
             id="cost-window"
             value={days}
             onChange={(e) => setDays(Number(e.target.value))}
-            className="rounded border border-gray-600 bg-gray-800 px-3 py-1.5 text-sm text-white"
+            className="rounded-control border border-surface-border bg-surface-card px-3 py-1.5 text-control text-fg-primary focus:border-accent focus:outline-none"
           >
             {WINDOW_PRESETS.map((p) => (
               <option key={p.days} value={p.days}>
@@ -165,7 +165,7 @@ export function CostDashboardView() {
           <button
             type="button"
             onClick={() => mutate()}
-            className="rounded border border-gray-600 bg-gray-800 px-3 py-1.5 text-sm text-gray-200 hover:bg-gray-700"
+            className="rounded-control border border-surface-border bg-surface-elevated px-3 py-1.5 text-control text-fg-primary hover:bg-surface-hover"
           >
             Refresh
           </button>
@@ -173,13 +173,13 @@ export function CostDashboardView() {
       </div>
 
       {error && (
-        <div className="rounded-md border border-red-500/30 bg-red-500/10 px-4 py-2 text-sm text-red-200">
+        <div className="rounded-control border border-severity-critical-ink/30 bg-severity-critical-bg px-4 py-2 text-body text-severity-critical-ink">
           Failed to load cost dashboard: {error instanceof Error ? error.message : String(error)}
         </div>
       )}
 
       {isLoading && !data && (
-        <div className="rounded-xl border border-gray-700 bg-gray-900 p-6 text-sm text-gray-400">
+        <div className="rounded-container border border-surface-border bg-surface-card p-6 text-body text-fg-muted">
           Computing cost snapshot…
         </div>
       )}
@@ -240,11 +240,11 @@ function PeriodHero({ data }: { data: CostDashboard }) {
   }, [headline]);
 
   return (
-    <section className="rounded-xl border border-violet-500/30 bg-violet-950/20 p-5">
-      <p className="text-xs uppercase tracking-wide text-violet-300">Reporting period</p>
-      <p className="mt-1 text-lg font-semibold text-white">{period.label}</p>
-      <p className="mt-3 text-sm leading-relaxed text-gray-200">{summary}</p>
-      <p className="mt-2 text-xs text-gray-500">
+    <section className="rounded-container border border-surface-border bg-surface-card p-5">
+      <p className="text-caption uppercase tracking-wide text-tone-purple font-medium">Reporting period</p>
+      <p className="mt-1 text-card-title font-semibold text-fg-primary">{period.label}</p>
+      <p className="mt-3 text-body leading-relaxed text-fg-secondary">{summary}</p>
+      <p className="mt-2 text-xs text-fg-muted">
         {fmtDate(period.start)} → {fmtDate(period.end)} · {period.window_days}-day window
       </p>
     </section>
@@ -351,12 +351,12 @@ function ModelTable({ data }: { data: CostDashboard }) {
       subtitle="Measured cost vs imputed list price, per model. An alias row shows what the gateway resolved it to."
     >
       {by_model.length === 0 ? (
-        <p className="text-sm text-gray-500">No per-model rows recorded for this window.</p>
+        <p className="text-body text-fg-muted">No per-model rows recorded for this window.</p>
       ) : (
         <div className="overflow-x-auto" data-testid="model-table">
-          <table className="w-full min-w-[800px] text-left text-sm">
+          <table className="w-full min-w-[800px] text-left text-body">
             <thead>
-              <tr className="border-b border-gray-700 text-xs uppercase tracking-wide text-gray-500">
+              <tr className="border-b border-surface-border text-caption uppercase tracking-wide text-fg-muted">
                 <th className="py-2 pr-4 font-medium">Model</th>
                 <th className="py-2 pr-4 font-medium text-right">Calls</th>
                 <th className="py-2 pr-4 font-medium text-right">Prompt tokens</th>
@@ -368,30 +368,30 @@ function ModelTable({ data }: { data: CostDashboard }) {
             </thead>
             <tbody>
               {by_model.map((m) => (
-                <tr key={m.model} className="border-b border-gray-800/80">
-                  <td className="py-2.5 pr-4 font-mono text-xs text-gray-100">
+                <tr key={m.model} className="border-b border-surface-border last:border-0">
+                  <td className="py-2.5 pr-4 font-mono text-xs text-fg-primary">
                     {m.model}
                     {m.resolved_model && (
-                      <span className="block text-[10px] text-gray-500">→ {m.resolved_model}</span>
+                      <span className="block text-eyebrow text-fg-muted">→ {m.resolved_model}</span>
                     )}
                   </td>
-                  <td className="py-2.5 pr-4 text-right text-gray-200 tabular-nums">
+                  <td className="py-2.5 pr-4 text-right text-fg-secondary tabular-nums">
                     {fmtNumber(m.calls)}
                   </td>
-                  <td className="py-2.5 pr-4 text-right text-gray-300 tabular-nums">
+                  <td className="py-2.5 pr-4 text-right text-fg-secondary tabular-nums">
                     {fmtNumber(m.total_prompt_tokens)}
                   </td>
-                  <td className="py-2.5 pr-4 text-right text-gray-300 tabular-nums">
+                  <td className="py-2.5 pr-4 text-right text-fg-secondary tabular-nums">
                     {fmtNumber(m.total_completion_tokens)}
                   </td>
-                  <td className="py-2.5 pr-4 text-right text-white tabular-nums">
+                  <td className="py-2.5 pr-4 text-right text-fg-primary tabular-nums">
                     {fmtSpend(
                       m.total_cost_usd,
                       m.measured_call_count,
                       m.estimated_cost_usd,
                       m.estimated_call_count,
                     )}
-                    <span className="block text-[10px] font-normal text-gray-500">
+                    <span className="block text-eyebrow font-normal text-fg-muted">
                       {spendProvenance(
                         m.measured_call_count,
                         m.estimated_call_count,
@@ -399,15 +399,15 @@ function ModelTable({ data }: { data: CostDashboard }) {
                       )}
                     </span>
                   </td>
-                  <td className="py-2.5 pr-4 text-right text-gray-400 tabular-nums">
+                  <td className="py-2.5 pr-4 text-right text-fg-muted tabular-nums">
                     {!m.imputed_is_estimable ? '—' : fmtUsd(m.imputed_public_cost_usd)}
                     {m.unpriced_tokens > 0 && (
-                      <span className="block text-[10px] text-gray-500">
+                      <span className="block text-eyebrow text-fg-muted">
                         {!m.imputed_is_estimable ? 'no published price' : `excludes ${fmtNumber(m.unpriced_tokens)} unpriced tokens`}
                       </span>
                     )}
                   </td>
-                  <td className="py-2.5 text-right text-gray-400 tabular-nums">
+                  <td className="py-2.5 text-right text-fg-muted tabular-nums">
                     {fmtMs(m.avg_latency_ms)}
                   </td>
                 </tr>
@@ -471,22 +471,22 @@ function CasesAndActions({ data }: { data: CostDashboard }) {
 function ByokPanel({ data }: { data: CostDashboard }) {
   const { byok_savings: b } = data;
   const accent = b.is_byok_active
-    ? 'border-emerald-500/30 bg-emerald-950/20'
-    : 'border-gray-700 bg-gray-900';
+    ? 'border-tone-success/30 bg-surface-card'
+    : 'border-surface-border bg-surface-card';
   const badge = b.is_byok_active
-    ? { text: 'BYOK active', cls: 'bg-emerald-500/20 text-emerald-200' }
-    : { text: 'Hosted provider', cls: 'bg-gray-700/60 text-gray-300' };
+    ? { text: 'BYOK active', cls: 'bg-pill-success-bg text-tone-success' }
+    : { text: 'Hosted provider', cls: 'bg-pill-neutral-bg text-tone-neutral' };
 
   return (
     <section
-      className={`rounded-xl border p-5 ${accent}`}
+      className={`rounded-container border p-5 ${accent}`}
       data-testid="byok-panel"
       data-byok={b.is_byok_active ? 'active' : 'inactive'}
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-xs uppercase tracking-wide text-gray-400">BYOK savings</p>
-          <p className="mt-1 text-lg font-semibold text-white">
+          <p className="text-caption uppercase tracking-wide text-fg-muted">BYOK savings</p>
+          <p className="mt-1 text-card-title font-semibold text-fg-primary">
             {!b.imputed_is_estimable
               ? 'Not estimable — no model in this window has a published list price'
               : b.is_byok_active
@@ -494,9 +494,9 @@ function ByokPanel({ data }: { data: CostDashboard }) {
                 : `Hosted via ${b.provider} — no local-model savings to attribute`}
           </p>
         </div>
-        <span className={`rounded-full px-3 py-1 text-xs font-medium ${badge.cls}`}>{badge.text}</span>
+        <span className={`rounded-pill px-3 py-1 text-xs font-medium ${badge.cls}`}>{badge.text}</span>
       </div>
-      <dl className="mt-4 grid grid-cols-1 gap-4 text-sm sm:grid-cols-3">
+      <dl className="mt-4 grid grid-cols-1 gap-4 text-body sm:grid-cols-3">
         <Stat
           label="Measured cost"
           value={b.recorded_is_measured ? fmtUsd(b.recorded_cost_usd) : '—'}
@@ -517,10 +517,10 @@ function ByokPanel({ data }: { data: CostDashboard }) {
           label="Estimated savings"
           value={!b.imputed_is_estimable ? '—' : `~${fmtUsd(b.savings_usd)}`}
           hint={!b.imputed_is_estimable ? 'not estimable' : 'estimate'}
-          accent={b.is_byok_active && b.imputed_is_estimable ? 'text-emerald-300' : 'text-gray-300'}
+          accent={b.is_byok_active && b.imputed_is_estimable ? 'text-tone-success' : 'text-fg-secondary'}
         />
       </dl>
-      <p className="mt-4 text-xs text-gray-500">
+      <p className="mt-4 text-xs text-fg-muted">
         Imputed cost re-prices prompt + completion tokens against each model&apos;s public list price,
         and only for models that have one — there is no default rate, so a model nobody publishes a
         price for contributes nothing here rather than a guess. Savings approximate what an equivalent
@@ -554,20 +554,20 @@ function StoragePanel({ data }: { data: CostDashboard }) {
   if (!s.measured) {
     return (
       <section
-        className="rounded-xl border border-gray-700 bg-gray-900 p-5"
+        className="rounded-container border border-surface-border bg-surface-card p-5"
         data-testid="storage-panel"
         data-storage="not-measured"
       >
-        <p className="text-xs uppercase tracking-wide text-gray-400">Storage cost</p>
-        <p className="mt-1 text-lg font-semibold text-white">Not measured</p>
-        <p className="mt-3 text-sm text-gray-400">{s.unmeasured_reason}</p>
+        <p className="text-caption uppercase tracking-wide text-fg-muted">Storage cost</p>
+        <p className="mt-1 text-card-title font-semibold text-fg-primary">Not measured</p>
+        <p className="mt-3 text-body text-fg-muted">{s.unmeasured_reason}</p>
       </section>
     );
   }
 
   return (
     <section
-      className="rounded-xl border border-gray-700 bg-gray-900 p-5"
+      className="rounded-container border border-surface-border bg-surface-card p-5"
       data-testid="storage-panel"
       data-storage="projected"
     >
@@ -638,10 +638,10 @@ function Card({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-xl border border-gray-700 bg-gray-900 p-5">
+    <div className="rounded-container border border-surface-border bg-surface-card p-5">
       <div className="mb-4">
-        <h2 className="text-base font-semibold text-white">{title}</h2>
-        {subtitle && <p className="mt-0.5 text-xs text-gray-500">{subtitle}</p>}
+        <h2 className="text-card-title font-semibold text-fg-primary">{title}</h2>
+        {subtitle && <p className="mt-0.5 text-xs text-fg-muted">{subtitle}</p>}
       </div>
       {children}
     </div>
@@ -658,10 +658,10 @@ function KpiCard({
   sub?: string;
 }) {
   return (
-    <div className="rounded-lg border border-gray-700 bg-gray-800 p-4">
-      <p className="text-xs text-gray-400">{label}</p>
-      <p className="mt-1 text-2xl font-semibold text-white tabular-nums">{value}</p>
-      {sub && <p className="mt-1 text-xs text-gray-500">{sub}</p>}
+    <div className="rounded-container border border-surface-border bg-surface-card p-4">
+      <p className="text-caption text-fg-muted">{label}</p>
+      <p className="mt-1 text-kpi font-semibold font-mono text-fg-primary tabular-nums">{value}</p>
+      {sub && <p className="mt-1 text-xs text-fg-muted">{sub}</p>}
     </div>
   );
 }
@@ -679,9 +679,9 @@ function Stat({
 }) {
   return (
     <div>
-      <dt className="text-xs text-gray-500">{label}</dt>
-      <dd className={`mt-1 text-xl font-semibold tabular-nums ${accent ?? 'text-white'}`}>{value}</dd>
-      {hint && <p className="mt-0.5 text-[10px] text-gray-500">{hint}</p>}
+      <dt className="text-xs text-fg-muted">{label}</dt>
+      <dd className={`mt-1 text-xl font-semibold tabular-nums ${accent ?? 'text-fg-primary'}`}>{value}</dd>
+      {hint && <p className="mt-0.5 text-eyebrow text-fg-subtle">{hint}</p>}
     </div>
   );
 }

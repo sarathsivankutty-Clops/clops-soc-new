@@ -20,6 +20,8 @@ import clsx from 'clsx';
 import type { Playbook, PlaybookRun } from './types';
 import { PlaybooksGallery, type PlaybookGalleryFilters } from './PlaybooksGallery';
 import { EmptyState, EmptyStateIcons } from '@/components/ui/EmptyState';
+import { PageHead } from '@/components/ui/PageHead';
+import { Button } from '@/components/ui/Button';
 import { SavedViewsBar } from '@/components/saved-views/SavedViewsBar';
 import { DraftFromPromptDialog } from './DraftFromPromptDialog';
 import { demoFallback } from '@/lib/demoFallback';
@@ -46,11 +48,11 @@ const DEFAULT_PLAYBOOK_FILTERS: PlaybookFilterSnapshot = {
 /* ─────────────────────────── Run History Tab ─────────────────────────── */
 
 const STATUS_BADGE: Record<string, string> = {
-  pending:   'bg-yellow-900/40 text-yellow-400 border-yellow-800',
-  running:   'bg-blue-900/40 text-blue-400 border-blue-800',
-  completed: 'bg-green-900/40 text-green-400 border-green-800',
-  failed:    'bg-red-900/40 text-red-400 border-red-800',
-  cancelled: 'bg-gray-800 text-gray-500 border-gray-700',
+  pending:   'bg-pill-warning-bg text-tone-warning',
+  running:   'bg-pill-info-bg text-tone-info',
+  completed: 'bg-pill-success-bg text-tone-success',
+  failed:    'bg-pill-danger-bg text-tone-danger',
+  cancelled: 'bg-pill-neutral-bg text-tone-neutral',
 };
 
 function RunHistoryTab() {
@@ -59,7 +61,7 @@ function RunHistoryTab() {
     authedFetcher,
     { refreshInterval: 10000 }
   );
-  if (isLoading) return <div className="py-10 text-center text-gray-600 text-sm">Loading run history…</div>;
+  if (isLoading) return <div className="py-10 text-center text-fg-muted text-body">Loading run history…</div>;
   // "the agents service may be offline" was a guess, and on the 403 a
   // non-responder role actually gets, it is the wrong one.
   if (error) return (
@@ -85,16 +87,16 @@ function RunHistoryTab() {
   return (
     <div className="space-y-2">
       {data.map((run) => (
-        <div key={run.run_id} className="bg-gray-900/60 border border-gray-800 rounded-xl px-5 py-3 flex items-center gap-4">
-          <span className={`text-xs px-2 py-0.5 rounded border ${STATUS_BADGE[run.status] ?? 'bg-gray-800 text-gray-400 border-gray-700'}`}>
+        <div key={run.run_id} className="bg-surface-card border border-surface-border rounded-container px-5 py-3 flex items-center gap-4">
+          <span className={`text-caption font-medium px-2 py-0.5 rounded-pill ${STATUS_BADGE[run.status] ?? 'bg-pill-neutral-bg text-tone-neutral'}`}>
             {run.status}
           </span>
           <div className="flex-1 min-w-0">
-            <div className="text-white text-sm font-medium truncate">{run.playbook_name}</div>
-            <div className="flex items-center gap-3 mt-0.5 text-xs text-gray-600">
+            <div className="text-fg-primary text-body font-medium truncate">{run.playbook_name}</div>
+            <div className="flex items-center gap-3 mt-0.5 text-xs text-fg-muted">
               <span className="font-mono">{run.run_id.slice(0, 12)}…</span>
               <span>{run.steps.length} steps</span>
-              {run.dry_run && <span className="text-yellow-700 border border-yellow-900 px-1.5 rounded">dry run</span>}
+              {run.dry_run && <span className="bg-pill-warning-bg text-tone-warning px-1.5 py-0.5 rounded-pill text-eyebrow">dry run</span>}
               {run.started_at && <span suppressHydrationWarning>{new Date(run.started_at).toLocaleString()}</span>}
             </div>
           </div>
@@ -102,13 +104,13 @@ function RunHistoryTab() {
           <div className="flex items-center gap-1">
             {run.steps.slice(0, 8).map((s) => {
               const dot =
-                s.status === 'completed' ? 'bg-green-500' :
-                s.status === 'failed'    ? 'bg-red-500' :
-                s.status === 'running'   ? 'bg-blue-400 animate-pulse' :
-                s.status === 'skipped'   ? 'bg-gray-700' : 'bg-gray-800';
+                s.status === 'completed' ? 'bg-dot-success' :
+                s.status === 'failed'    ? 'bg-dot-danger' :
+                s.status === 'running'   ? 'bg-dot-info animate-pulse' :
+                s.status === 'skipped'   ? 'bg-surface-border-strong' : 'bg-surface-border';
               return <div key={s.step_id} className={`w-2 h-2 rounded-full ${dot}`} title={`${s.step_name}: ${s.status}`} />;
             })}
-            {run.steps.length > 8 && <span className="text-xs text-gray-700">+{run.steps.length - 8}</span>}
+            {run.steps.length > 8 && <span className="text-xs text-fg-subtle">+{run.steps.length - 8}</span>}
           </div>
         </div>
       ))}
@@ -203,31 +205,32 @@ function CommunityPlaybooksTab() {
     <div className="space-y-4">
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-3">
-        <div className="flex flex-1 min-w-[220px] gap-2">
+        <div className="flex flex-1 min-w-56 gap-2">
           <input
             type="search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && load(search, sortBy, 1)}
             placeholder="Search community runbooks…"
-            className="flex-1 rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 focus:border-zinc-500 focus:outline-none"
+            className="flex-1 rounded-control border border-surface-border bg-surface-card px-3 py-2 text-body text-fg-primary placeholder:text-fg-subtle focus:border-accent focus:outline-none"
           />
-          <button
+          <Button
+            variant="secondary"
+            size="md"
             onClick={() => load(search, sortBy, 1)}
-            className="rounded-lg bg-zinc-700 px-3 py-2 text-sm text-zinc-200 hover:bg-zinc-600 transition-colors"
           >
             Search
-          </button>
+          </Button>
         </div>
 
-        <div className="flex gap-1 rounded-lg border border-zinc-700 bg-zinc-800 p-1">
+        <div className="flex gap-1 rounded-control border border-surface-border bg-surface-card p-1">
           {(['install_count', 'rating', 'name'] as const).map((s) => (
             <button
               key={s}
               onClick={() => { setSortBy(s); load(search, s, 1); }}
               className={clsx(
-                'rounded px-2.5 py-1.5 text-xs font-medium transition-colors',
-                sortBy === s ? 'bg-zinc-600 text-zinc-100' : 'text-zinc-400 hover:text-zinc-200'
+                'rounded-control px-2.5 py-1.5 text-xs font-medium transition-colors',
+                sortBy === s ? 'bg-nav-active-bg text-fg-primary' : 'text-fg-muted hover:text-fg-primary'
               )}
             >
               {s === 'install_count' ? 'Popular' : s === 'rating' ? 'Top Rated' : 'Name'}
@@ -235,52 +238,55 @@ function CommunityPlaybooksTab() {
           ))}
         </div>
 
-        <button
+        <Button
+          variant="secondary"
+          size="md"
           onClick={() => setSubmitOpen(!submitOpen)}
-          className="rounded-lg border border-blue-700/60 bg-blue-900/30 px-3 py-2 text-sm text-blue-300 hover:bg-blue-900/50 transition-colors"
         >
           + Submit Runbook
-        </button>
+        </Button>
       </div>
 
       {/* Submit panel */}
       {submitOpen && (
-        <div className="rounded-xl border border-zinc-700/60 bg-zinc-800/60 p-4 space-y-3">
-          <h3 className="text-sm font-semibold text-zinc-100">Submit a Community Runbook</h3>
-          <p className="text-xs text-zinc-400">Paste your runbook definition as JSON. It will be reviewed before appearing in the catalog.</p>
+        <div className="rounded-container border border-surface-border bg-surface-card p-4 space-y-3">
+          <h3 className="text-body font-semibold text-fg-primary">Submit a Community Runbook</h3>
+          <p className="text-xs text-fg-muted">Paste your runbook definition as JSON. It will be reviewed before appearing in the catalog.</p>
           <textarea
             value={submitJson}
             onChange={(e) => setSubmitJson(e.target.value)}
             rows={8}
             placeholder={'{\n  "name": "My Runbook",\n  "description": "...",\n  "author": "you",\n  "steps": [...]\n}'}
-            className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs font-mono text-zinc-200 focus:border-zinc-500 focus:outline-none resize-y"
+            className="w-full rounded-control border border-surface-border bg-surface-elevated px-3 py-2 text-xs font-mono text-fg-primary focus:border-accent focus:outline-none resize-y"
           />
           {submitResult && (
-            <p className={clsx('text-xs', submitResult.startsWith('Error') || submitResult.startsWith('Invalid') || submitResult.startsWith('Submission') ? 'text-red-400' : 'text-emerald-400')}>
+            <p className={clsx('text-xs', submitResult.startsWith('Error') || submitResult.startsWith('Invalid') || submitResult.startsWith('Submission') ? 'text-tone-danger' : 'text-tone-success')}>
               {submitResult}
             </p>
           )}
           <div className="flex gap-2">
-            <button
+            <Button
+              variant="secondary"
+              size="sm"
               onClick={handleSubmit}
               disabled={submitting || !submitJson.trim()}
-              className="rounded px-3 py-1.5 text-xs font-medium bg-blue-700 text-white hover:bg-blue-600 disabled:opacity-50 transition-colors"
             >
               {submitting ? 'Submitting…' : 'Submit for Review'}
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => { setSubmitOpen(false); setSubmitResult(null); }}
-              className="rounded px-3 py-1.5 text-xs font-medium text-zinc-400 hover:text-zinc-200 transition-colors"
             >
               Cancel
-            </button>
+            </Button>
           </div>
         </div>
       )}
 
-      {loading && <div className="py-12 text-center text-sm text-zinc-500">Loading community runbooks…</div>}
+      {loading && <div className="py-12 text-center text-body text-fg-muted">Loading community runbooks…</div>}
       {error && (
-          <div className="rounded-md border border-amber-500/30 bg-amber-500/5 px-4 py-2 text-xs text-amber-200">
+          <div className="rounded-control border border-tone-warning/30 bg-pill-warning-bg px-4 py-2 text-xs text-tone-warning">
             {error}
           </div>
         )}
@@ -299,12 +305,13 @@ function CommunityPlaybooksTab() {
           }
           action={
             search ? (
-              <button
+              <Button
+                variant="secondary"
+                size="sm"
                 onClick={() => { setSearch(''); load('', sortBy, 1); }}
-                className="text-xs px-3 py-1.5 rounded-md border border-blue-500/40 bg-blue-500/10 text-blue-300 hover:bg-blue-500/20 transition-colors"
               >
                 Clear search
-              </button>
+              </Button>
             ) : undefined
           }
           className="bg-transparent py-12"
@@ -324,15 +331,15 @@ function CommunityPlaybooksTab() {
           <button
             onClick={() => { setPage(page - 1); load(search, sortBy, page - 1); }}
             disabled={page <= 1}
-            className="rounded px-3 py-1.5 text-sm text-zinc-400 hover:text-zinc-200 disabled:opacity-30"
+            className="rounded-control px-3 py-1.5 text-body text-fg-muted hover:text-fg-primary disabled:opacity-30"
           >
             ← Prev
           </button>
-          <span className="text-sm text-zinc-500">Page {page} of {totalPages}</span>
+          <span className="text-body text-fg-muted">Page {page} of {totalPages}</span>
           <button
             onClick={() => { setPage(page + 1); load(search, sortBy, page + 1); }}
             disabled={page >= totalPages}
-            className="rounded px-3 py-1.5 text-sm text-zinc-400 hover:text-zinc-200 disabled:opacity-30"
+            className="rounded-control px-3 py-1.5 text-body text-fg-muted hover:text-fg-primary disabled:opacity-30"
           >
             Next →
           </button>
@@ -357,29 +364,29 @@ function CommunityPlaybookCard({ playbook }: { playbook: CommunityPlaybook }) {
   };
 
   return (
-    <div className="rounded-xl border border-zinc-700/60 bg-zinc-800/60 p-4 flex flex-col gap-3 hover:border-zinc-600 transition-colors">
+    <div className="rounded-container border border-surface-border bg-surface-card p-4 flex flex-col gap-3 hover:bg-surface-elevated transition-colors">
       <div>
-        <h3 className="text-sm font-semibold text-zinc-100 line-clamp-1">{playbook.name}</h3>
-        <p className="text-xs text-zinc-400 mt-1 line-clamp-2">{playbook.description || 'No description.'}</p>
+        <h3 className="text-body font-semibold text-fg-primary line-clamp-1">{playbook.name}</h3>
+        <p className="text-xs text-fg-muted mt-1 line-clamp-2">{playbook.description || 'No description.'}</p>
       </div>
       {playbook.tags.length > 0 && (
         <div className="flex flex-wrap gap-1">
           {playbook.tags.slice(0, 4).map((t) => (
-            <span key={t} className="rounded bg-zinc-700/50 px-1.5 py-0.5 text-xs text-zinc-400">{t}</span>
+            <span key={t} className="rounded-pill bg-surface-subtle px-2 py-0.5 text-caption text-fg-muted">{t}</span>
           ))}
         </div>
       )}
-      <div className="flex items-center justify-between text-xs text-zinc-500 mt-auto pt-2 border-t border-zinc-700/40">
+      <div className="flex items-center justify-between text-xs text-fg-muted mt-auto pt-2 border-t border-surface-border">
         <span>{playbook.install_count.toLocaleString()} installs</span>
         {playbook.rating > 0 && (
-          <span className="text-yellow-400">{playbook.rating.toFixed(1)} rating</span>
+          <span className="text-tone-warning">{playbook.rating.toFixed(1)} rating</span>
         )}
         <button
           onClick={handleInstall}
           disabled={installing || installed}
           className={clsx(
-            'rounded px-2.5 py-1 text-xs font-medium transition-colors',
-            installed ? 'bg-emerald-900/40 text-emerald-300 cursor-default' : 'bg-zinc-700 text-zinc-200 hover:bg-zinc-600'
+            'rounded-control px-2.5 py-1 text-xs font-medium transition-colors',
+            installed ? 'bg-pill-success-bg text-tone-success cursor-default' : 'border border-surface-border bg-surface-elevated text-fg-primary hover:bg-surface-hover'
           )}
         >
           {installed ? 'Installed' : installing ? '…' : 'Install'}
@@ -444,40 +451,39 @@ export function PlaybooksView() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold text-white">Runbooks</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
-            Automated response workflows triggered by alerts and cases
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setNlDialogOpen(true)}
-            className="px-4 py-2 rounded-lg border border-blue-600/60 bg-blue-950/40 text-blue-300 hover:bg-blue-900/40 hover:text-blue-200 text-sm font-medium transition-colors"
-            title="T3.7 — describe a runbook in natural language and AiSOC drafts the DAG."
-          >
-            ✨ Draft from prompt
-          </button>
-          <Link
-            href="/playbooks/new"
-            className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium transition-colors"
-          >
-            + New Runbook
-          </Link>
-        </div>
-      </div>
+      <PageHead
+        title="Runbooks"
+        description="Automated response workflows triggered by alerts and cases"
+        actions={
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="secondary"
+              size="md"
+              onClick={() => setNlDialogOpen(true)}
+              title="T3.7 — describe a runbook in natural language and ClopsSOC drafts the DAG."
+            >
+              ✨ Draft from prompt
+            </Button>
+            <Link
+              href="/playbooks/new"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-control bg-btn-grad hover:brightness-105 text-white text-control font-semibold transition-all"
+            >
+              + New Runbook
+            </Link>
+          </div>
+        }
+      />
 
       <DraftFromPromptDialog open={nlDialogOpen} onClose={() => setNlDialogOpen(false)} />
 
       {/* Tabs */}
-      <div className="flex gap-1 border-b border-gray-800/60">
+      <div className="flex gap-6 border-b border-surface-border">
         <button
           onClick={() => setTab('playbooks')}
-          className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${tab === 'playbooks' ? 'border-blue-500 text-blue-300' : 'border-transparent text-gray-500 hover:text-gray-300'}`}
+          className={`px-1 py-2.5 text-control font-medium transition-colors border-b-2 -mb-px ${tab === 'playbooks' ? 'border-accent text-fg-primary' : 'border-transparent text-fg-muted hover:text-fg-secondary'}`}
         >
           {/* '…' means "still loading"; on a failed request the count is not
               pending, it is unknown. */}
@@ -485,13 +491,13 @@ export function PlaybooksView() {
         </button>
         <button
           onClick={() => setTab('runs')}
-          className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${tab === 'runs' ? 'border-blue-500 text-blue-300' : 'border-transparent text-gray-500 hover:text-gray-300'}`}
+          className={`px-1 py-2.5 text-control font-medium transition-colors border-b-2 -mb-px ${tab === 'runs' ? 'border-accent text-fg-primary' : 'border-transparent text-fg-muted hover:text-fg-secondary'}`}
         >
           Run History
         </button>
         <button
           onClick={() => setTab('community')}
-          className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${tab === 'community' ? 'border-blue-500 text-blue-300' : 'border-transparent text-gray-500 hover:text-gray-300'}`}
+          className={`px-1 py-2.5 text-control font-medium transition-colors border-b-2 -mb-px ${tab === 'community' ? 'border-accent text-fg-primary' : 'border-transparent text-fg-muted hover:text-fg-secondary'}`}
         >
           Community
         </button>
@@ -513,7 +519,7 @@ export function PlaybooksView() {
             onApply={handleApplyView}
           />
 
-          {isLoading && <div className="text-gray-600 text-sm">Loading runbooks…</div>}
+          {isLoading && <div className="text-fg-muted text-body">Loading runbooks…</div>}
 
           {/* Outside the hosted demo there are no demo playbooks to show:
               `fallbackData` is `undefined`, and a truthy `error` also
@@ -529,9 +535,9 @@ export function PlaybooksView() {
                 })}
                 onRetry={() => mutate()}
               />
-              <div className="flex flex-col items-center justify-center gap-1 rounded-xl border border-gray-800/60 bg-gray-900/40 px-4 py-12 text-center">
-                <p className="text-sm text-amber-200/80">The runbook list could not be loaded.</p>
-                <p className="text-[11px] text-gray-600">
+              <div className="flex flex-col items-center justify-center gap-1 rounded-container border border-surface-border bg-surface-card px-4 py-12 text-center">
+                <p className="text-body text-tone-warning">The runbook list could not be loaded.</p>
+                <p className="text-caption text-fg-muted">
                   Treat this as unknown rather than as a tenant with no runbooks.
                 </p>
               </div>
@@ -550,16 +556,17 @@ export function PlaybooksView() {
                 <div className="flex items-center gap-2">
                   <Link
                     href="/playbooks/new"
-                    className="px-3 py-1.5 rounded-md bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium transition-colors"
+                    className="px-3 py-1.5 rounded-control border border-surface-border bg-surface-elevated hover:bg-surface-hover text-fg-primary text-xs font-medium transition-colors"
                   >
                     Create your first runbook
                   </Link>
-                  <button
+                  <Button
+                    variant="secondary"
+                    size="sm"
                     onClick={() => setTab('community')}
-                    className="text-xs px-3 py-1.5 rounded-md border border-zinc-700 bg-zinc-800/40 text-zinc-300 hover:bg-zinc-800 transition-colors"
                   >
                     Browse community
-                  </button>
+                  </Button>
                 </div>
               }
               className="bg-transparent py-16"

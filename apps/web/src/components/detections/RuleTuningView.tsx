@@ -7,7 +7,9 @@ import useSWR from 'swr';
 
 import { EmptyState, EmptyStateIcons } from '@/components/ui/EmptyState';
 import { ErrorState } from '@/components/ui/ErrorState';
+import { PageHead } from '@/components/ui/PageHead';
 import { Skeleton } from '@/components/ui/Skeleton';
+import { Button } from '@/components/ui/Button';
 import {
   tuningApi,
   type ApplyTuningRequest,
@@ -45,20 +47,20 @@ const SUGGESTION_LABEL: Record<TuningSuggestion, string> = {
 };
 
 const SUGGESTION_TONE: Record<TuningSuggestion, string> = {
-  disable: 'bg-red-500/10 text-red-300 border-red-500/30',
-  add_suppression: 'bg-amber-500/10 text-amber-300 border-amber-500/30',
-  raise_threshold: 'bg-orange-500/10 text-orange-300 border-orange-500/30',
-  tune_confidence: 'bg-blue-500/10 text-blue-300 border-blue-500/30',
-  review_stale: 'bg-purple-500/10 text-purple-300 border-purple-500/30',
-  healthy: 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30',
+  disable: 'bg-pill-danger-bg text-tone-danger',
+  add_suppression: 'bg-pill-warning-bg text-tone-warning',
+  raise_threshold: 'bg-severity-high-bg text-severity-high-ink',
+  tune_confidence: 'bg-pill-info-bg text-tone-info',
+  review_stale: 'bg-pill-purple-bg text-tone-purple',
+  healthy: 'bg-pill-success-bg text-tone-success',
 };
 
 const SEVERITY_TONE: Record<string, string> = {
-  critical: 'bg-red-500/15 text-red-300 border-red-500/40',
-  high: 'bg-orange-500/15 text-orange-300 border-orange-500/40',
-  medium: 'bg-amber-500/15 text-amber-300 border-amber-500/40',
-  low: 'bg-sky-500/15 text-sky-300 border-sky-500/40',
-  info: 'bg-gray-500/15 text-gray-300 border-gray-500/40',
+  critical: 'bg-severity-critical-bg text-severity-critical-ink',
+  high: 'bg-severity-high-bg text-severity-high-ink',
+  medium: 'bg-severity-medium-bg text-severity-medium-ink',
+  low: 'bg-severity-low-bg text-severity-low-ink',
+  info: 'bg-severity-info-bg text-severity-info-ink',
 };
 
 /**
@@ -220,38 +222,30 @@ export default function RuleTuningView({ initialSuggestion = 'all' }: RuleTuning
   }, []);
 
   return (
-    <div className="space-y-8 p-6 max-w-7xl mx-auto">
-      <header className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-white">Detection Tuning</h1>
-          <p className="text-gray-400 mt-1 max-w-2xl">
-            Live tuning workbench for noisy or under-performing detection rules. Suggestions
-            are scored from real false-positive rates, hit volume, and confidence — no more
-            static dashboards.
-          </p>
-        </div>
-        <div className="flex items-center gap-2 text-xs text-gray-500">
-          {isValidating ? (
-            <span className="inline-flex items-center gap-1.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-blue-400 animate-pulse" />
-              Refreshing…
-            </span>
-          ) : data ? (
-            <span>Updated {new Date(data.generated_at).toLocaleTimeString()}</span>
-          ) : null}
-          <button
-            type="button"
-            onClick={() => mutate()}
-            className="rounded-lg border border-gray-700 bg-gray-800/60 px-3 py-1.5 text-sm text-gray-200 hover:bg-gray-700 transition-colors"
-          >
-            Refresh
-          </button>
-        </div>
-      </header>
+    <div className="space-y-6">
+      <PageHead
+        title="Detection Tuning"
+        description="Live tuning workbench for noisy or under-performing detection rules. Suggestions are scored from real false-positive rates, hit volume, and confidence — no more static dashboards."
+        actions={
+          <div className="flex items-center gap-2 text-xs text-fg-muted">
+            {isValidating ? (
+              <span className="inline-flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
+                Refreshing…
+              </span>
+            ) : data ? (
+              <span>Updated {new Date(data.generated_at).toLocaleTimeString()}</span>
+            ) : null}
+            <Button type="button" variant="secondary" size="sm" onClick={() => mutate()}>
+              Refresh
+            </Button>
+          </div>
+        }
+      />
 
       <SummaryCards summary={summary} isLoading={isLoading && !summary} />
 
-      <div className="rounded-xl border border-gray-800/60 bg-gray-900/40">
+      <div className="rounded-container border border-surface-border bg-surface-card">
         <FilterBar
           severity={severity}
           suggestion={suggestion}
@@ -310,13 +304,9 @@ export default function RuleTuningView({ initialSuggestion = 'all' }: RuleTuning
                 }
                 action={
                   filtersDirty ? (
-                    <button
-                      type="button"
-                      onClick={resetFilters}
-                      className="rounded-lg bg-gray-800 px-4 py-2 text-sm text-gray-200 hover:bg-gray-700 transition-colors"
-                    >
+                    <Button type="button" variant="secondary" size="sm" onClick={resetFilters}>
                       Clear filters
-                    </button>
+                    </Button>
                   ) : undefined
                 }
               />
@@ -359,7 +349,7 @@ function SummaryCards({ summary, isLoading }: SummaryCardsProps) {
         {Array.from({ length: 4 }).map((_, i) => (
           <div
             key={i}
-            className="rounded-xl border border-gray-800/60 bg-gray-900/40 p-4"
+            className="rounded-container border border-surface-border bg-surface-card p-4"
           >
             <Skeleton className="w-24 h-3" />
             <Skeleton className="w-20 h-7 mt-2" />
@@ -381,10 +371,10 @@ function SummaryCards({ summary, isLoading }: SummaryCardsProps) {
       hint: `${summary.high_fp_count} noisy rules`,
       tone:
         summary.average_fp_rate >= 0.2
-          ? 'text-red-300'
+          ? 'text-tone-danger'
           : summary.average_fp_rate >= 0.1
-            ? 'text-amber-300'
-            : 'text-emerald-300',
+            ? 'text-tone-warning'
+            : 'text-tone-success',
     },
     {
       label: 'Healthy',
@@ -393,7 +383,7 @@ function SummaryCards({ summary, isLoading }: SummaryCardsProps) {
         summary.total_rules > 0
           ? `${Math.round((summary.healthy / summary.total_rules) * 100)}% of population`
           : '—',
-      tone: 'text-emerald-300',
+      tone: 'text-tone-success',
     },
     {
       label: 'Auto-Tuned',
@@ -407,13 +397,13 @@ function SummaryCards({ summary, isLoading }: SummaryCardsProps) {
       {cards.map((c) => (
         <div
           key={c.label}
-          className="rounded-xl border border-gray-800/60 bg-gray-900/40 p-4"
+          className="rounded-container border border-surface-border bg-surface-card p-4"
         >
-          <p className="text-xs text-gray-400 uppercase tracking-wider">{c.label}</p>
-          <p className={clsx('mt-1 text-2xl font-semibold text-white', c.tone)}>
+          <p className="text-caption text-fg-muted uppercase tracking-wider">{c.label}</p>
+          <p className={clsx('mt-1 text-kpi font-semibold font-mono tabular-nums text-fg-primary', c.tone)}>
             {c.value}
           </p>
-          <p className="mt-1 text-xs text-gray-500">{c.hint}</p>
+          <p className="mt-1 text-xs text-fg-subtle">{c.hint}</p>
         </div>
       ))}
     </div>
@@ -452,14 +442,14 @@ function FilterBar({
   filtersDirty,
 }: FilterBarProps) {
   return (
-    <div className="border-b border-gray-800/60 px-5 py-4 flex flex-wrap items-center gap-3">
+    <div className="border-b border-surface-border px-5 py-4 flex flex-wrap items-center gap-3">
       <input
         type="search"
         value={search}
         onChange={(e) => onSearchChange(e.target.value)}
         placeholder="Search rules…"
         aria-label="Search rules"
-        className="w-56 rounded-lg border border-gray-700 bg-gray-800/60 px-3 py-1.5 text-sm text-gray-200 placeholder-gray-500 focus:border-blue-500 focus:outline-none"
+        className="w-56 rounded-control border border-surface-border bg-surface-elevated px-3 py-1.5 text-body text-fg-primary placeholder:text-fg-subtle focus:border-accent focus:outline-none"
       />
 
       <label className="sr-only" htmlFor="suggestion-filter">
@@ -469,7 +459,7 @@ function FilterBar({
         id="suggestion-filter"
         value={suggestion}
         onChange={(e) => onSuggestionChange(e.target.value as SuggestionFilter)}
-        className="rounded-lg border border-gray-700 bg-gray-800/60 px-3 py-1.5 text-sm text-gray-200 focus:border-blue-500 focus:outline-none"
+        className="rounded-control border border-surface-border bg-surface-elevated px-3 py-1.5 text-body text-fg-primary focus:border-accent focus:outline-none"
       >
         {SUGGESTION_FILTERS.map((opt) => (
           <option key={opt.value} value={opt.value}>
@@ -485,7 +475,7 @@ function FilterBar({
         id="severity-filter"
         value={severity}
         onChange={(e) => onSeverityChange(e.target.value as SeverityFilter)}
-        className="rounded-lg border border-gray-700 bg-gray-800/60 px-3 py-1.5 text-sm text-gray-200 focus:border-blue-500 focus:outline-none"
+        className="rounded-control border border-surface-border bg-surface-elevated px-3 py-1.5 text-body text-fg-primary focus:border-accent focus:outline-none"
       >
         {SEVERITY_FILTERS.map((s) => (
           <option key={s} value={s}>
@@ -494,35 +484,31 @@ function FilterBar({
         ))}
       </select>
 
-      <label className="inline-flex items-center gap-2 text-sm text-gray-300 ml-2">
+      <label className="inline-flex items-center gap-2 text-body text-fg-secondary ml-2">
         <input
           type="checkbox"
           checked={enabledOnly}
           onChange={(e) => onEnabledOnlyChange(e.target.checked)}
-          className="rounded border-gray-600 bg-gray-800 text-blue-500 focus:ring-blue-500"
+          className="rounded border-surface-border bg-surface-elevated accent-accent"
         />
         Enabled only
       </label>
 
-      <label className="inline-flex items-center gap-2 text-sm text-gray-300">
+      <label className="inline-flex items-center gap-2 text-body text-fg-secondary">
         <input
           type="checkbox"
           checked={includeDismissed}
           onChange={(e) => onIncludeDismissedChange(e.target.checked)}
-          className="rounded border-gray-600 bg-gray-800 text-blue-500 focus:ring-blue-500"
+          className="rounded border-surface-border bg-surface-elevated accent-accent"
         />
         Include dismissed
       </label>
 
       <div className="ml-auto">
         {filtersDirty ? (
-          <button
-            type="button"
-            onClick={onReset}
-            className="text-sm px-3 py-1.5 rounded-lg border border-gray-700 bg-gray-800/60 hover:bg-gray-700 text-gray-200 transition-colors"
-          >
+          <Button type="button" variant="secondary" size="sm" onClick={onReset}>
             Reset filters
-          </button>
+          </Button>
         ) : null}
       </div>
     </div>
@@ -547,9 +533,9 @@ function TuningTable({
   onToggleAutoTune,
 }: TuningTableProps) {
   return (
-    <table className="w-full text-sm">
+    <table className="w-full text-body">
       <thead>
-        <tr className="border-b border-gray-800/60 text-left text-gray-400">
+        <tr className="border-b border-surface-border bg-surface-elevated text-left text-caption uppercase tracking-wider text-fg-muted">
           <th className="px-5 py-3 font-medium">Rule</th>
           <th className="px-5 py-3 font-medium">Suggestion</th>
           <th className="px-5 py-3 font-medium text-right">FP Rate</th>
@@ -598,40 +584,40 @@ function TuningRow({
   return (
     <tr
       className={clsx(
-        'border-b border-gray-800/40 transition-colors',
-        entry.dismissed_at ? 'opacity-60' : 'hover:bg-gray-800/30',
+        'border-b border-surface-border transition-colors',
+        entry.dismissed_at ? 'opacity-60' : 'hover:bg-surface-hover',
       )}
       data-testid={`tuning-row-${entry.rule_id}`}
     >
       <td className="px-5 py-3 align-top">
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2">
-            <span className="font-medium text-white">{entry.name}</span>
+            <span className="font-medium text-fg-primary">{entry.name}</span>
             <span
               className={clsx(
-                'px-1.5 py-0.5 rounded text-[10px] uppercase tracking-wider border',
+                'px-2 py-0.5 rounded-pill text-eyebrow uppercase tracking-wider font-medium',
                 severityTone,
               )}
             >
               {entry.severity}
             </span>
             {!entry.enabled ? (
-              <span className="px-1.5 py-0.5 rounded text-[10px] uppercase tracking-wider border border-gray-600 text-gray-400">
+              <span className="px-2 py-0.5 rounded-pill text-eyebrow uppercase tracking-wider bg-pill-neutral-bg text-tone-neutral">
                 Disabled
               </span>
             ) : null}
             {entry.dismissed_at ? (
-              <span className="px-1.5 py-0.5 rounded text-[10px] uppercase tracking-wider border border-gray-600 text-gray-400">
+              <span className="px-2 py-0.5 rounded-pill text-eyebrow uppercase tracking-wider bg-pill-neutral-bg text-tone-neutral">
                 Dismissed
               </span>
             ) : null}
           </div>
           {entry.reasons.length > 0 ? (
-            <p className="text-xs text-gray-400 max-w-md">
+            <p className="text-xs text-fg-muted max-w-md">
               {entry.reasons[0]}
             </p>
           ) : null}
-          <p className="text-[11px] text-gray-500">
+          <p className="text-caption text-fg-subtle">
             {entry.category}
             {entry.last_triggered_at
               ? ` • last hit ${new Date(entry.last_triggered_at).toLocaleDateString()}`
@@ -642,7 +628,7 @@ function TuningRow({
       <td className="px-5 py-3 align-top">
         <span
           className={clsx(
-            'inline-flex items-center px-2 py-1 rounded-md text-xs font-medium border',
+            'inline-flex items-center px-2 py-1 rounded-pill text-xs font-medium',
             SUGGESTION_TONE[entry.suggestion],
           )}
         >
@@ -651,16 +637,16 @@ function TuningRow({
       </td>
       <td
         className={clsx(
-          'px-5 py-3 align-top text-right font-medium',
-          fpPct >= 50 ? 'text-red-400' : fpPct >= 20 ? 'text-amber-400' : 'text-emerald-400',
+          'px-5 py-3 align-top text-right font-medium font-mono tabular-nums',
+          fpPct >= 50 ? 'text-tone-danger' : fpPct >= 20 ? 'text-tone-warning' : 'text-tone-success',
         )}
       >
         {fpPct.toFixed(1)}%
       </td>
-      <td className="px-5 py-3 align-top text-right text-gray-300">
+      <td className="px-5 py-3 align-top text-right font-mono tabular-nums text-fg-secondary">
         {entry.total_hits.toLocaleString()}
       </td>
-      <td className="px-5 py-3 align-top text-right text-gray-300">
+      <td className="px-5 py-3 align-top text-right font-mono tabular-nums text-fg-secondary">
         {entry.confidence}
       </td>
       <td className="px-5 py-3 align-top text-center">
@@ -671,8 +657,8 @@ function TuningRow({
           aria-label={`Toggle auto-tune for ${entry.name}`}
           aria-pressed={entry.auto_tune}
           className={clsx(
-            'relative inline-flex h-5 w-9 items-center rounded-full transition-colors disabled:opacity-50',
-            entry.auto_tune ? 'bg-blue-600' : 'bg-gray-600',
+            'relative inline-flex h-5 w-9 items-center rounded-pill transition-colors disabled:opacity-50',
+            entry.auto_tune ? 'bg-accent' : 'bg-surface-border-strong',
           )}
         >
           <span
@@ -690,7 +676,7 @@ function TuningRow({
               type="button"
               onClick={() => onApply(entry, primaryAction)}
               disabled={busy || !entry.enabled}
-              className="text-xs px-2.5 py-1.5 rounded-md bg-blue-600 hover:bg-blue-500 text-white transition-colors disabled:bg-gray-700 disabled:text-gray-400 disabled:cursor-not-allowed"
+              className="text-xs px-2.5 py-1.5 rounded-control border border-surface-border bg-surface-card text-fg-primary hover:bg-surface-hover transition-colors disabled:opacity-45 disabled:cursor-not-allowed"
               title={
                 !entry.enabled
                   ? 'Rule is already disabled'
@@ -704,7 +690,7 @@ function TuningRow({
               type="button"
               onClick={() => onApply(entry, 'acknowledge')}
               disabled={busy}
-              className="text-xs px-2.5 py-1.5 rounded-md bg-gray-800 hover:bg-gray-700 text-gray-200 transition-colors disabled:opacity-50"
+              className="text-xs px-2.5 py-1.5 rounded-control border border-surface-border bg-surface-card text-fg-primary hover:bg-surface-hover transition-colors disabled:opacity-45"
             >
               {busyAction === 'apply' ? 'Acknowledging…' : 'Acknowledge'}
             </button>
@@ -713,7 +699,7 @@ function TuningRow({
             type="button"
             onClick={() => onDismiss(entry)}
             disabled={busy || Boolean(entry.dismissed_at)}
-            className="text-xs px-2.5 py-1.5 rounded-md border border-gray-700 bg-gray-800/60 hover:bg-gray-700 text-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="text-xs px-2.5 py-1.5 rounded-control text-fg-secondary hover:bg-surface-hover hover:text-fg-primary transition-colors disabled:opacity-45 disabled:cursor-not-allowed"
           >
             {busyAction === 'dismiss' ? 'Dismissing…' : 'Dismiss'}
           </button>
@@ -727,7 +713,7 @@ function TuningRow({
 
 function TuningTableSkeleton() {
   return (
-    <div className="divide-y divide-gray-800/40">
+    <div className="divide-y divide-surface-border">
       {Array.from({ length: 6 }).map((_, i) => (
         <div key={i} className="flex items-center gap-4 px-5 py-4">
           <div className="flex-1 space-y-2">
@@ -754,27 +740,29 @@ interface PaginationProps {
 
 function Pagination({ page, totalPages, total, onPageChange }: PaginationProps) {
   return (
-    <div className="px-5 py-3 border-t border-gray-800/60 flex flex-wrap items-center justify-between gap-3 text-sm text-gray-400">
+    <div className="px-5 py-3 border-t border-surface-border flex flex-wrap items-center justify-between gap-3 text-body text-fg-muted">
       <span>
         Page {page} of {totalPages} • {total.toLocaleString()} rules
       </span>
       <div className="flex items-center gap-2">
-        <button
+        <Button
           type="button"
+          variant="secondary"
+          size="sm"
           onClick={() => onPageChange(Math.max(1, page - 1))}
           disabled={page <= 1}
-          className="px-2.5 py-1 rounded-md border border-gray-700 bg-gray-800/60 hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed text-gray-200 transition-colors"
         >
           ← Prev
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
+          variant="secondary"
+          size="sm"
           onClick={() => onPageChange(Math.min(totalPages, page + 1))}
           disabled={page >= totalPages}
-          className="px-2.5 py-1 rounded-md border border-gray-700 bg-gray-800/60 hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed text-gray-200 transition-colors"
         >
           Next →
-        </button>
+        </Button>
       </div>
     </div>
   );

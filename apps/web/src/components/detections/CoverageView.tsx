@@ -75,17 +75,17 @@ export function CoverageView() {
 
   if (isLoading) {
     return (
-      <div className="p-8 text-sm text-gray-400">Loading coverage…</div>
+      <div className="p-8 text-body text-fg-muted">Loading coverage…</div>
     );
   }
 
   if (error || !data?.mitre_coverage || !matrix) {
     return (
       <div className="p-8">
-        <h1 className="text-2xl font-bold text-white">MITRE ATT&CK coverage</h1>
-        <p className="mt-3 text-sm text-rose-300">
+        <h1 className="text-page-title font-bold text-fg-primary">MITRE ATT&amp;CK coverage</h1>
+        <p className="mt-3 text-body text-tone-danger">
           Could not load <code>marketplace/index.json</code>. Run{' '}
-          <code className="rounded bg-black/40 px-1.5 py-0.5">
+          <code className="rounded-control bg-surface-elevated px-1.5 py-0.5 text-fg-secondary">
             python3 scripts/build_marketplace.py
           </code>{' '}
           to generate it.
@@ -97,12 +97,12 @@ export function CoverageView() {
   const { stats } = data;
 
   return (
-    <div className="p-6 lg:p-8">
-      <header className="mb-6">
-        <h1 className="text-2xl font-bold text-white">MITRE ATT&CK coverage</h1>
-        <p className="mt-2 max-w-3xl text-sm text-gray-400">
+    <div className="space-y-4">
+      <header className="mb-4">
+        <h1 className="text-page-title font-bold text-fg-primary">MITRE ATT&amp;CK coverage</h1>
+        <p className="mt-2 max-w-3xl text-body text-fg-muted">
           Live coverage matrix derived from <code>marketplace/index.json</code>.
-          Counts reflect detection rules and playbooks with at least one
+          Counts reflect detection rules and runbooks with at least one
           mapped MITRE technique. Sub-techniques inherit their parent tactic.
         </p>
       </header>
@@ -211,13 +211,13 @@ function Card({
   breakdown?: React.ReactNode;
 }) {
   return (
-    <div className="rounded-lg border border-white/10 bg-surface-card/40 p-4">
-      <div className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+    <div className="rounded-container border border-surface-border bg-surface-card p-4">
+      <div className="text-caption font-semibold uppercase tracking-wider text-fg-muted">
         {label}
       </div>
-      <div className="mt-1 font-mono text-3xl font-bold text-white">{value}</div>
+      <div className="mt-1 font-mono text-kpi font-bold text-fg-primary">{value}</div>
       {children ? (
-        <div className="mt-1 text-xs text-gray-500">{children}</div>
+        <div className="mt-1 text-xs text-fg-muted">{children}</div>
       ) : null}
       {breakdown}
     </div>
@@ -247,10 +247,10 @@ function TierFilterBar({
           type="button"
           onClick={() => onChange(opt.id)}
           className={clsx(
-            'rounded-full border px-3 py-1 text-xs font-medium transition-colors',
+            'rounded-pill border px-3 py-1 text-xs font-medium transition-colors',
             value === opt.id
-              ? 'border-brand-300/60 bg-brand-500/20 text-white'
-              : 'border-white/10 bg-surface-card/40 text-gray-300 hover:bg-white/5',
+              ? 'border-accent bg-nav-active-bg text-fg-primary'
+              : 'border-surface-border bg-surface-card text-fg-secondary hover:bg-surface-hover',
           )}
         >
           {opt.label}
@@ -264,22 +264,22 @@ function TierFilterBar({
 
 function Legend() {
   return (
-    <div className="mb-4 flex flex-wrap items-center gap-4 text-[11px] text-gray-400">
+    <div className="mb-4 flex flex-wrap items-center gap-4 text-caption text-fg-muted">
       <span>Heatmap intensity = number of rules covering the technique:</span>
       <span className="inline-flex items-center gap-1.5">
-        <span className="h-3 w-3 rounded border border-white/10 bg-emerald-500/15" />
+        <span className="h-3 w-3 rounded border border-surface-border bg-dot-success/15" />
         1 rule
       </span>
       <span className="inline-flex items-center gap-1.5">
-        <span className="h-3 w-3 rounded border border-white/10 bg-emerald-500/35" />
+        <span className="h-3 w-3 rounded border border-surface-border bg-dot-success/35" />
         2-4
       </span>
       <span className="inline-flex items-center gap-1.5">
-        <span className="h-3 w-3 rounded border border-white/10 bg-emerald-500/55" />
+        <span className="h-3 w-3 rounded border border-surface-border bg-dot-success/55" />
         5-9
       </span>
       <span className="inline-flex items-center gap-1.5">
-        <span className="h-3 w-3 rounded border border-white/10 bg-emerald-500/80" />
+        <span className="h-3 w-3 rounded border border-surface-border bg-dot-success/80" />
         10+
       </span>
     </div>
@@ -291,7 +291,7 @@ function Legend() {
 function Matrix({ matrix }: { matrix: BuiltMatrix }) {
   if (matrix.tactics.length === 0) {
     return (
-      <div className="rounded-lg border border-white/10 bg-surface-card/40 p-6 text-sm text-gray-400">
+      <div className="rounded-container border border-surface-border bg-surface-card p-6 text-body text-fg-muted">
         No techniques covered for this tier yet.
       </div>
     );
@@ -313,15 +313,15 @@ function Matrix({ matrix }: { matrix: BuiltMatrix }) {
 
 function TacticColumn({ column }: { column: BuiltTactic }) {
   return (
-    <div className="flex flex-col gap-1.5 rounded-lg border border-white/10 bg-surface-card/30 p-2.5">
+    <div className="flex flex-col gap-1.5 rounded-container border border-surface-border bg-surface-card p-2.5">
       <div className="px-1 pb-1.5">
-        <div className="font-mono text-[10px] uppercase tracking-wider text-gray-500">
+        <div className="font-mono text-eyebrow uppercase tracking-wider text-fg-subtle">
           {column.tactic.id}
         </div>
-        <div className="text-xs font-semibold text-white">
+        <div className="text-xs font-semibold text-fg-primary">
           {column.tactic.name}
         </div>
-        <div className="mt-0.5 text-[10px] text-gray-500">
+        <div className="mt-0.5 text-eyebrow text-fg-subtle">
           {column.techniques.length} technique
           {column.techniques.length === 1 ? '' : 's'}
         </div>
@@ -343,8 +343,8 @@ function TechniqueCell({ technique }: { technique: BuiltTechnique }) {
       target="_blank"
       rel="noopener noreferrer"
       className={clsx(
-        'block rounded border px-2 py-1.5 transition-colors hover:border-brand-300/60',
-        'border-white/10',
+        'block rounded-control border px-2 py-1.5 transition-colors hover:border-accent',
+        'border-surface-border',
         intensity,
       )}
       title={`${technique.id} — ${technique.total} rule${
@@ -352,15 +352,15 @@ function TechniqueCell({ technique }: { technique: BuiltTechnique }) {
       }`}
     >
       <div className="flex items-baseline justify-between gap-2">
-        <span className="font-mono text-[11px] font-medium text-white/90">
+        <span className="font-mono text-caption font-medium">
           {technique.id}
         </span>
-        <span className="font-mono text-[11px] text-white">
+        <span className="font-mono text-caption">
           {technique.total}
         </span>
       </div>
       {technique.byTier.length > 0 ? (
-        <div className="mt-1 flex h-1 overflow-hidden rounded-full bg-white/5">
+        <div className="mt-1 flex h-1 overflow-hidden rounded-pill bg-surface-subtle">
           {technique.byTier.map(({ tier, count }) => {
             const pct = (count / technique.total) * 100;
             return (
@@ -460,10 +460,10 @@ function buildMatrix(
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
 function intensityClass(count: number): string {
-  if (count >= 10) return 'bg-emerald-500/80';
-  if (count >= 5) return 'bg-emerald-500/55';
-  if (count >= 2) return 'bg-emerald-500/35';
-  return 'bg-emerald-500/15';
+  if (count >= 10) return 'bg-dot-success/80 text-white';
+  if (count >= 5) return 'bg-dot-success/55 text-fg-primary';
+  if (count >= 2) return 'bg-dot-success/35 text-fg-primary';
+  return 'bg-dot-success/15 text-fg-primary';
 }
 
 function tierColorFor(tier: string): string {

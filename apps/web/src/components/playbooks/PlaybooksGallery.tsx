@@ -199,19 +199,19 @@ export function PlaybooksGallery({ playbooks, initialFilters }: PlaybooksGallery
     <div className="space-y-4">
       {/* Toolbar — search + source pills */}
       <div className="flex flex-wrap items-center gap-3">
-        <div className="flex flex-1 min-w-[220px] gap-2">
+        <div className="flex flex-1 min-w-56 gap-2">
           <input
             type="search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search runbooks by name, tag, description…"
             aria-label="Search runbooks"
-            className="flex-1 rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:border-blue-500 focus:outline-none"
+            className="flex-1 rounded-control border border-surface-border bg-surface-card px-3 py-2 text-body text-fg-primary placeholder:text-fg-subtle focus:border-accent focus:outline-none"
           />
         </div>
 
         <div
-          className="flex gap-1 rounded-lg border border-gray-700 bg-gray-900 p-1"
+          className="flex gap-1 rounded-control border border-surface-border bg-surface-card p-1"
           role="tablist"
           aria-label="Runbook source"
         >
@@ -239,7 +239,7 @@ export function PlaybooksGallery({ playbooks, initialFilters }: PlaybooksGallery
         {hasActiveFilters && (
           <button
             onClick={clearAllFilters}
-            className="text-xs text-gray-500 hover:text-red-400 transition-colors px-2 py-1 rounded border border-gray-800 hover:border-red-900"
+            className="text-xs text-fg-muted hover:text-tone-danger transition-colors px-2 py-1 rounded-control border border-surface-border hover:border-severity-critical-ink/40"
           >
             Clear filters
           </button>
@@ -249,7 +249,7 @@ export function PlaybooksGallery({ playbooks, initialFilters }: PlaybooksGallery
       {/* Category facet (only when a category is meaningful) */}
       {showCategoryRow && (
         <div className="flex flex-wrap items-center gap-2" aria-label="Filter by category">
-          <span className="text-xs text-gray-600 w-16 shrink-0">Category</span>
+          <span className="text-xs text-fg-subtle w-16 shrink-0">Category</span>
           <CategoryPill
             label="All"
             active={category === 'all'}
@@ -273,7 +273,7 @@ export function PlaybooksGallery({ playbooks, initialFilters }: PlaybooksGallery
 
       {/* MITRE Tactic filter */}
       <div className="flex flex-wrap items-center gap-2" aria-label="Filter by MITRE tactic">
-        <span className="text-xs text-gray-600 w-16 shrink-0">MITRE</span>
+        <span className="text-xs text-fg-subtle w-16 shrink-0">MITRE</span>
         <FacetPill
           label="All"
           active={mitreTactic === 'all'}
@@ -288,7 +288,7 @@ export function PlaybooksGallery({ playbooks, initialFilters }: PlaybooksGallery
               label={`${tactic} (${n})`}
               active={mitreTactic === tactic}
               onClick={() => setMitreTactic(tactic)}
-              activeClass="bg-red-900/40 text-red-300 border-red-800"
+              activeClass="bg-pill-danger-bg text-tone-danger border-transparent"
             />
           );
         })}
@@ -296,7 +296,7 @@ export function PlaybooksGallery({ playbooks, initialFilters }: PlaybooksGallery
 
       {/* Severity filter */}
       <div className="flex flex-wrap items-center gap-2" aria-label="Filter by severity">
-        <span className="text-xs text-gray-600 w-16 shrink-0">Severity</span>
+        <span className="text-xs text-fg-subtle w-16 shrink-0">Severity</span>
         <FacetPill
           label="All"
           active={severity === 'all'}
@@ -306,11 +306,11 @@ export function PlaybooksGallery({ playbooks, initialFilters }: PlaybooksGallery
           const n = severityCounts[sev];
           if (n === 0) return null;
           const COLOR_MAP: Record<SeverityLevel, string> = {
-            info:     'bg-blue-900/40 text-blue-300 border-blue-800',
-            low:      'bg-gray-800/60 text-gray-300 border-gray-600',
-            medium:   'bg-yellow-900/40 text-yellow-300 border-yellow-800',
-            high:     'bg-orange-900/40 text-orange-300 border-orange-800',
-            critical: 'bg-red-900/60 text-red-200 border-red-700',
+            info:     'bg-severity-info-bg text-severity-info-ink border-transparent',
+            low:      'bg-severity-low-bg text-severity-low-ink border-transparent',
+            medium:   'bg-severity-medium-bg text-severity-medium-ink border-transparent',
+            high:     'bg-severity-high-bg text-severity-high-ink border-transparent',
+            critical: 'bg-severity-critical-bg text-severity-critical-ink border-transparent',
           };
           return (
             <FacetPill
@@ -326,7 +326,7 @@ export function PlaybooksGallery({ playbooks, initialFilters }: PlaybooksGallery
 
       {/* Integration filter */}
       <div className="flex flex-wrap items-center gap-2" aria-label="Filter by integration">
-        <span className="text-xs text-gray-600 w-16 shrink-0">Uses</span>
+        <span className="text-xs text-fg-subtle w-16 shrink-0">Uses</span>
         <FacetPill
           label="All"
           active={integration === 'all'}
@@ -341,7 +341,7 @@ export function PlaybooksGallery({ playbooks, initialFilters }: PlaybooksGallery
               label={`${intType} (${n})`}
               active={integration === intType}
               onClick={() => setIntegration(intType)}
-              activeClass="bg-teal-900/40 text-teal-300 border-teal-800"
+              activeClass="bg-pill-info-bg text-tone-info border-transparent"
             />
           );
         })}
@@ -350,7 +350,7 @@ export function PlaybooksGallery({ playbooks, initialFilters }: PlaybooksGallery
       {forkError && (
         <div
           role="alert"
-          className="rounded-md border border-red-500/30 bg-red-500/5 px-4 py-2 text-xs text-red-200"
+          className="rounded-control border border-severity-critical-ink/30 bg-severity-critical-bg px-4 py-2 text-xs text-severity-critical-ink"
         >
           {forkError}
         </div>
@@ -359,13 +359,13 @@ export function PlaybooksGallery({ playbooks, initialFilters }: PlaybooksGallery
       {/* Empty state */}
       {filtered.length === 0 && (
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <div className="text-lg font-medium text-gray-400 mb-2">No matching runbooks</div>
-          <div className="text-sm text-gray-600 mb-6">
+          <div className="text-lg font-medium text-fg-secondary mb-2">No matching runbooks</div>
+          <div className="text-body text-fg-muted mb-6">
             Try clearing your filters, or create a new runbook from scratch.
           </div>
           <Link
             href="/playbooks/new"
-            className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm transition-colors"
+            className="px-4 py-2 rounded-control border border-surface-border bg-surface-elevated hover:bg-surface-hover text-fg-primary text-control font-medium transition-colors"
           >
             Create a runbook
           </Link>
@@ -414,10 +414,10 @@ function FacetPill({
     <button
       onClick={onClick}
       className={clsx(
-        'rounded-full px-3 py-0.5 text-xs font-medium border transition-colors',
+        'rounded-pill px-3 py-0.5 text-xs font-medium border transition-colors',
         active
-          ? activeClass ?? 'bg-blue-900/40 text-blue-200 border-blue-700'
-          : 'border-gray-800 text-gray-500 hover:text-gray-300 hover:border-gray-700',
+          ? activeClass ?? 'bg-nav-active-bg text-accent border-accent/30'
+          : 'border-surface-border text-fg-muted hover:text-fg-primary hover:bg-surface-hover',
       )}
     >
       {label}
@@ -446,12 +446,12 @@ function SourcePill({
       aria-selected={active}
       onClick={onClick}
       className={clsx(
-        'rounded px-2.5 py-1.5 text-xs font-medium transition-colors',
+        'rounded-control px-2.5 py-1.5 text-xs font-medium transition-colors',
         active
           ? tone === 'pack'
-            ? 'bg-purple-700 text-white'
-            : 'bg-blue-600 text-white'
-          : 'text-gray-400 hover:text-gray-200',
+            ? 'bg-pill-purple-bg text-tone-purple'
+            : 'bg-nav-active-bg text-fg-primary'
+          : 'text-fg-muted hover:text-fg-primary',
       )}
     >
       {label} ({count})
@@ -470,13 +470,13 @@ function CategoryPill({
   onClick: () => void;
   tone?: PackCategory;
 }) {
-  const activeClasses = tone ? categoryBadgeClass(tone) : 'bg-blue-900/40 text-blue-200 border-blue-700';
+  const activeClasses = tone ? categoryBadgeClass(tone) : 'bg-nav-active-bg text-accent border-accent/30';
   return (
     <button
       onClick={onClick}
       className={clsx(
-        'rounded-full px-3 py-1 text-xs font-medium border transition-colors',
-        active ? activeClasses : 'border-gray-800 text-gray-500 hover:text-gray-300 hover:border-gray-700',
+        'rounded-pill px-3 py-1 text-xs font-medium border transition-colors',
+        active ? activeClasses : 'border-surface-border text-fg-muted hover:text-fg-primary hover:bg-surface-hover',
       )}
     >
       {label}
@@ -505,18 +505,18 @@ function PlaybookRow({
   const integrations = integrationsOf(playbook);
 
   const SEVERITY_MINI: Record<SeverityLevel, string> = {
-    info:     'bg-blue-900/40 text-blue-400 border-blue-800',
-    low:      'bg-gray-800/60 text-gray-400 border-gray-700',
-    medium:   'bg-yellow-900/40 text-yellow-400 border-yellow-800',
-    high:     'bg-orange-900/40 text-orange-400 border-orange-800',
-    critical: 'bg-red-900/50 text-red-300 border-red-800',
+    info:     'bg-severity-info-bg text-severity-info-ink',
+    low:      'bg-severity-low-bg text-severity-low-ink',
+    medium:   'bg-severity-medium-bg text-severity-medium-ink',
+    high:     'bg-severity-high-bg text-severity-high-ink',
+    critical: 'bg-severity-critical-bg text-severity-critical-ink',
   };
 
   return (
     <div
       className={clsx(
-        'bg-gray-900/60 border rounded-xl px-5 py-4 flex items-center gap-4 transition-colors',
-        playbook.enabled ? 'border-gray-800 hover:border-gray-700' : 'border-gray-800/40 opacity-70',
+        'bg-surface-card border rounded-container px-5 py-4 flex items-center gap-4 transition-colors',
+        playbook.enabled ? 'border-surface-border hover:bg-surface-elevated' : 'border-surface-border opacity-70',
       )}
     >
       <EnabledToggle playbook={playbook} />
@@ -524,7 +524,7 @@ function PlaybookRow({
         <div className="flex items-center gap-2 flex-wrap">
           {isPack && (
             <span
-              className="text-[10px] font-semibold tracking-wide px-1.5 py-0.5 rounded border border-purple-700/60 bg-purple-900/40 text-purple-200"
+              className="text-eyebrow font-semibold tracking-wide px-1.5 py-0.5 rounded-pill bg-pill-purple-bg text-tone-purple"
               title="Shipped reference pack — fork to customize."
             >
               PACK
@@ -532,7 +532,7 @@ function PlaybookRow({
           )}
           {cat && (
             <span
-              className={`text-[10px] px-1.5 py-0.5 rounded border ${categoryBadgeClass(cat)}`}
+              className={`text-eyebrow px-1.5 py-0.5 rounded-pill ${categoryBadgeClass(cat)}`}
               title={`Category: ${categoryLabel(cat)}`}
             >
               {categoryLabel(cat)}
@@ -540,27 +540,27 @@ function PlaybookRow({
           )}
           <Link
             href={`/playbooks/${playbook.id}`}
-            className="text-white font-medium hover:text-blue-300 transition-colors truncate"
+            className="text-fg-primary font-medium hover:text-accent transition-colors truncate"
           >
             {playbook.name}
           </Link>
           <span
-            className={`text-xs px-2 py-0.5 rounded border ${
+            className={`text-xs px-2 py-0.5 rounded-pill ${
               TRIGGER_COLORS[triggerOn] ?? TRIGGER_COLORS.manual
             }`}
           >
             {triggerOn}
           </span>
           {!playbook.enabled && (
-            <span className="text-xs px-1.5 py-0.5 rounded border border-gray-700 text-gray-500">
+            <span className="text-xs px-1.5 py-0.5 rounded-pill bg-pill-neutral-bg text-tone-neutral">
               disabled
             </span>
           )}
         </div>
         {playbook.description && (
-          <p className="text-sm text-gray-500 mt-0.5 line-clamp-2">{playbook.description}</p>
+          <p className="text-body text-fg-muted mt-0.5 line-clamp-2">{playbook.description}</p>
         )}
-        <div className="flex items-center gap-3 mt-1 text-xs text-gray-700">
+        <div className="flex items-center gap-3 mt-1 text-xs text-fg-subtle">
           <span>{playbook.steps.length} steps</span>
           <span>v{playbook.version}</span>
           {playbook.author && <span>by {playbook.author}</span>}
@@ -571,19 +571,19 @@ function PlaybookRow({
             {tactics.slice(0, 3).map((t) => (
               <span
                 key={t}
-                className="text-[9px] px-1.5 py-0.5 rounded border border-red-900/60 bg-red-950/40 text-red-400"
+                className="text-eyebrow px-1.5 py-0.5 rounded-pill bg-pill-danger-bg text-tone-danger"
                 title={`MITRE tactic: ${t}`}
               >
                 {t}
               </span>
             ))}
             {tactics.length > 3 && (
-              <span className="text-[9px] text-gray-600">+{tactics.length - 3} more</span>
+              <span className="text-eyebrow text-fg-subtle">+{tactics.length - 3} more</span>
             )}
             {sevs.map((s) => (
               <span
                 key={s}
-                className={`text-[9px] px-1.5 py-0.5 rounded border ${SEVERITY_MINI[s]}`}
+                className={`text-eyebrow px-1.5 py-0.5 rounded-pill ${SEVERITY_MINI[s]}`}
                 title={`Trigger severity: ${s}`}
               >
                 {s}
@@ -592,14 +592,14 @@ function PlaybookRow({
             {integrations.slice(0, 2).map((i) => (
               <span
                 key={i}
-                className="text-[9px] px-1.5 py-0.5 rounded border border-teal-900/60 bg-teal-950/40 text-teal-400"
+                className="text-eyebrow px-1.5 py-0.5 rounded-pill bg-pill-info-bg text-tone-info"
                 title={`Integration: ${i}`}
               >
                 {i}
               </span>
             ))}
             {integrations.length > 2 && (
-              <span className="text-[9px] text-gray-600">+{integrations.length - 2} integrations</span>
+              <span className="text-eyebrow text-fg-subtle">+{integrations.length - 2} integrations</span>
             )}
           </div>
         )}
@@ -609,7 +609,7 @@ function PlaybookRow({
         <button
           onClick={onPreview}
           aria-label={`Preview DAG for ${playbook.name}`}
-          className="text-xs px-2.5 py-1 rounded border border-gray-700 text-gray-300 hover:text-blue-300 hover:border-blue-800 transition-colors"
+          className="text-xs px-2.5 py-1 rounded-control border border-surface-border text-fg-secondary hover:text-fg-primary hover:bg-surface-hover transition-colors"
         >
           Preview
         </button>
@@ -618,7 +618,7 @@ function PlaybookRow({
             onClick={onFork}
             disabled={forking}
             aria-label={`Fork ${playbook.name}`}
-            className="text-xs px-2.5 py-1 rounded bg-purple-700 hover:bg-purple-600 text-white transition-colors disabled:opacity-50"
+            className="text-xs px-2.5 py-1 rounded-control bg-pill-purple-bg text-tone-purple hover:brightness-110 transition-colors disabled:opacity-50"
           >
             {forking ? 'Forking…' : 'Fork'}
           </button>
@@ -626,13 +626,13 @@ function PlaybookRow({
           <>
             <Link
               href={`/playbooks/${playbook.id}`}
-              className="text-xs px-2.5 py-1 rounded border border-gray-700 text-gray-400 hover:text-gray-200 hover:border-gray-600 transition-colors"
+              className="text-xs px-2.5 py-1 rounded-control border border-surface-border text-fg-secondary hover:text-fg-primary hover:bg-surface-hover transition-colors"
             >
               Edit
             </Link>
             <button
               onClick={() => deletePlaybook(playbook.id)}
-              className="text-xs px-2.5 py-1 rounded border border-gray-800 text-gray-600 hover:text-red-400 hover:border-red-900 transition-colors"
+              className="text-xs px-2.5 py-1 rounded-control border border-surface-border text-fg-muted hover:text-tone-danger hover:border-severity-critical-ink/40 transition-colors"
               aria-label={`Delete ${playbook.name}`}
             >
               Delete

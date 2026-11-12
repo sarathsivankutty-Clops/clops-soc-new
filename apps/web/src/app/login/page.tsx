@@ -15,6 +15,8 @@
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
+import { useOptionalTheme } from '@/components/theme/ThemeProvider';
+import { Button } from '@/components/ui/Button';
 import {
   API_BASE,
   authApi,
@@ -213,37 +215,34 @@ async function landingRoute(requested: string): Promise<string> {
     setPassword(DEMO_PASSWORD);
   };
 
+  const themeCtx = useOptionalTheme();
+  const isLight = themeCtx?.resolved === 'light';
+  const fallbackLogo = isLight ? '/brand/logo-light.png' : '/brand/logo-dark.png';
+
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 antialiased flex flex-col">
-      <div className="flex-1 flex items-center justify-center px-6 py-16">
-        <div className="w-full max-w-md">
+    <div className="min-h-screen bg-surface-base text-fg-primary antialiased flex flex-col">
+      <div className="flex-1 flex items-center justify-center px-6 py-12">
+        <div className="w-full max-w-md rounded-container border border-surface-border bg-surface-card p-8 shadow-overlay">
           {/* Brand */}
-          <div className="flex flex-col items-center text-center mb-10">
+          <div className="flex flex-col items-center text-center mb-8">
             <Link
               href="/"
-              className="w-14 h-14 rounded-2xl bg-indigo-600 flex items-center justify-center mb-5 hover:bg-indigo-500 transition"
-              aria-label="Back to AiSOC home"
+              className="mb-5 inline-flex items-center justify-center rounded-control focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+              aria-label="Back to ClopsSOC home"
             >
-              <svg
-                className="w-8 h-8 text-white"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.75}
-                  d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"
-                />
-              </svg>
+              {/* [HIDDEN-UI THEME-5 replaced indigo shield icon with ClopsSOC fallback mark] */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={fallbackLogo}
+                alt="ClopsSOC"
+                className="h-9 w-auto max-w-44 object-contain"
+              />
             </Link>
-            <h1 className="text-2xl font-semibold tracking-tight">
-              Sign in to AiSOC
+            <h1 className="text-page-title font-semibold tracking-tight text-fg-primary">
+              Sign in to ClopsSOC
             </h1>
-            <p className="text-sm text-zinc-400 mt-2 leading-relaxed">
-              Open-source AI SOC console. Sign in with your tenant&rsquo;s
-              account.
+            <p className="text-body text-fg-muted mt-1.5 leading-relaxed">
+              Sign in with your tenant&rsquo;s security operations account.
             </p>
           </div>
 
@@ -253,22 +252,24 @@ async function landingRoute(requested: string): Promise<string> {
               button that fails and told the operator's own users to sign in
               with an account on somebody else's instance. */}
           {isDemoMode() && HAS_DEMO_CREDENTIALS && (
-          <div className="mb-6 rounded-xl border border-indigo-500/30 bg-indigo-500/5 px-4 py-3 text-sm">
+          <div className="mb-6 rounded-control border border-accent/30 bg-accent-subtle px-4 py-3 text-control">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="font-medium text-indigo-300">Public demo</p>
-                <p className="text-xs text-zinc-400 mt-0.5">
-                  <code className="text-zinc-300">{DEMO_EMAIL}</code> /{' '}
-                  <code className="text-zinc-300">{DEMO_PASSWORD}</code>
+                <p className="font-medium text-accent">Public demo</p>
+                <p className="text-xs text-fg-muted mt-0.5">
+                  <code className="text-fg-secondary">{DEMO_EMAIL}</code> /{' '}
+                  <code className="text-fg-secondary">{DEMO_PASSWORD}</code>
                 </p>
               </div>
-              <button
+              <Button
                 type="button"
+                variant="secondary"
+                size="sm"
                 onClick={useDemo}
-                className="shrink-0 rounded-lg border border-indigo-500/40 bg-indigo-500/10 px-3 py-1.5 text-xs font-medium text-indigo-200 hover:bg-indigo-500/20 transition"
+                className="shrink-0"
               >
                 Use demo
-              </button>
+              </Button>
             </div>
           </div>
           )}
@@ -279,7 +280,7 @@ async function landingRoute(requested: string): Promise<string> {
               their authenticator. */}
           {challenge ? (
             <form onSubmit={submitCode} className="space-y-4" noValidate data-testid="mfa-challenge">
-              <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 px-4 py-3 text-sm text-zinc-300">
+              <div className="rounded-control border border-surface-border bg-surface-elevated px-4 py-3 text-body text-fg-secondary">
                 {challenge.mfa_enrollment_required
                   ? 'Your organisation requires a second factor and this account has not set one up yet. Finish setting it up to sign in.'
                   : 'Enter the 6-digit code from your authenticator app, or one of your recovery codes.'}
@@ -290,27 +291,30 @@ async function landingRoute(requested: string): Promise<string> {
                   session, so every authenticated route would bounce them
                   straight back to this page. */}
               {challenge.mfa_enrollment_required && !enrolment ? (
-                <button
+                <Button
                   type="button"
+                  variant="primary"
+                  size="lg"
                   onClick={beginEnrolment}
                   disabled={phase === 'pending'}
-                  className="w-full inline-flex items-center justify-center rounded-xl bg-indigo-500 hover:bg-indigo-400 text-white font-medium py-3 px-4 transition disabled:bg-zinc-800 disabled:text-zinc-500"
+                  loading={phase === 'pending'}
+                  className="w-full"
                 >
                   {phase === 'pending' ? 'Preparing…' : 'Set up two-factor authentication'}
-                </button>
+                </Button>
               ) : (
                 <>
                   {enrolment ? (
-                    <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 px-4 py-3 space-y-2">
-                      <p className="text-xs text-zinc-400">
+                    <div className="rounded-control border border-surface-border bg-surface-elevated px-4 py-3 space-y-2">
+                      <p className="text-xs text-fg-muted">
                         Add this key to your authenticator app, then enter the code it shows.
                       </p>
-                      <code className="block break-all rounded-lg bg-zinc-950 px-3 py-2 text-xs tracking-wider text-indigo-300">
+                      <code className="block break-all rounded-control bg-surface-subtle px-3 py-2 text-xs tracking-wider text-accent">
                         {enrolment.secret}
                       </code>
                       <a
                         href={enrolment.otpauth_uri}
-                        className="inline-block text-xs text-indigo-400 hover:text-indigo-300 underline-offset-2 hover:underline"
+                        className="inline-block text-xs text-accent hover:text-accent-hover underline-offset-2 hover:underline"
                       >
                         Open in your authenticator app
                       </a>
@@ -318,11 +322,11 @@ async function landingRoute(requested: string): Promise<string> {
                   ) : null}
 
                   {recoveryCodes ? (
-                    <div className="rounded-xl border border-amber-500/40 bg-amber-500/5 px-4 py-3 space-y-2">
-                      <p className="text-xs font-medium text-amber-300">
+                    <div className="rounded-control border border-tone-warning/40 bg-pill-warning-bg px-4 py-3 space-y-2">
+                      <p className="text-xs font-medium text-tone-warning">
                         Save these recovery codes. They are shown once.
                       </p>
-                      <ul className="grid grid-cols-2 gap-1 font-mono text-[11px] text-zinc-300">
+                      <ul className="grid grid-cols-2 gap-1 font-mono text-caption text-fg-primary">
                         {recoveryCodes.map((rc) => (
                           <li key={rc}>{rc}</li>
                         ))}
@@ -331,7 +335,7 @@ async function landingRoute(requested: string): Promise<string> {
                   ) : null}
 
                   <label className="block">
-                    <span className="block text-xs uppercase tracking-wider text-zinc-500 mb-2">
+                    <span className="block text-caption font-medium uppercase tracking-wider text-fg-muted mb-2">
                       Verification code
                     </span>
                     <input
@@ -349,28 +353,33 @@ async function landingRoute(requested: string): Promise<string> {
                       onChange={(e) => setCode(e.target.value)}
                       disabled={phase === 'pending'}
                       required
-                      className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 text-sm tracking-[0.3em] text-zinc-100 placeholder:tracking-normal placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 disabled:opacity-60"
+                      className="w-full bg-surface-elevated border border-surface-border rounded-control px-4 py-3 text-body tracking-widest text-fg-primary placeholder:tracking-normal placeholder:text-fg-subtle focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent disabled:opacity-60"
                     />
                   </label>
                   {/* Navigating automatically would take the recovery
                       codes off the screen the moment they appeared, and
                       they are shown exactly once. */}
                   {recoveryCodes ? (
-                    <button
+                    <Button
                       type="button"
+                      variant="primary"
+                      size="lg"
                       onClick={async () => router.replace(await landingRoute(next))}
-                      className="w-full bg-indigo-500 hover:bg-indigo-400 text-white font-medium rounded-xl py-3 px-4 transition"
+                      className="w-full"
                     >
                       I have saved my recovery codes — continue
-                    </button>
+                    </Button>
                   ) : (
-                    <button
+                    <Button
                       type="submit"
+                      variant="primary"
+                      size="lg"
                       disabled={phase === 'pending' || !code}
-                      className="w-full bg-indigo-500 hover:bg-indigo-400 active:bg-indigo-600 text-white font-medium rounded-xl py-3 px-4 transition disabled:bg-zinc-800 disabled:text-zinc-500"
+                      loading={phase === 'pending'}
+                      className="w-full"
                     >
                       {phase === 'pending' ? 'Verifying…' : enrolment ? 'Confirm' : 'Verify'}
-                    </button>
+                    </Button>
                   )}
                 </>
               )}
@@ -378,7 +387,7 @@ async function landingRoute(requested: string): Promise<string> {
               {error ? (
                 <div
                   role="alert"
-                  className="rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2.5 text-xs text-red-300"
+                  className="rounded-control border border-severity-critical-ink/40 bg-severity-critical-bg px-3 py-2.5 text-xs text-severity-critical-ink"
                 >
                   {error}
                 </div>
@@ -394,7 +403,7 @@ async function landingRoute(requested: string): Promise<string> {
                   setEnrolment(null);
                   setRecoveryCodes(null);
                 }}
-                className="w-full text-xs text-zinc-500 hover:text-zinc-300 underline-offset-2 hover:underline"
+                className="w-full text-xs text-fg-muted hover:text-fg-primary underline-offset-2 hover:underline"
               >
                 Start over
               </button>
@@ -406,7 +415,7 @@ async function landingRoute(requested: string): Promise<string> {
             <div className="mb-4">
               <a
                 href={`${API_BASE}/auth/${sso.provider === 'saml' ? 'saml/login' : 'oidc/login'}?redirect=${encodeURIComponent(next)}`}
-                className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-indigo-500/40 bg-indigo-500/10 px-4 py-2.5 text-sm font-semibold text-indigo-200 hover:bg-indigo-500/20 transition"
+                className="w-full inline-flex items-center justify-center gap-2 rounded-control border border-surface-border-strong bg-surface-elevated px-4 py-2.5 text-body font-semibold text-fg-primary hover:bg-surface-hover transition"
                 data-testid="sso-login-button"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
@@ -415,10 +424,10 @@ async function landingRoute(requested: string): Promise<string> {
                 {sso.login_label || 'Continue with SSO'}
               </a>
               {sso.local_login_enabled ? (
-                <div className="my-4 flex items-center gap-3 text-[11px] uppercase tracking-widest text-zinc-600">
-                  <span className="h-px flex-1 bg-zinc-800" />
+                <div className="my-4 flex items-center gap-3 text-caption uppercase tracking-widest text-fg-subtle">
+                  <span className="h-px flex-1 bg-surface-border" />
                   or
-                  <span className="h-px flex-1 bg-zinc-800" />
+                  <span className="h-px flex-1 bg-surface-border" />
                 </div>
               ) : null}
             </div>
@@ -426,7 +435,7 @@ async function landingRoute(requested: string): Promise<string> {
 
           <form onSubmit={submit} className="space-y-4" noValidate>
             <label className="block">
-              <span className="block text-xs uppercase tracking-wider text-zinc-500 mb-2">
+              <span className="block text-caption font-medium uppercase tracking-wider text-fg-muted mb-2">
                 Email
               </span>
               <input
@@ -440,12 +449,12 @@ async function landingRoute(requested: string): Promise<string> {
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={phase === 'pending'}
                 required
-                className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 disabled:opacity-60"
+                className="w-full bg-surface-elevated border border-surface-border rounded-control px-4 py-3 text-body text-fg-primary placeholder:text-fg-subtle focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent disabled:opacity-60"
               />
             </label>
 
             <label className="block">
-              <span className="block text-xs uppercase tracking-wider text-zinc-500 mb-2">
+              <span className="block text-caption font-medium uppercase tracking-wider text-fg-muted mb-2">
                 Password
               </span>
               <input
@@ -456,47 +465,25 @@ async function landingRoute(requested: string): Promise<string> {
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={phase === 'pending'}
                 required
-                className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 disabled:opacity-60"
+                className="w-full bg-surface-elevated border border-surface-border rounded-control px-4 py-3 text-body text-fg-primary placeholder:text-fg-subtle focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent disabled:opacity-60"
               />
             </label>
 
-            <button
+            <Button
               type="submit"
+              variant="primary"
+              size="lg"
               disabled={phase === 'pending' || !email || !password}
-              className="w-full bg-indigo-500 hover:bg-indigo-400 active:bg-indigo-600 text-white font-medium rounded-xl py-3 px-4 transition flex items-center justify-center gap-2 disabled:bg-zinc-800 disabled:text-zinc-500"
+              loading={phase === 'pending'}
+              className="w-full"
             >
-              {phase === 'pending' ? (
-                <>
-                  <svg
-                    className="w-4 h-4 animate-spin"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="3"
-                    />
-                    <path
-                      className="opacity-90"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-                    />
-                  </svg>
-                  <span>Signing in…</span>
-                </>
-              ) : (
-                <span>Sign in</span>
-              )}
-            </button>
+              {phase === 'pending' ? 'Signing in…' : 'Sign in'}
+            </Button>
 
             {error ? (
               <div
                 role="alert"
-                className="rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2.5 text-xs text-red-300"
+                className="rounded-control border border-severity-critical-ink/40 bg-severity-critical-bg px-3 py-2.5 text-xs text-severity-critical-ink"
               >
                 {error}
               </div>
@@ -506,21 +493,21 @@ async function landingRoute(requested: string): Promise<string> {
           )}
 
           {/* Footer hints */}
-          <div className="mt-8 space-y-3 text-center">
-            <p className="text-xs text-zinc-500">
+          <div className="mt-6 pt-5 border-t border-surface-border space-y-2.5 text-center">
+            <p className="text-xs text-fg-muted">
               On a phone?{' '}
               <Link
                 href="/responder/login"
-                className="text-indigo-400 hover:text-indigo-300 underline-offset-2 hover:underline"
+                className="text-accent hover:text-accent-hover underline-offset-2 hover:underline"
               >
                 Use the responder PWA
               </Link>{' '}
               with passkeys.
             </p>
-            <p className="text-[11px] text-zinc-600">
+            <p className="text-caption text-fg-subtle">
               <Link
                 href="/"
-                className="hover:text-zinc-400 underline-offset-2 hover:underline"
+                className="hover:text-fg-secondary underline-offset-2 hover:underline"
               >
                 ← Back to home
               </Link>
@@ -529,9 +516,9 @@ async function landingRoute(requested: string): Promise<string> {
         </div>
       </div>
 
-      <div className="px-6 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 text-center">
-        <p className="text-[10px] text-zinc-700 uppercase tracking-widest">
-          AiSOC · MIT-licensed · Open-source AI SOC
+      <div className="px-6 pb-4 pt-2 text-center">
+        <p className="text-eyebrow text-fg-subtle uppercase tracking-widest">
+          ClopsSOC · Security Operations Console · MIT-licensed
         </p>
       </div>
     </div>

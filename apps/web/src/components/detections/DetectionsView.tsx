@@ -14,6 +14,8 @@ import {
 import { Skeleton } from '@/components/ui/Skeleton';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { PageHead } from '@/components/ui/PageHead';
+import { Button } from '@/components/ui/Button';
 import { ContributorLeaderboard } from './ContributorLeaderboard';
 import { MitreRuleHeatmap } from './MitreRuleHeatmap';
 import { ConfidenceTrends } from './ConfidenceTrends';
@@ -124,21 +126,21 @@ const LANG_LABEL: Record<DetectionLanguage, string> = {
 };
 
 const LANG_BADGE: Record<DetectionLanguage, string> = {
-  sigma: 'bg-blue-500/10 text-blue-300 ring-blue-500/30',
-  yara: 'bg-purple-500/10 text-purple-300 ring-purple-500/30',
-  kql: 'bg-emerald-500/10 text-emerald-300 ring-emerald-500/30',
-  eql: 'bg-amber-500/10 text-amber-300 ring-amber-500/30',
-  lucene: 'bg-cyan-500/10 text-cyan-300 ring-cyan-500/30',
-  regex: 'bg-pink-500/10 text-pink-300 ring-pink-500/30',
-  'aisoc-match': 'bg-slate-500/10 text-slate-300 ring-slate-500/30',
+  sigma: 'bg-pill-info-bg text-tone-info',
+  yara: 'bg-pill-purple-bg text-tone-purple',
+  kql: 'bg-pill-success-bg text-tone-success',
+  eql: 'bg-pill-warning-bg text-tone-warning',
+  lucene: 'bg-accent-subtle text-accent',
+  regex: 'bg-pill-danger-bg text-tone-danger',
+  'aisoc-match': 'bg-pill-neutral-bg text-tone-neutral',
 };
 
 const SEVERITY_BADGE: Record<string, string> = {
-  critical: 'bg-red-500/10 text-red-300 ring-red-500/40',
-  high: 'bg-orange-500/10 text-orange-300 ring-orange-500/40',
-  medium: 'bg-yellow-500/10 text-yellow-300 ring-yellow-500/40',
-  low: 'bg-blue-500/10 text-blue-300 ring-blue-500/40',
-  info: 'bg-slate-500/10 text-slate-300 ring-slate-500/40',
+  critical: 'bg-severity-critical-bg text-severity-critical-ink',
+  high: 'bg-severity-high-bg text-severity-high-ink',
+  medium: 'bg-severity-medium-bg text-severity-medium-ink',
+  low: 'bg-severity-low-bg text-severity-low-ink',
+  info: 'bg-severity-info-bg text-severity-info-ink',
 };
 
 // ─── Tabs ────────────────────────────────────────────────────────────────────
@@ -388,73 +390,46 @@ export function DetectionsView() {
   return (
     <div className="space-y-5">
       {/* Header */}
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-gray-100">
-            Detection rules
-          </h1>
-          <p className="mt-1 max-w-2xl text-sm text-gray-500">
-            {TABS.find((t) => t.id === tab)?.description ??
-              'Author, test, and operate detection logic across log sources.'}
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          {/* [HIDDEN-UI NAV-6 /detection/proposals route hidden] */}
-          {/* <Link
-            href="/detection/proposals"
-            className="inline-flex items-center justify-center gap-2 rounded-md border border-gray-800 px-3 py-2 text-sm text-gray-300 hover:bg-gray-800"
-          >
-            Proposals
-          </Link> */}
-          <Link
-            href="/detection/new"
-            className="inline-flex items-center justify-center gap-2 rounded-md bg-blue-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-600"
-          >
-            <svg
-              className="h-4 w-4"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2}
+      <PageHead
+        title="Detection rules"
+        description={
+          TABS.find((t) => t.id === tab)?.description ??
+          'Author, test, and operate detection logic across log sources.'
+        }
+        actions={
+          <div className="flex items-center gap-2">
+            {/* [HIDDEN-UI NAV-6 /detection/proposals route hidden] */}
+            {/* <Link
+              href="/detection/proposals"
+              className="inline-flex items-center justify-center gap-2 rounded-md border border-gray-800 px-3 py-2 text-sm text-gray-300 hover:bg-gray-800"
             >
-              <path d="M12 5v14M5 12h14" strokeLinecap="round" />
-            </svg>
-            New rule
-          </Link>
-        </div>
-      </div>
+              Proposals
+            </Link> */}
+            <Link
+              href="/detection/new"
+              className="inline-flex items-center justify-center gap-2 rounded-control bg-btn-grad px-4 py-2 text-control font-semibold text-white transition-all hover:brightness-105"
+            >
+              <svg
+                className="h-4 w-4"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path d="M12 5v14M5 12h14" strokeLinecap="round" />
+              </svg>
+              New rule
+            </Link>
+          </div>
+        }
+      />
 
       {/* [HIDDEN-UI NAV-6 hide inner tab bar so only SectionTabs shows] */}
-      {/* <div
-        className="flex gap-1 rounded-md border border-gray-800 bg-gray-950 p-0.5 text-sm"
-        role="tablist"
-        aria-label="Detection management views"
-      >
-        {TABS.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            role="tab"
-            aria-selected={tab === t.id}
-            onClick={() => {
-              setTab(t.id);
-              if (t.id !== 'rules') clearSelection();
-            }}
-            className={clsx(
-              'flex-1 rounded px-3 py-1.5 transition-colors sm:flex-none sm:min-w-[7rem]',
-              tab === t.id
-                ? 'bg-gray-800 text-gray-100'
-                : 'text-gray-400 hover:text-gray-200',
-            )}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div> */}
+      {/* <div ... /> */}
 
       {/* Demo banner */}
       {useFallback && (
-        <div className="rounded-md border border-amber-500/30 bg-amber-500/5 px-4 py-2 text-xs text-amber-200">
+        <div className="rounded-control border border-tone-warning/30 bg-pill-warning-bg px-4 py-2 text-xs text-tone-warning">
           Detection API unreachable — showing curated demo rules so you can
           explore the workflow.
         </div>
@@ -463,16 +438,16 @@ export function DetectionsView() {
       {tab === 'rules' && (
         <>
           {/* Filters */}
-          <div className="flex flex-col gap-3 rounded-lg border border-gray-800 bg-gray-900/40 p-3 lg:flex-row lg:items-center">
+          <div className="flex flex-col gap-3 rounded-container border border-surface-border bg-surface-card p-3 lg:flex-row lg:items-center">
             <div className="relative flex-1">
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search by name, tag, or technique (T1059, lolbin, identity)…"
-                className="w-full rounded-md border border-gray-800 bg-gray-950 px-9 py-2 text-sm text-gray-200 placeholder-gray-600 outline-none transition-colors focus:border-blue-500/60 focus:ring-1 focus:ring-blue-500/40"
+                className="w-full rounded-control border border-surface-border bg-surface-elevated px-9 py-2 text-body text-fg-primary placeholder:text-fg-subtle outline-none transition-colors focus:border-accent focus:ring-1 focus:ring-accent"
               />
               <svg
-                className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500"
+                className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-fg-subtle"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -488,7 +463,7 @@ export function DetectionsView() {
               onChange={(e) =>
                 setLanguage(e.target.value as DetectionLanguage | 'all')
               }
-              className="rounded-md border border-gray-800 bg-gray-950 px-3 py-2 text-sm text-gray-300 outline-none focus:border-blue-500/60"
+              className="rounded-control border border-surface-border bg-surface-elevated px-3 py-2 text-body text-fg-secondary outline-none focus:border-accent"
             >
               <option value="all">All languages</option>
               <option value="aisoc-match">Engine (compiled)</option>
@@ -500,17 +475,17 @@ export function DetectionsView() {
               <option value="regex">Regex</option>
             </select>
 
-            <div className="inline-flex rounded-md border border-gray-800 bg-gray-950 p-0.5 text-xs">
+            <div className="inline-flex rounded-control border border-surface-border bg-surface-elevated p-0.5 text-xs">
               {(['all', 'on', 'off'] as const).map((opt) => (
                 <button
                   key={opt}
                   type="button"
                   onClick={() => setEnabledFilter(opt)}
                   className={clsx(
-                    'rounded px-3 py-1.5 transition-colors',
+                    'rounded-control px-3 py-1.5 font-medium transition-colors',
                     enabledFilter === opt
-                      ? 'bg-gray-800 text-gray-100'
-                      : 'text-gray-400 hover:text-gray-200',
+                      ? 'bg-nav-active-bg text-fg-primary'
+                      : 'text-fg-muted hover:text-fg-primary',
                   )}
                 >
                   {opt === 'all' ? 'All' : opt === 'on' ? 'Enabled' : 'Disabled'}
@@ -522,39 +497,42 @@ export function DetectionsView() {
           {/* Bulk action bar — appears when rules are selected. */}
           {selected.size > 0 && (
             <div
-              className="flex flex-wrap items-center gap-3 rounded-md border border-blue-500/30 bg-blue-500/5 px-4 py-2.5 text-sm"
+              className="flex flex-wrap items-center gap-3 rounded-control border border-accent/30 bg-accent-subtle px-4 py-2.5 text-body"
               role="toolbar"
               aria-label="Bulk rule actions"
             >
-              <span className="text-blue-200">
+              <span className="text-fg-primary">
                 <span className="font-mono font-semibold">{selected.size}</span>{' '}
                 rule{selected.size === 1 ? '' : 's'} selected
               </span>
               <div className="ml-auto flex items-center gap-2">
-                <button
+                <Button
                   type="button"
+                  variant="secondary"
+                  size="sm"
                   onClick={() => runBulkToggle(true)}
                   disabled={bulkPending}
-                  className="rounded-md bg-emerald-500 px-3 py-1.5 text-xs font-medium text-white shadow-sm transition-colors hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   Enable
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
+                  variant="secondary"
+                  size="sm"
                   onClick={() => runBulkToggle(false)}
                   disabled={bulkPending}
-                  className="rounded-md bg-gray-700 px-3 py-1.5 text-xs font-medium text-gray-100 transition-colors hover:bg-gray-600 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   Disable
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="sm"
                   onClick={clearSelection}
                   disabled={bulkPending}
-                  className="rounded-md border border-gray-700 px-3 py-1.5 text-xs text-gray-300 hover:bg-gray-800 disabled:opacity-60"
                 >
                   Clear
-                </button>
+                </Button>
               </div>
             </div>
           )}
@@ -563,7 +541,7 @@ export function DetectionsView() {
               different questions: the page used to answer neither, printing
               "No detection rules yet" beside a tile crediting 2,511 rules. */}
           {!isLoading && !error && (
-            <p className="px-1 text-xs text-gray-500">
+            <p className="px-1 text-xs text-fg-muted">
               {matchedTotal.toLocaleString()} matching
               {libraryTotal > 0 && (
                 <>
@@ -581,7 +559,7 @@ export function DetectionsView() {
               total as if it were the whole corpus is the same mistake in a
               quieter costume. */}
           {missingArtefacts.length > 0 && (
-            <div className="rounded-md border border-amber-500/30 bg-amber-500/5 px-4 py-2 text-xs text-amber-200">
+            <div className="rounded-control border border-tone-warning/30 bg-pill-warning-bg px-4 py-2 text-xs text-tone-warning">
               Part of the compiled corpus is missing from this deployment (
               {missingArtefacts.join(', ')}), so the library below is
               incomplete. Rebuild the API image from a tree where{' '}
@@ -626,7 +604,7 @@ export function DetectionsView() {
                 action={
                   <Link
                     href="/detection/new"
-                    className="rounded-md bg-blue-500 px-4 py-2 text-sm font-medium text-white hover:bg-blue-600"
+                    className="rounded-control bg-btn-grad px-4 py-2 text-control font-semibold text-white hover:brightness-105"
                   >
                     Create a rule
                   </Link>
@@ -637,24 +615,25 @@ export function DetectionsView() {
                 title="No rules match your filters"
                 description="Try clearing the search, switching language, or showing all enabled states."
                 action={
-                  <button
+                  <Button
                     type="button"
+                    variant="secondary"
+                    size="sm"
                     onClick={() => {
                       setSearch('');
                       setLanguage('all');
                       setEnabledFilter('all');
                     }}
-                    className="rounded-md border border-gray-700 px-4 py-2 text-sm text-gray-300 hover:bg-gray-800"
                   >
                     Clear filters
-                  </button>
+                  </Button>
                 }
               />
             )
           ) : (
             <>
               {/* Select-all header — small horizontal strip above the list */}
-              <div className="flex items-center gap-2 px-1 text-xs text-gray-500">
+              <div className="flex items-center gap-2 px-1 text-xs text-fg-muted">
                 <input
                   type="checkbox"
                   checked={allFilteredSelected}
@@ -664,7 +643,7 @@ export function DetectionsView() {
                       ? 'Deselect all visible rules'
                       : 'Select all visible rules'
                   }
-                  className="h-3.5 w-3.5 cursor-pointer rounded border-gray-700 bg-gray-950 accent-blue-500"
+                  className="h-3.5 w-3.5 cursor-pointer rounded border-surface-border bg-surface-elevated accent-accent"
                 />
                 <span>
                   {allFilteredSelected
@@ -687,30 +666,32 @@ export function DetectionsView() {
 
               {pageCount > 1 && (
                 <nav
-                  className="flex items-center justify-between gap-3 px-1 text-xs text-gray-400"
+                  className="flex items-center justify-between gap-3 px-1 text-xs text-fg-muted"
                   aria-label="Rule library pages"
                 >
-                  <button
+                  <Button
                     type="button"
+                    variant="secondary"
+                    size="sm"
                     onClick={() => setPage((p) => Math.max(0, p - 1))}
                     disabled={page === 0}
-                    className="rounded-md border border-gray-800 px-3 py-1.5 text-gray-300 hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     Previous
-                  </button>
+                  </Button>
                   <span>
                     Page {page + 1} of {pageCount.toLocaleString()}
                   </span>
-                  <button
+                  <Button
                     type="button"
+                    variant="secondary"
+                    size="sm"
                     onClick={() =>
                       setPage((p) => Math.min(pageCount - 1, p + 1))
                     }
                     disabled={page >= pageCount - 1}
-                    className="rounded-md border border-gray-800 px-3 py-1.5 text-gray-300 hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     Next
-                  </button>
+                  </Button>
                 </nav>
               )}
             </>
@@ -756,10 +737,10 @@ function RuleCard({ rule, selected, onSelect, onToggle }: RuleCardProps) {
     <Link
       href={`/detection/${rule.id}`}
       className={clsx(
-        'group block rounded-lg border bg-gray-900/40 p-4 transition-colors',
+        'group block rounded-container border p-4 transition-colors',
         selected
-          ? 'border-blue-500/50 bg-blue-500/5 hover:bg-blue-500/10'
-          : 'border-gray-800 hover:border-gray-700 hover:bg-gray-900/70',
+          ? 'border-accent/50 bg-nav-active-bg'
+          : 'border-surface-border bg-surface-card hover:bg-surface-elevated',
       )}
     >
       <div className="flex items-start gap-4">
@@ -778,14 +759,14 @@ function RuleCard({ rule, selected, onSelect, onToggle }: RuleCardProps) {
               // Click handler does the work; keep onChange to satisfy React.
             }}
             aria-label={`Select rule ${rule.name}`}
-            className="h-3.5 w-3.5 cursor-pointer rounded border-gray-700 bg-gray-950 accent-blue-500"
+            className="h-3.5 w-3.5 cursor-pointer rounded border-surface-border bg-surface-elevated accent-accent"
           />
           <span
             className={clsx(
               'inline-flex h-2.5 w-2.5 rounded-full',
               rule.enabled
-                ? 'bg-emerald-400 shadow-[0_0_0_3px_rgba(52,211,153,0.18)]'
-                : 'bg-gray-600',
+                ? 'bg-dot-success'
+                : 'bg-fg-subtle',
             )}
           />
         </div>
@@ -793,12 +774,12 @@ function RuleCard({ rule, selected, onSelect, onToggle }: RuleCardProps) {
         {/* Body */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <h3 className="truncate text-sm font-semibold text-gray-100 group-hover:text-blue-300">
+            <h3 className="truncate text-body font-semibold text-fg-primary group-hover:text-accent">
               {rule.name}
             </h3>
             <span
               className={clsx(
-                'rounded-md px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide ring-1',
+                'rounded-pill px-2 py-0.5 text-eyebrow font-medium uppercase tracking-wide',
                 LANG_BADGE[rule.language],
               )}
             >
@@ -807,8 +788,8 @@ function RuleCard({ rule, selected, onSelect, onToggle }: RuleCardProps) {
             {rule.severity && (
               <span
                 className={clsx(
-                  'rounded-md px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide ring-1',
-                  SEVERITY_BADGE[rule.severity] ?? 'bg-gray-800 text-gray-300',
+                  'rounded-pill px-2 py-0.5 text-eyebrow font-medium uppercase tracking-wide',
+                  SEVERITY_BADGE[rule.severity] ?? 'bg-pill-neutral-bg text-tone-neutral',
                 )}
               >
                 {rule.severity}
@@ -817,7 +798,7 @@ function RuleCard({ rule, selected, onSelect, onToggle }: RuleCardProps) {
             {rule.isBuiltin && (
               <span
                 title="Loaded and evaluated by the detection engine. Disabling it here stops the engine firing it for this tenant."
-                className="rounded-md bg-sky-500/10 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-sky-300 ring-1 ring-sky-500/30"
+                className="rounded-pill bg-pill-info-bg px-2 py-0.5 text-eyebrow font-medium uppercase tracking-wide text-tone-info"
               >
                 Built-in
               </span>
@@ -828,22 +809,22 @@ function RuleCard({ rule, selected, onSelect, onToggle }: RuleCardProps) {
             // The id an alert carries. An analyst reading "detection:
             // det-cloud-063" off an alert searches for exactly this string,
             // so it belongs on the card rather than one click deeper.
-            <p className="mt-1 font-mono text-[11px] text-gray-500">
+            <p className="mt-1 font-mono text-caption text-fg-subtle">
               {rule.sourceId}
             </p>
           )}
 
           {rule.description && (
-            <p className="mt-1 text-sm text-gray-400 line-clamp-2">
+            <p className="mt-1 text-body text-fg-muted line-clamp-2">
               {rule.description}
             </p>
           )}
 
-          <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-gray-500">
+          <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-fg-muted">
             {rule.mitre?.slice(0, 4).map((id) => (
               <span
                 key={id}
-                className="rounded-md bg-gray-800/60 px-1.5 py-0.5 font-mono text-[11px] text-gray-300"
+                className="rounded-control bg-surface-subtle px-1.5 py-0.5 font-mono text-caption text-fg-secondary"
               >
                 {id}
               </span>
@@ -851,7 +832,7 @@ function RuleCard({ rule, selected, onSelect, onToggle }: RuleCardProps) {
             {rule.tags?.slice(0, 5).map((tag) => (
               <span
                 key={tag}
-                className="rounded-full bg-gray-800/40 px-2 py-0.5 text-[11px] text-gray-400"
+                className="rounded-pill bg-surface-subtle px-2 py-0.5 text-caption text-fg-muted"
               >
                 #{tag}
               </span>
@@ -861,10 +842,10 @@ function RuleCard({ rule, selected, onSelect, onToggle }: RuleCardProps) {
 
         {/* Right meta + toggle */}
         <div className="flex flex-col items-end gap-2">
-          <div className="text-right text-xs text-gray-500">
+          <div className="text-right text-xs text-fg-muted">
             {!rule.isBuiltin && (
               <div>
-                <span className="font-mono text-gray-300">
+                <span className="font-mono text-fg-primary">
                   {rule.hitCount ?? 0}
                 </span>{' '}
                 hits
@@ -906,8 +887,8 @@ function Toggle({ enabled, onChange }: ToggleProps) {
       aria-checked={enabled}
       aria-label={enabled ? 'Disable rule' : 'Enable rule'}
       className={clsx(
-        'relative inline-flex h-5 w-9 items-center rounded-full transition-colors',
-        enabled ? 'bg-emerald-500/70' : 'bg-gray-700',
+        'relative inline-flex h-5 w-9 items-center rounded-pill transition-colors',
+        enabled ? 'bg-dot-success' : 'bg-surface-border-strong',
       )}
     >
       <span
