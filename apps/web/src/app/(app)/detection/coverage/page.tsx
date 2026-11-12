@@ -1,4 +1,6 @@
-import { CoverageView } from '@/components/detections/CoverageView';
+import { redirect } from 'next/navigation';
+// [HIDDEN-UI NAV-2 consolidated into Detection SectionTabs]
+// import { CoverageView } from '@/components/detections/CoverageView';
 
 export const metadata = {
   title: 'MITRE ATT&CK Coverage',
@@ -7,5 +9,7 @@ export const metadata = {
 };
 
 export default function CoveragePage() {
-  return <CoverageView />;
+  // [HIDDEN-UI NAV-2 redirect with permanent:false (307) to MITRE Coverage tab]
+  // return <CoverageView />;
+  redirect('/detection?tab=coverage');
 }
