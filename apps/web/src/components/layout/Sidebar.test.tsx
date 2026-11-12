@@ -27,29 +27,36 @@ vi.mock('next/link', () => ({
 import { Sidebar } from './Sidebar';
 
 describe('Sidebar', () => {
-  it('renders the AiSOC mark and the major nav sections', () => {
+  it('renders the AiSOC mark and the 10 flat nav items', () => {
     render(<Sidebar />);
 
     // Brand
     expect(screen.getByText('Ai')).toBeInTheDocument();
     expect(screen.getByText('SOC')).toBeInTheDocument();
 
-    // Section headings — Dashboard sits in an unlabelled lead section,
-    // everything else is grouped under one of these four titles.
-    expect(screen.getByText('Threat Operations')).toBeInTheDocument();
-    expect(screen.getByText('Intelligence')).toBeInTheDocument();
-    expect(screen.getByText('Automation')).toBeInTheDocument();
-    expect(screen.getByText('Platform')).toBeInTheDocument();
+    const expected: [string, string][] = [
+      ['Dashboard', '/dashboard'],
+      ['SOC Insights', '/dashboards/soc-insights'],
+      ['SOC Operations', '/dashboards/operations'],
+      ['Alerts', '/alerts'],
+      ['Investigation Queue', '/queue'],
+      ['Hunt', '/hunt'],
+      ['Detection', '/detection'],
+      ['Runbooks', '/playbooks'],
+      ['Dashboards', '/sla'],
+      ['Settings', '/settings'],
+    ];
+    for (const [label, href] of expected) {
+      expect(screen.getByRole('link', { name: new RegExp(`^${label}(?:\\s|$)`, 'i') })).toHaveAttribute('href', href);
+    }
   });
 
-  it('exposes the marketplace and compliance entry points', () => {
+  it('hides consolidated and retired nav links', () => {
     render(<Sidebar />);
 
-    const marketplace = screen.getByRole('link', { name: /marketplace/i });
-    expect(marketplace).toHaveAttribute('href', '/marketplace');
-
-    const compliance = screen.getByRole('link', { name: /compliance/i });
-    expect(compliance).toHaveAttribute('href', '/compliance');
+    expect(screen.queryByRole('link', { name: /marketplace/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /cases/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /compliance/i })).not.toBeInTheDocument();
   });
 
   it('renders the MIT license attribution in the footer', () => {

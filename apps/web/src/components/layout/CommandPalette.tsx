@@ -18,6 +18,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { Command } from 'cmdk';
 import { AnimatePresence, motion } from 'framer-motion';
 import toast from 'react-hot-toast';
+import { authApi } from '@/lib/api';
 
 interface PaletteAction {
   id: string;
@@ -63,18 +64,24 @@ function writeRecent(path: string) {
   }
 }
 
-const NAV_ITEMS: { label: string; href: string; keywords: string[] }[] = [
-  { label: 'Dashboard',       href: '/dashboard',    keywords: ['home', 'overview', 'metrics'] },
-  { label: 'Alerts',          href: '/alerts',       keywords: ['notifications', 'incidents'] },
-  { label: 'Cases',           href: '/cases',        keywords: ['investigations', 'tickets'] },
-  { label: 'Hunt',            href: '/hunt',         keywords: ['threat hunting', 'search', 'kql', 'esql'] },
-  { label: 'Explore',         href: '/explore',      keywords: ['data explorer', 'lake', 'sql', 'bi', 'query', 'identity', 'intel'] },
-  { label: 'Detection Rules', href: '/detection',    keywords: ['rules', 'detections', 'sigma'] },
-  { label: 'Threat Intel',    href: '/threat-intel', keywords: ['ioc', 'feeds', 'cti'] },
-  { label: 'Attack Graph',    href: '/graph',        keywords: ['graph', 'paths', 'cytoscape'] },
-  { label: 'AI Copilot',      href: '/copilot',      keywords: ['assistant', 'chat', 'ai'] },
-  { label: 'Connectors',      href: '/connectors',   keywords: ['integrations', 'sources'] },
-  { label: 'Settings',        href: '/settings',     keywords: ['preferences', 'profile', 'tenant'] },
+const NAV_ITEMS: { label: string; href: string; keywords: string[]; adminOnly?: boolean }[] = [
+  { label: 'Dashboard',           href: '/dashboard',               keywords: ['home', 'overview', 'metrics'] },
+  { label: 'SOC Insights',        href: '/dashboards/soc-insights', keywords: ['insights', 'mtta', 'mttr', 'kpi'] },
+  { label: 'SOC Operations',      href: '/dashboards/operations',   keywords: ['operations', 'pipeline', 'throughput'] },
+  { label: 'Alerts',              href: '/alerts',                  keywords: ['notifications', 'incidents'] },
+  { label: 'Investigation Queue', href: '/queue',                   keywords: ['queue', 'triage', 'entity risk'] },
+  { label: 'Hunt',                href: '/hunt',                    keywords: ['threat hunting', 'search', 'kql', 'esql'] },
+  { label: 'Detection',           href: '/detection',               keywords: ['rules', 'detections', 'sigma', 'catalog', 'mitre', 'coverage', 'tuning'] },
+  { label: 'Runbooks',            href: '/playbooks',               keywords: ['runbooks', 'playbooks', 'soar', 'automation'] },
+  { label: 'Dashboards',          href: '/sla',                     keywords: ['sla', 'team analytics', 'mssp', 'cost', 'reports'] },
+  { label: 'Settings',            href: '/settings',                keywords: ['preferences', 'profile', 'tenant', 'connectors', 'users', 'rbac', 'mfa', 'compliance', 'audit'] },
+  // [HIDDEN-UI NAV-1 consolidated into SectionTabs or hidden from primary navigation]
+  // { label: 'Cases',        href: '/cases',        keywords: ['investigations', 'tickets'] },
+  // { label: 'Explore',      href: '/explore',      keywords: ['data explorer', 'lake', 'sql', 'bi', 'query', 'identity', 'intel'] },
+  // { label: 'Threat Intel', href: '/threat-intel', keywords: ['ioc', 'feeds', 'cti'] },
+  // { label: 'Attack Graph', href: '/graph',        keywords: ['graph', 'paths', 'cytoscape'] },
+  // { label: 'AI Copilot',   href: '/copilot',      keywords: ['assistant', 'chat', 'ai'] },
+  // { label: 'Connectors',   href: '/connectors',   keywords: ['integrations', 'sources'] },
 ];
 
 export function CommandPalette() {
@@ -124,10 +131,11 @@ export function CommandPalette() {
   );
 
   const groups = useMemo<PaletteGroup[]>(() => {
+    const isAdmin = authApi.currentUser()?.role === 'admin';
     const navGroup: PaletteGroup = {
       id: 'navigation',
       heading: 'Navigation',
-      items: NAV_ITEMS.map((item) => ({
+      items: NAV_ITEMS.filter((item) => !item.adminOnly || isAdmin).map((item) => ({
         id: `nav:${item.href}`,
         label: item.label,
         hint: item.href,
@@ -152,13 +160,14 @@ export function CommandPalette() {
             close();
           },
         },
-        {
-          id: 'action:full-copilot',
-          label: 'Open AI Copilot page',
-          hint: 'Full conversation view',
-          keywords: ['copilot', 'ai', 'chat'],
-          perform: () => navigate('/copilot'),
-        },
+        // [HIDDEN-UI NAV-1 full /copilot page hidden; floating CopilotDock remains active]
+        // {
+        //   id: 'action:full-copilot',
+        //   label: 'Open AI Copilot page',
+        //   hint: 'Full conversation view',
+        //   keywords: ['copilot', 'ai', 'chat'],
+        //   perform: () => navigate('/copilot'),
+        // },
         {
           id: 'action:refresh',
           label: 'Refresh data',
