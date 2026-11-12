@@ -40,21 +40,22 @@ const VARIANT_STYLES: Record<EmptyStateVariant, {
   badge: string;
   badgeLabel: string;
 }> = {
+  /* [HIDDEN-UI THEME-3 restyled EmptyState to SREOps tokens] */
   default: {
     container:
-      'border-gray-800 bg-gray-900/30',
+      'border-surface-border-strong bg-surface-card',
     iconWrap:
-      'bg-gray-800/60 text-blue-400',
+      'bg-pill-success-bg text-tone-success rounded-control',
     badge: '',
     badgeLabel: '',
   },
   'planned-v1.1': {
     container:
-      'border-amber-500/30 bg-amber-500/[0.04]',
+      'border-tone-warning/40 bg-pill-warning-bg',
     iconWrap:
-      'bg-amber-500/10 text-amber-300',
+      'bg-pill-warning-bg text-tone-warning rounded-control',
     badge:
-      'inline-flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-300',
+      'inline-flex items-center gap-1 rounded-pill bg-pill-warning-bg px-2.5 py-0.5 text-eyebrow font-semibold uppercase tracking-wide text-tone-warning',
     badgeLabel: 'Planned for v1.1',
   },
 };
@@ -84,7 +85,7 @@ export function EmptyState({
   return (
     <div
       className={clsx(
-        'flex flex-col items-center justify-center rounded-xl border border-dashed px-6 py-12 text-center',
+        'flex flex-col items-center justify-center rounded-container border border-dashed px-6 py-10 text-center',
         styles.container,
         className,
       )}
@@ -93,7 +94,7 @@ export function EmptyState({
       {icon && (
         <div
           className={clsx(
-            'mb-4 flex h-12 w-12 items-center justify-center rounded-full',
+            'mb-3 flex h-10 w-10 items-center justify-center',
             styles.iconWrap,
           )}
         >
@@ -101,11 +102,11 @@ export function EmptyState({
         </div>
       )}
       {showBadge && <span className={clsx('mb-3', styles.badge)}>{badgeText}</span>}
-      <Heading className="text-base font-semibold text-gray-100">{title}</Heading>
+      <Heading className="text-card-title font-semibold text-fg-primary">{title}</Heading>
       {description && (
-        <p className="mt-1 max-w-md text-sm text-gray-500">{description}</p>
+        <p className="mt-1 max-w-md text-body text-fg-muted">{description}</p>
       )}
-      {action && variant === 'default' && <div className="mt-5">{action}</div>}
+      {action && variant === 'default' && <div className="mt-4">{action}</div>}
     </div>
   );
 }

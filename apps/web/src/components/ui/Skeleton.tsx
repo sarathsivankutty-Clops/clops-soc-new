@@ -13,17 +13,18 @@ interface SkeletonProps extends HTMLAttributes<HTMLDivElement> {
  */
 export function Skeleton({ className, rounded = 'md', ...props }: SkeletonProps) {
   const roundedClass = {
-    sm: 'rounded-sm',
-    md: 'rounded-md',
-    lg: 'rounded-lg',
-    xl: 'rounded-xl',
-    full: 'rounded-full',
+    sm: 'rounded-control',
+    md: 'rounded-control',
+    lg: 'rounded-control',
+    xl: 'rounded-container',
+    full: 'rounded-pill',
   }[rounded];
 
   return (
     <div
       className={clsx(
-        'animate-pulse bg-gradient-to-r from-gray-800/40 via-gray-700/40 to-gray-800/40 bg-[length:200%_100%]',
+        /* [HIDDEN-UI THEME-3 restyled Skeleton to surface-subtle shimmer tokens] */
+        'animate-pulse bg-surface-subtle',
         roundedClass,
         className,
       )}
@@ -51,7 +52,7 @@ export function SkeletonList({ count = 5, className, rowClassName }: SkeletonLis
 
 export function SkeletonCard() {
   return (
-    <div className="rounded-xl border border-gray-800/60 bg-gray-900/40 p-5 space-y-4">
+    <div className="rounded-container border border-surface-border bg-surface-card p-5 space-y-4 shadow-card">
       <Skeleton className="h-4 w-1/3" />
       <Skeleton className="h-8 w-2/3" />
       <Skeleton className="h-3 w-full" />

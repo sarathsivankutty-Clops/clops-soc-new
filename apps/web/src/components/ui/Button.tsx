@@ -30,23 +30,24 @@ export type ButtonVariant =
 export type ButtonSize = 'xs' | 'sm' | 'md' | 'lg';
 
 const VARIANT_CLASSES: Record<ButtonVariant, string> = {
+  /* [HIDDEN-UI THEME-3 restyled Button variants to SREOps --btn-grad + flat semantic surface tokens] */
   primary:
-    'bg-blue-600 text-white hover:bg-blue-500 active:bg-blue-700 disabled:bg-blue-600/40',
+    'bg-btn-grad text-white hover:brightness-105 active:translate-y-px disabled:opacity-45',
   secondary:
-    'bg-gray-800 text-gray-200 hover:bg-gray-700 active:bg-gray-700 disabled:bg-gray-800/40 disabled:text-gray-500',
+    'bg-surface-card border border-surface-border text-fg-primary hover:bg-surface-hover hover:border-surface-border-strong disabled:opacity-45',
   destructive:
-    'bg-red-600 text-white hover:bg-red-500 active:bg-red-700 disabled:bg-red-600/40',
+    'bg-surface-card border border-surface-border text-tone-danger hover:bg-pill-danger-bg disabled:opacity-45',
   ghost:
-    'bg-transparent text-gray-300 hover:bg-gray-800/60 hover:text-gray-100 disabled:text-gray-600',
+    'bg-transparent text-fg-secondary hover:bg-surface-hover hover:text-fg-primary disabled:text-fg-subtle',
   outline:
-    'bg-transparent text-gray-300 border border-gray-700 hover:border-gray-600 hover:bg-gray-800/40 disabled:opacity-50',
+    'bg-transparent text-fg-secondary border border-surface-border hover:border-surface-border-strong hover:bg-surface-hover disabled:opacity-50',
 };
 
 const SIZE_CLASSES: Record<ButtonSize, string> = {
-  xs: 'h-7 px-2 text-xs gap-1.5',
-  sm: 'h-8 px-3 text-xs gap-1.5',
-  md: 'h-9 px-4 text-sm gap-2',
-  lg: 'h-11 px-5 text-sm font-medium gap-2',
+  xs: 'h-7 px-2.5 text-caption gap-1.5',
+  sm: 'h-8 px-3 text-caption gap-1.5',
+  md: 'h-9 px-3.5 text-control gap-2',
+  lg: 'h-10 px-5 text-body gap-2',
 };
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -89,10 +90,10 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       aria-pressed={pressed}
       aria-busy={loading || undefined}
       className={clsx(
-        'inline-flex items-center justify-center rounded-lg font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 disabled:cursor-not-allowed',
+        'inline-flex items-center justify-center rounded-control font-semibold transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 disabled:cursor-not-allowed',
         VARIANT_CLASSES[variant],
         SIZE_CLASSES[size],
-        pressed && 'ring-1 ring-blue-500/40',
+        pressed && 'ring-1 ring-accent/50',
         className,
       )}
       {...rest}

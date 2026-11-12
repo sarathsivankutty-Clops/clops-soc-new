@@ -72,25 +72,26 @@ export function CapabilityUnavailable({
   return (
     <div
       className={clsx(
-        'rounded-xl border border-amber-500/25 bg-amber-500/5 px-6 py-6 text-sm',
+        /* [HIDDEN-UI THEME-3 restyled CapabilityUnavailable to warning/surface tokens] */
+        'rounded-container border border-tone-warning/30 bg-pill-warning-bg px-6 py-6 text-body',
         className,
       )}
       role="status"
     >
-      <p className="font-medium text-amber-200">{capability} is not part of this deployment</p>
-      <p className="mt-2 max-w-xl text-amber-200/70">
+      <p className="font-semibold text-tone-warning">{capability} is not part of this deployment</p>
+      <p className="mt-2 max-w-xl text-fg-secondary">
         {capability} is backed by {service}, which runs in the{' '}
-        <code className="rounded bg-amber-500/10 px-1 py-0.5 font-mono text-[12px]">`full`</code>{' '}
+        <code className="rounded-control bg-surface-card px-1.5 py-0.5 font-mono text-control-sm text-fg-primary border border-surface-border">`full`</code>{' '}
         profile and is not part of this deployment. This is not a report that there is nothing to
         show — nothing was read.
       </p>
-      <p className="mt-2 max-w-xl text-amber-200/60">
+      <p className="mt-2 max-w-xl text-fg-muted">
         Bring it up with{' '}
-        <code className="rounded bg-amber-500/10 px-1 py-0.5 font-mono text-[12px]">make up-full</code>
+        <code className="rounded-control bg-surface-card px-1.5 py-0.5 font-mono text-control-sm text-fg-primary border border-surface-border">make up-full</code>
         , then reload this page.
       </p>
       {status !== undefined && (
-        <p className="mt-3 font-mono text-[11px] text-amber-300/50">HTTP {status}</p>
+        <p className="mt-3 font-mono text-caption text-fg-muted">HTTP {status}</p>
       )}
     </div>
   );

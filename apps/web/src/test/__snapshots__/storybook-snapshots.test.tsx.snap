@@ -3,8 +3,12 @@
 exports[`Storybook visual-regression / Badge > renders the danger tone 1`] = `
 <DocumentFragment>
   <span
-    class="inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-[11px] font-medium bg-red-900/40 text-red-300 border-red-800"
+    class="inline-flex items-center gap-1.5 rounded-pill px-2.5 py-0.5 text-caption font-medium whitespace-nowrap bg-pill-danger-bg text-tone-danger"
   >
+    <span
+      aria-hidden="true"
+      class="h-1.5 w-1.5 shrink-0 rounded-pill bg-dot-danger"
+    />
     danger
   </span>
 </DocumentFragment>
@@ -13,8 +17,12 @@ exports[`Storybook visual-regression / Badge > renders the danger tone 1`] = `
 exports[`Storybook visual-regression / Badge > renders the info tone 1`] = `
 <DocumentFragment>
   <span
-    class="inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-[11px] font-medium bg-blue-900/40 text-blue-300 border-blue-800"
+    class="inline-flex items-center gap-1.5 rounded-pill px-2.5 py-0.5 text-caption font-medium whitespace-nowrap bg-pill-info-bg text-accent"
   >
+    <span
+      aria-hidden="true"
+      class="h-1.5 w-1.5 shrink-0 rounded-pill bg-dot-info"
+    />
     info
   </span>
 </DocumentFragment>
@@ -23,7 +31,7 @@ exports[`Storybook visual-regression / Badge > renders the info tone 1`] = `
 exports[`Storybook visual-regression / Badge > renders the neutral tone 1`] = `
 <DocumentFragment>
   <span
-    class="inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-[11px] font-medium bg-gray-800/80 text-gray-300 border-gray-700"
+    class="inline-flex items-center gap-1.5 rounded-pill px-2.5 py-0.5 text-caption font-medium whitespace-nowrap bg-pill-neutral-bg text-fg-muted"
   >
     neutral
   </span>
@@ -33,8 +41,12 @@ exports[`Storybook visual-regression / Badge > renders the neutral tone 1`] = `
 exports[`Storybook visual-regression / Badge > renders the severity-critical tone 1`] = `
 <DocumentFragment>
   <span
-    class="inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-[11px] font-medium bg-red-900/60 text-red-200 border-red-700"
+    class="inline-flex items-center gap-1.5 rounded-pill px-2.5 py-0.5 text-caption font-medium whitespace-nowrap bg-severity-bg-critical text-severity-ink-critical"
   >
+    <span
+      aria-hidden="true"
+      class="h-1.5 w-1.5 shrink-0 rounded-pill bg-severity-dot-critical"
+    />
     severity-critical
   </span>
 </DocumentFragment>
@@ -43,8 +55,12 @@ exports[`Storybook visual-regression / Badge > renders the severity-critical ton
 exports[`Storybook visual-regression / Badge > renders the severity-high tone 1`] = `
 <DocumentFragment>
   <span
-    class="inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-[11px] font-medium bg-orange-900/50 text-orange-300 border-orange-800"
+    class="inline-flex items-center gap-1.5 rounded-pill px-2.5 py-0.5 text-caption font-medium whitespace-nowrap bg-severity-bg-high text-severity-ink-high"
   >
+    <span
+      aria-hidden="true"
+      class="h-1.5 w-1.5 shrink-0 rounded-pill bg-severity-dot-high"
+    />
     severity-high
   </span>
 </DocumentFragment>
@@ -53,8 +69,12 @@ exports[`Storybook visual-regression / Badge > renders the severity-high tone 1`
 exports[`Storybook visual-regression / Badge > renders the severity-info tone 1`] = `
 <DocumentFragment>
   <span
-    class="inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-[11px] font-medium bg-slate-800 text-slate-300 border-slate-700"
+    class="inline-flex items-center gap-1.5 rounded-pill px-2.5 py-0.5 text-caption font-medium whitespace-nowrap bg-severity-bg-info text-severity-ink-info"
   >
+    <span
+      aria-hidden="true"
+      class="h-1.5 w-1.5 shrink-0 rounded-pill bg-severity-dot-info"
+    />
     severity-info
   </span>
 </DocumentFragment>
@@ -63,8 +83,12 @@ exports[`Storybook visual-regression / Badge > renders the severity-info tone 1`
 exports[`Storybook visual-regression / Badge > renders the severity-low tone 1`] = `
 <DocumentFragment>
   <span
-    class="inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-[11px] font-medium bg-blue-900/40 text-blue-300 border-blue-800"
+    class="inline-flex items-center gap-1.5 rounded-pill px-2.5 py-0.5 text-caption font-medium whitespace-nowrap bg-severity-bg-low text-severity-ink-low"
   >
+    <span
+      aria-hidden="true"
+      class="h-1.5 w-1.5 shrink-0 rounded-pill bg-severity-dot-low"
+    />
     severity-low
   </span>
 </DocumentFragment>
@@ -73,8 +97,12 @@ exports[`Storybook visual-regression / Badge > renders the severity-low tone 1`]
 exports[`Storybook visual-regression / Badge > renders the severity-medium tone 1`] = `
 <DocumentFragment>
   <span
-    class="inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-[11px] font-medium bg-amber-900/40 text-amber-200 border-amber-800"
+    class="inline-flex items-center gap-1.5 rounded-pill px-2.5 py-0.5 text-caption font-medium whitespace-nowrap bg-severity-bg-medium text-severity-ink-medium"
   >
+    <span
+      aria-hidden="true"
+      class="h-1.5 w-1.5 shrink-0 rounded-pill bg-severity-dot-medium"
+    />
     severity-medium
   </span>
 </DocumentFragment>
@@ -83,8 +111,12 @@ exports[`Storybook visual-regression / Badge > renders the severity-medium tone 
 exports[`Storybook visual-regression / Badge > renders the success tone 1`] = `
 <DocumentFragment>
   <span
-    class="inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-[11px] font-medium bg-green-900/40 text-green-300 border-green-800"
+    class="inline-flex items-center gap-1.5 rounded-pill px-2.5 py-0.5 text-caption font-medium whitespace-nowrap bg-pill-success-bg text-tone-success"
   >
+    <span
+      aria-hidden="true"
+      class="h-1.5 w-1.5 shrink-0 rounded-pill bg-dot-success"
+    />
     success
   </span>
 </DocumentFragment>
@@ -93,8 +125,12 @@ exports[`Storybook visual-regression / Badge > renders the success tone 1`] = `
 exports[`Storybook visual-regression / Badge > renders the warning tone 1`] = `
 <DocumentFragment>
   <span
-    class="inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-[11px] font-medium bg-amber-900/40 text-amber-200 border-amber-800"
+    class="inline-flex items-center gap-1.5 rounded-pill px-2.5 py-0.5 text-caption font-medium whitespace-nowrap bg-pill-warning-bg text-tone-warning"
   >
+    <span
+      aria-hidden="true"
+      class="h-1.5 w-1.5 shrink-0 rounded-pill bg-dot-warning"
+    />
     warning
   </span>
 </DocumentFragment>
@@ -106,7 +142,7 @@ exports[`Storybook visual-regression / Button > renders all sizes side-by-side 1
     class="flex gap-2"
   >
     <button
-      class="inline-flex items-center justify-center rounded-lg font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 disabled:cursor-not-allowed bg-blue-600 text-white hover:bg-blue-500 active:bg-blue-700 disabled:bg-blue-600/40 h-7 px-2 text-xs gap-1.5"
+      class="inline-flex items-center justify-center rounded-control font-semibold transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 disabled:cursor-not-allowed bg-btn-grad text-white hover:brightness-105 active:translate-y-px disabled:opacity-45 h-7 px-2.5 text-caption gap-1.5"
       type="button"
     >
       <span>
@@ -114,7 +150,7 @@ exports[`Storybook visual-regression / Button > renders all sizes side-by-side 1
       </span>
     </button>
     <button
-      class="inline-flex items-center justify-center rounded-lg font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 disabled:cursor-not-allowed bg-blue-600 text-white hover:bg-blue-500 active:bg-blue-700 disabled:bg-blue-600/40 h-8 px-3 text-xs gap-1.5"
+      class="inline-flex items-center justify-center rounded-control font-semibold transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 disabled:cursor-not-allowed bg-btn-grad text-white hover:brightness-105 active:translate-y-px disabled:opacity-45 h-8 px-3 text-caption gap-1.5"
       type="button"
     >
       <span>
@@ -122,7 +158,7 @@ exports[`Storybook visual-regression / Button > renders all sizes side-by-side 1
       </span>
     </button>
     <button
-      class="inline-flex items-center justify-center rounded-lg font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 disabled:cursor-not-allowed bg-blue-600 text-white hover:bg-blue-500 active:bg-blue-700 disabled:bg-blue-600/40 h-9 px-4 text-sm gap-2"
+      class="inline-flex items-center justify-center rounded-control font-semibold transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 disabled:cursor-not-allowed bg-btn-grad text-white hover:brightness-105 active:translate-y-px disabled:opacity-45 h-9 px-3.5 text-control gap-2"
       type="button"
     >
       <span>
@@ -130,7 +166,7 @@ exports[`Storybook visual-regression / Button > renders all sizes side-by-side 1
       </span>
     </button>
     <button
-      class="inline-flex items-center justify-center rounded-lg font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 disabled:cursor-not-allowed bg-blue-600 text-white hover:bg-blue-500 active:bg-blue-700 disabled:bg-blue-600/40 h-11 px-5 text-sm font-medium gap-2"
+      class="inline-flex items-center justify-center rounded-control font-semibold transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 disabled:cursor-not-allowed bg-btn-grad text-white hover:brightness-105 active:translate-y-px disabled:opacity-45 h-10 px-5 text-body gap-2"
       type="button"
     >
       <span>
@@ -144,7 +180,7 @@ exports[`Storybook visual-regression / Button > renders all sizes side-by-side 1
 exports[`Storybook visual-regression / Button > renders the destructive variant 1`] = `
 <DocumentFragment>
   <button
-    class="inline-flex items-center justify-center rounded-lg font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 disabled:cursor-not-allowed bg-red-600 text-white hover:bg-red-500 active:bg-red-700 disabled:bg-red-600/40 h-9 px-4 text-sm gap-2"
+    class="inline-flex items-center justify-center rounded-control font-semibold transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 disabled:cursor-not-allowed bg-surface-card border border-surface-border text-tone-danger hover:bg-pill-danger-bg disabled:opacity-45 h-9 px-3.5 text-control gap-2"
     type="button"
   >
     <span>
@@ -157,7 +193,7 @@ exports[`Storybook visual-regression / Button > renders the destructive variant 
 exports[`Storybook visual-regression / Button > renders the ghost variant 1`] = `
 <DocumentFragment>
   <button
-    class="inline-flex items-center justify-center rounded-lg font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 disabled:cursor-not-allowed bg-transparent text-gray-300 hover:bg-gray-800/60 hover:text-gray-100 disabled:text-gray-600 h-9 px-4 text-sm gap-2"
+    class="inline-flex items-center justify-center rounded-control font-semibold transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 disabled:cursor-not-allowed bg-transparent text-fg-secondary hover:bg-surface-hover hover:text-fg-primary disabled:text-fg-subtle h-9 px-3.5 text-control gap-2"
     type="button"
   >
     <span>
@@ -171,7 +207,7 @@ exports[`Storybook visual-regression / Button > renders the loading state 1`] = 
 <DocumentFragment>
   <button
     aria-busy="true"
-    class="inline-flex items-center justify-center rounded-lg font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 disabled:cursor-not-allowed bg-blue-600 text-white hover:bg-blue-500 active:bg-blue-700 disabled:bg-blue-600/40 h-9 px-4 text-sm gap-2"
+    class="inline-flex items-center justify-center rounded-control font-semibold transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 disabled:cursor-not-allowed bg-btn-grad text-white hover:brightness-105 active:translate-y-px disabled:opacity-45 h-9 px-3.5 text-control gap-2"
     disabled=""
     type="button"
   >
@@ -189,7 +225,7 @@ exports[`Storybook visual-regression / Button > renders the loading state 1`] = 
 exports[`Storybook visual-regression / Button > renders the outline variant 1`] = `
 <DocumentFragment>
   <button
-    class="inline-flex items-center justify-center rounded-lg font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 disabled:cursor-not-allowed bg-transparent text-gray-300 border border-gray-700 hover:border-gray-600 hover:bg-gray-800/40 disabled:opacity-50 h-9 px-4 text-sm gap-2"
+    class="inline-flex items-center justify-center rounded-control font-semibold transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 disabled:cursor-not-allowed bg-transparent text-fg-secondary border border-surface-border hover:border-surface-border-strong hover:bg-surface-hover disabled:opacity-50 h-9 px-3.5 text-control gap-2"
     type="button"
   >
     <span>
@@ -202,7 +238,7 @@ exports[`Storybook visual-regression / Button > renders the outline variant 1`] 
 exports[`Storybook visual-regression / Button > renders the primary variant 1`] = `
 <DocumentFragment>
   <button
-    class="inline-flex items-center justify-center rounded-lg font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 disabled:cursor-not-allowed bg-blue-600 text-white hover:bg-blue-500 active:bg-blue-700 disabled:bg-blue-600/40 h-9 px-4 text-sm gap-2"
+    class="inline-flex items-center justify-center rounded-control font-semibold transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 disabled:cursor-not-allowed bg-btn-grad text-white hover:brightness-105 active:translate-y-px disabled:opacity-45 h-9 px-3.5 text-control gap-2"
     type="button"
   >
     <span>
@@ -215,7 +251,7 @@ exports[`Storybook visual-regression / Button > renders the primary variant 1`] 
 exports[`Storybook visual-regression / Button > renders the secondary variant 1`] = `
 <DocumentFragment>
   <button
-    class="inline-flex items-center justify-center rounded-lg font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 disabled:cursor-not-allowed bg-gray-800 text-gray-200 hover:bg-gray-700 active:bg-gray-700 disabled:bg-gray-800/40 disabled:text-gray-500 h-9 px-4 text-sm gap-2"
+    class="inline-flex items-center justify-center rounded-control font-semibold transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 disabled:cursor-not-allowed bg-surface-card border border-surface-border text-fg-primary hover:bg-surface-hover hover:border-surface-border-strong disabled:opacity-45 h-9 px-3.5 text-control gap-2"
     type="button"
   >
     <span>
@@ -228,7 +264,7 @@ exports[`Storybook visual-regression / Button > renders the secondary variant 1`
 exports[`Storybook visual-regression / Card > renders a flat card 1`] = `
 <DocumentFragment>
   <div
-    class="rounded-xl bg-gray-900/40 border border-gray-800/60 p-5"
+    class="rounded-container overflow-hidden bg-surface-card border border-surface-border shadow-card p-5"
   >
     Flat surface
   </div>
@@ -238,7 +274,7 @@ exports[`Storybook visual-regression / Card > renders a flat card 1`] = `
 exports[`Storybook visual-regression / Card > renders a flush card with a table 1`] = `
 <DocumentFragment>
   <div
-    class="rounded-xl bg-gray-900/70 border border-gray-800 shadow-md shadow-black/30"
+    class="rounded-container overflow-hidden bg-surface-card border border-surface-border shadow-card"
   >
     <table>
       <tbody>
@@ -256,36 +292,36 @@ exports[`Storybook visual-regression / Card > renders a flush card with a table 
 exports[`Storybook visual-regression / Card > renders a raised card with header / body / footer 1`] = `
 <DocumentFragment>
   <div
-    class="rounded-xl bg-gray-900/70 border border-gray-800 shadow-md shadow-black/30 p-5"
+    class="rounded-container overflow-hidden bg-surface-card border border-surface-border shadow-card p-5"
   >
     <div
-      class="flex items-start justify-between gap-3 mb-3"
+      class="flex items-start justify-between gap-3 mb-3.5"
     >
       <div
         class="min-w-0"
       >
         <h3
-          class="text-sm font-semibold text-gray-100"
+          class="text-card-title font-semibold text-fg-primary"
         >
           Test card
         </h3>
         <p
-          class="mt-0.5 text-xs text-gray-500"
+          class="mt-0.5 text-caption text-fg-muted"
         >
           A snapshotted card.
         </p>
       </div>
     </div>
     <div
-      class="text-sm text-gray-300"
+      class="text-body text-fg-secondary"
     >
       The body content.
     </div>
     <div
-      class="mt-4 flex items-center justify-end gap-2 border-t border-gray-800/60 pt-3"
+      class="mt-4 flex items-center justify-end gap-2 border-t border-surface-divider pt-3"
     >
       <button
-        class="inline-flex items-center justify-center rounded-lg font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 disabled:cursor-not-allowed bg-transparent text-gray-300 hover:bg-gray-800/60 hover:text-gray-100 disabled:text-gray-600 h-8 px-3 text-xs gap-1.5"
+        class="inline-flex items-center justify-center rounded-control font-semibold transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 disabled:cursor-not-allowed bg-transparent text-fg-secondary hover:bg-surface-hover hover:text-fg-primary disabled:text-fg-subtle h-8 px-3 text-caption gap-1.5"
         type="button"
       >
         <span>
@@ -293,7 +329,7 @@ exports[`Storybook visual-regression / Card > renders a raised card with header 
         </span>
       </button>
       <button
-        class="inline-flex items-center justify-center rounded-lg font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 disabled:cursor-not-allowed bg-blue-600 text-white hover:bg-blue-500 active:bg-blue-700 disabled:bg-blue-600/40 h-8 px-3 text-xs gap-1.5"
+        class="inline-flex items-center justify-center rounded-control font-semibold transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 disabled:cursor-not-allowed bg-btn-grad text-white hover:brightness-105 active:translate-y-px disabled:opacity-45 h-8 px-3 text-caption gap-1.5"
         type="button"
       >
         <span>
@@ -308,16 +344,16 @@ exports[`Storybook visual-regression / Card > renders a raised card with header 
 exports[`Storybook visual-regression / EmptyState > renders the default variant 1`] = `
 <DocumentFragment>
   <div
-    class="flex flex-col items-center justify-center rounded-xl border border-dashed px-6 py-12 text-center border-gray-800 bg-gray-900/30"
+    class="flex flex-col items-center justify-center rounded-container border border-dashed px-6 py-10 text-center border-surface-border-strong bg-surface-card"
     role="status"
   >
     <h3
-      class="text-base font-semibold text-gray-100"
+      class="text-card-title font-semibold text-fg-primary"
     >
       No playbooks yet
     </h3>
     <p
-      class="mt-1 max-w-md text-sm text-gray-500"
+      class="mt-1 max-w-md text-body text-fg-muted"
     >
       Use the button above to create one.
     </p>
@@ -328,21 +364,21 @@ exports[`Storybook visual-regression / EmptyState > renders the default variant 
 exports[`Storybook visual-regression / EmptyState > renders the planned-v1.1 variant 1`] = `
 <DocumentFragment>
   <div
-    class="flex flex-col items-center justify-center rounded-xl border border-dashed px-6 py-12 text-center border-amber-500/30 bg-amber-500/[0.04]"
+    class="flex flex-col items-center justify-center rounded-container border border-dashed px-6 py-10 text-center border-tone-warning/40 bg-pill-warning-bg"
     role="status"
   >
     <span
-      class="mb-3 inline-flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-300"
+      class="mb-3 inline-flex items-center gap-1 rounded-pill bg-pill-warning-bg px-2.5 py-0.5 text-eyebrow font-semibold uppercase tracking-wide text-tone-warning"
     >
       Planned for v1.1
     </span>
     <h3
-      class="text-base font-semibold text-gray-100"
+      class="text-card-title font-semibold text-fg-primary"
     >
       Coming soon
     </h3>
     <p
-      class="mt-1 max-w-md text-sm text-gray-500"
+      class="mt-1 max-w-md text-body text-fg-muted"
     >
       Available in the next release.
     </p>
@@ -353,11 +389,11 @@ exports[`Storybook visual-regression / EmptyState > renders the planned-v1.1 var
 exports[`Storybook visual-regression / ErrorState > renders the basic error 1`] = `
 <DocumentFragment>
   <div
-    class="rounded-xl border border-red-500/30 bg-red-500/5 px-6 py-8 text-center"
+    class="rounded-container border border-tone-danger/30 bg-pill-danger-bg px-6 py-8 text-center"
     role="alert"
   >
     <div
-      class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-500/15 text-red-400"
+      class="mx-auto mb-4 flex h-11 w-11 items-center justify-center rounded-control bg-surface-card text-tone-danger border border-tone-danger/30"
     >
       <svg
         class="h-6 w-6"
@@ -374,12 +410,12 @@ exports[`Storybook visual-regression / ErrorState > renders the basic error 1`] 
       </svg>
     </div>
     <h3
-      class="text-base font-semibold text-red-200"
+      class="text-card-title font-semibold text-fg-primary"
     >
       Something went wrong
     </h3>
     <p
-      class="mx-auto mt-1 max-w-md text-sm text-red-300/70"
+      class="mx-auto mt-1 max-w-md text-body text-fg-secondary"
     >
       We couldn't load this view. Try again or check the service status.
     </p>
@@ -393,11 +429,11 @@ exports[`Storybook visual-regression / ErrorState > renders the basic error 1`] 
 exports[`Storybook visual-regression / ErrorState > renders the error with a string detail 1`] = `
 <DocumentFragment>
   <div
-    class="rounded-xl border border-red-500/30 bg-red-500/5 px-6 py-8 text-center"
+    class="rounded-container border border-tone-danger/30 bg-pill-danger-bg px-6 py-8 text-center"
     role="alert"
   >
     <div
-      class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-500/15 text-red-400"
+      class="mx-auto mb-4 flex h-11 w-11 items-center justify-center rounded-control bg-surface-card text-tone-danger border border-tone-danger/30"
     >
       <svg
         class="h-6 w-6"
@@ -414,17 +450,17 @@ exports[`Storybook visual-regression / ErrorState > renders the error with a str
       </svg>
     </div>
     <h3
-      class="text-base font-semibold text-red-200"
+      class="text-card-title font-semibold text-fg-primary"
     >
       Boom
     </h3>
     <p
-      class="mx-auto mt-1 max-w-md text-sm text-red-300/70"
+      class="mx-auto mt-1 max-w-md text-body text-fg-secondary"
     >
       A test boom.
     </p>
     <pre
-      class="mx-auto mt-4 max-w-xl overflow-x-auto rounded-md bg-black/30 px-3 py-2 text-left font-mono text-xs text-red-300/80"
+      class="mx-auto mt-4 max-w-xl overflow-x-auto rounded-control border border-surface-border bg-surface-card px-3 py-2 text-left font-mono text-control-sm text-tone-danger"
     >
       HTTP 500
     </pre>
@@ -438,7 +474,7 @@ exports[`Storybook visual-regression / ErrorState > renders the error with a str
 exports[`Storybook visual-regression / Skeleton > renders a single skeleton 1`] = `
 <DocumentFragment>
   <div
-    class="animate-pulse bg-gradient-to-r from-gray-800/40 via-gray-700/40 to-gray-800/40 bg-[length:200%_100%] rounded-md h-4 w-32"
+    class="animate-pulse bg-surface-subtle rounded-control h-4 w-32"
     style="animation: skeleton-shimmer 1.4s ease-in-out infinite;"
   />
 </DocumentFragment>
@@ -447,22 +483,22 @@ exports[`Storybook visual-regression / Skeleton > renders a single skeleton 1`] 
 exports[`Storybook visual-regression / Skeleton > renders a skeleton card 1`] = `
 <DocumentFragment>
   <div
-    class="rounded-xl border border-gray-800/60 bg-gray-900/40 p-5 space-y-4"
+    class="rounded-container border border-surface-border bg-surface-card p-5 space-y-4 shadow-card"
   >
     <div
-      class="animate-pulse bg-gradient-to-r from-gray-800/40 via-gray-700/40 to-gray-800/40 bg-[length:200%_100%] rounded-md h-4 w-1/3"
+      class="animate-pulse bg-surface-subtle rounded-control h-4 w-1/3"
       style="animation: skeleton-shimmer 1.4s ease-in-out infinite;"
     />
     <div
-      class="animate-pulse bg-gradient-to-r from-gray-800/40 via-gray-700/40 to-gray-800/40 bg-[length:200%_100%] rounded-md h-8 w-2/3"
+      class="animate-pulse bg-surface-subtle rounded-control h-8 w-2/3"
       style="animation: skeleton-shimmer 1.4s ease-in-out infinite;"
     />
     <div
-      class="animate-pulse bg-gradient-to-r from-gray-800/40 via-gray-700/40 to-gray-800/40 bg-[length:200%_100%] rounded-md h-3 w-full"
+      class="animate-pulse bg-surface-subtle rounded-control h-3 w-full"
       style="animation: skeleton-shimmer 1.4s ease-in-out infinite;"
     />
     <div
-      class="animate-pulse bg-gradient-to-r from-gray-800/40 via-gray-700/40 to-gray-800/40 bg-[length:200%_100%] rounded-md h-3 w-4/5"
+      class="animate-pulse bg-surface-subtle rounded-control h-3 w-4/5"
       style="animation: skeleton-shimmer 1.4s ease-in-out infinite;"
     />
   </div>
@@ -475,15 +511,15 @@ exports[`Storybook visual-regression / Skeleton > renders a skeleton list 1`] = 
     class="space-y-3"
   >
     <div
-      class="animate-pulse bg-gradient-to-r from-gray-800/40 via-gray-700/40 to-gray-800/40 bg-[length:200%_100%] rounded-md h-14 w-full"
+      class="animate-pulse bg-surface-subtle rounded-control h-14 w-full"
       style="animation: skeleton-shimmer 1.4s ease-in-out infinite;"
     />
     <div
-      class="animate-pulse bg-gradient-to-r from-gray-800/40 via-gray-700/40 to-gray-800/40 bg-[length:200%_100%] rounded-md h-14 w-full"
+      class="animate-pulse bg-surface-subtle rounded-control h-14 w-full"
       style="animation: skeleton-shimmer 1.4s ease-in-out infinite;"
     />
     <div
-      class="animate-pulse bg-gradient-to-r from-gray-800/40 via-gray-700/40 to-gray-800/40 bg-[length:200%_100%] rounded-md h-14 w-full"
+      class="animate-pulse bg-surface-subtle rounded-control h-14 w-full"
       style="animation: skeleton-shimmer 1.4s ease-in-out infinite;"
     />
   </div>
@@ -493,11 +529,11 @@ exports[`Storybook visual-regression / Skeleton > renders a skeleton list 1`] = 
 exports[`Storybook visual-regression / StatusPill > renders the cancelled status 1`] = `
 <DocumentFragment>
   <span
-    class="inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-medium text-gray-400 bg-gray-800/60 border-gray-700"
+    class="inline-flex items-center gap-1.5 rounded-pill px-2.5 py-0.5 text-caption font-medium whitespace-nowrap text-fg-muted bg-pill-neutral-bg"
   >
     <span
       aria-hidden="true"
-      class="h-1.5 w-1.5 rounded-full bg-current"
+      class="h-1.5 w-1.5 shrink-0 rounded-pill bg-dot-neutral"
     />
     Cancelled
   </span>
@@ -507,11 +543,11 @@ exports[`Storybook visual-regression / StatusPill > renders the cancelled status
 exports[`Storybook visual-regression / StatusPill > renders the completed status 1`] = `
 <DocumentFragment>
   <span
-    class="inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-medium text-green-300 bg-green-900/30 border-green-800"
+    class="inline-flex items-center gap-1.5 rounded-pill px-2.5 py-0.5 text-caption font-medium whitespace-nowrap text-tone-success bg-pill-success-bg"
   >
     <span
       aria-hidden="true"
-      class="h-1.5 w-1.5 rounded-full bg-current"
+      class="h-1.5 w-1.5 shrink-0 rounded-pill bg-dot-success"
     />
     Completed
   </span>
@@ -521,11 +557,11 @@ exports[`Storybook visual-regression / StatusPill > renders the completed status
 exports[`Storybook visual-regression / StatusPill > renders the failed status 1`] = `
 <DocumentFragment>
   <span
-    class="inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-medium text-red-300 bg-red-900/30 border-red-800"
+    class="inline-flex items-center gap-1.5 rounded-pill px-2.5 py-0.5 text-caption font-medium whitespace-nowrap text-tone-danger bg-pill-danger-bg"
   >
     <span
       aria-hidden="true"
-      class="h-1.5 w-1.5 rounded-full bg-current"
+      class="h-1.5 w-1.5 shrink-0 rounded-pill bg-dot-danger"
     />
     Failed
   </span>
@@ -535,11 +571,11 @@ exports[`Storybook visual-regression / StatusPill > renders the failed status 1`
 exports[`Storybook visual-regression / StatusPill > renders the pending status 1`] = `
 <DocumentFragment>
   <span
-    class="inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-medium text-yellow-300 bg-yellow-900/30 border-yellow-800"
+    class="inline-flex items-center gap-1.5 rounded-pill px-2.5 py-0.5 text-caption font-medium whitespace-nowrap text-tone-warning bg-pill-warning-bg"
   >
     <span
       aria-hidden="true"
-      class="h-1.5 w-1.5 rounded-full bg-current"
+      class="h-1.5 w-1.5 shrink-0 rounded-pill bg-dot-warning"
     />
     Pending
   </span>
@@ -549,11 +585,11 @@ exports[`Storybook visual-regression / StatusPill > renders the pending status 1
 exports[`Storybook visual-regression / StatusPill > renders the running status 1`] = `
 <DocumentFragment>
   <span
-    class="inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-medium text-blue-300 bg-blue-900/30 border-blue-800"
+    class="inline-flex items-center gap-1.5 rounded-pill px-2.5 py-0.5 text-caption font-medium whitespace-nowrap text-accent bg-pill-info-bg"
   >
     <span
       aria-hidden="true"
-      class="h-1.5 w-1.5 rounded-full bg-current animate-pulse"
+      class="h-1.5 w-1.5 shrink-0 rounded-pill bg-dot-info animate-pulse"
     />
     Running
   </span>
@@ -563,11 +599,11 @@ exports[`Storybook visual-regression / StatusPill > renders the running status 1
 exports[`Storybook visual-regression / StatusPill > renders the unknown status 1`] = `
 <DocumentFragment>
   <span
-    class="inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-medium text-gray-500 bg-gray-900/40 border-gray-800"
+    class="inline-flex items-center gap-1.5 rounded-pill px-2.5 py-0.5 text-caption font-medium whitespace-nowrap text-fg-subtle bg-pill-neutral-bg"
   >
     <span
       aria-hidden="true"
-      class="h-1.5 w-1.5 rounded-full bg-current"
+      class="h-1.5 w-1.5 shrink-0 rounded-pill bg-dot-neutral"
     />
     Unknown
   </span>
