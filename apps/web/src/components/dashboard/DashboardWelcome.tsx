@@ -79,14 +79,13 @@ export function DashboardWelcome() {
   ];
 
   return (
-    {/* [HIDDEN-UI THEME-7 visible product label updated]
-        Previous section label and aria-label: "Welcome to AiSOC". */}
     <section
       role="region"
       aria-label="Welcome to ClopsSOC"
       data-testid="dashboard-welcome"
       className="rounded-xl border border-brand-400/30 bg-gradient-to-br from-brand-500/10 to-brand-700/5 p-5"
     >
+      {/* [HIDDEN-UI THEME-7 visible product label updated; prior aria-label: "Welcome to AiSOC"] */}
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wider text-brand-300">

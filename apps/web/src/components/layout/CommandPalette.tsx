@@ -305,19 +305,11 @@ export function CommandPalette() {
                         {item.shortcut && (
                           <span className="flex items-center gap-0.5">
                             {item.shortcut.map((key) => (
-                              {/*
-                                [HIDDEN-UI THEME-7 use control radius for keycaps]
-                                <kbd
-                                  key={key}
-                                  className="rounded border border-surface-border bg-surface-elevated px-1 py-0.5 text-eyebrow font-mono text-fg-muted"
-                                >
-                                  {key}
-                                </kbd>
-                              */}
                               <kbd
                                 key={key}
                                 className="rounded-control border border-surface-border bg-surface-elevated px-1 py-0.5 text-eyebrow font-mono text-fg-muted"
                               >
+                                {/* [HIDDEN-UI THEME-7 prior keycap class: rounded] */}
                                 {key}
                               </kbd>
                             ))}
