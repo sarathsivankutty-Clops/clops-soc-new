@@ -78,7 +78,7 @@ type TabId =
   | 'delegations'
   | 'notifications'
   | 'appearance'
-  | 'deployment'
+  // [HIDDEN-UI NAV-7 restore-ai-settings] 'deployment'
   | 'audit'
   | 'about';
 
@@ -368,13 +368,15 @@ const TABS: { id: TabId; label: string; description: string }[] = [
     label: 'Appearance',
     description: 'Theme, density, animations.',
   },
+  // [HIDDEN-UI NAV-7 restore-ai-settings]
+  /*
   {
     id: 'deployment',
     label: 'Deployment & AI',
     description:
-      /* [HIDDEN-UI THEME-7 prior deployment copy named AiSOC] */
       'Live air-gap policy and LLM provider snapshot for this ClopsSOC pod.',
   },
+  */
   {
     id: 'audit',
     label: 'Audit log',
@@ -504,7 +506,9 @@ export function SettingsView() {
               {tab === 'delegations' && <DelegationsPanel />}
               {tab === 'notifications' && <NotificationsPanel />}
               {tab === 'appearance' && <AppearancePanel />}
+              {/* [HIDDEN-UI NAV-7 restore-ai-settings]
               {tab === 'deployment' && <DeploymentAIPanel />}
+              */}
               {tab === 'audit' && <AuditPanel />}
               {tab === 'about' && <AboutPanel />}
             </motion.div>
@@ -1595,7 +1599,7 @@ const PROVIDER_LABEL: Record<LlmProvider, string> = {
   none: 'Not configured',
 };
 
-function DeploymentAIPanel() {
+export function DeploymentAIPanel() {
   const airgap = useSWR(
     'settings:airgap-status',
     () => deploymentApi.getAirgapStatus(),

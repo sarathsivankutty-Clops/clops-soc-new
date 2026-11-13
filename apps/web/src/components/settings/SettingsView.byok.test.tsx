@@ -2,13 +2,13 @@
  * WS-H2 — BYOK per-tenant settings UI (vault-encrypted)
  *
  * Tests the BYOKCard component behaviour rendered inside DeploymentAIPanel
- * (which is part of SettingsView's "deployment" tab).
+ * (the SettingsTabs "AI Settings" tab).
  *
  * Strategy
  * ─────────
  * • SWR is mocked so we control the data each hook key receives.
  * • deploymentApi is mocked to observe calls and inject errors.
- * • We render SettingsView, navigate to the "Deployment & AI" tab, then assert
+ * • We render SettingsTabs, navigate to the "AI Settings" tab, then assert
  *   BYOKCard states (empty / view / edit / delete / error).
  *
  * Author: Beenu <beenu@cyble.com>
@@ -53,6 +53,7 @@ const mockGetConnectorStatuses = vi.hoisted(() => vi.fn());
 
 vi.mock('@/lib/api', () => ({
   __esModule: true,
+  authApi: { currentUser: () => null },
   deploymentApi: {
     getAirgapStatus: mockGetAirgapStatus,
     getLlmStatus: mockGetLlmStatus,
@@ -101,7 +102,7 @@ vi.mock('date-fns', async () => {
 // ──────────────────────────────────────────────────────────────────────────────
 // Import under test (after mocks)
 // ──────────────────────────────────────────────────────────────────────────────
-import { SettingsView } from './SettingsView';
+import { SettingsTabs } from './SettingsTabs';
 import type { LlmCredentialView } from '@/lib/api';
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -148,7 +149,7 @@ const llmFixture = {
   policy_note: 'Live LLM calls enabled.',
 };
 
-/** Render SettingsView with the "Deployment & AI" tab pre-selected. */
+/** Render SettingsTabs with the "AI Settings" tab pre-selected. */
 async function renderDeploymentTab(options: {
   credential?: LlmCredentialView | null;
   credentialError?: unknown;
@@ -176,7 +177,7 @@ async function renderDeploymentTab(options: {
 
   // [HIDDEN-UI NAV-6 inner tab bar hidden; navigate via ?section=deployment]
   window.history.replaceState(null, '', '/settings?section=deployment');
-  render(<SettingsView />, { wrapper: NavigationTestProvider });
+  render(<SettingsTabs />, { wrapper: NavigationTestProvider });
 }
 
 function clearSwrMaps() {

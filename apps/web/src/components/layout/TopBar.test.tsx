@@ -3,9 +3,11 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 const pathnameMock = vi.fn(() => '/cases');
+const searchParamsMock = vi.fn(() => new URLSearchParams());
 
 vi.mock('next/navigation', () => ({
   usePathname: () => pathnameMock(),
+  useSearchParams: () => searchParamsMock(),
 }));
 
 import { TopBar } from './TopBar';
@@ -46,6 +48,23 @@ describe('TopBar', () => {
     renderTopBar();
 
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Detection Catalog');
+  });
+
+  it('shows the AI Settings title for the deployment settings tab', () => {
+    pathnameMock.mockReturnValue('/settings');
+    searchParamsMock.mockReturnValue(new URLSearchParams('section=deployment'));
+    renderTopBar();
+
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('AI Settings');
+    expect(screen.getByText('LLM provider, BYOK, and air-gap configuration')).toBeInTheDocument();
+  });
+
+  it('prefers an explicitly selected settings tab over the legacy deep link', () => {
+    pathnameMock.mockReturnValue('/settings');
+    searchParamsMock.mockReturnValue(new URLSearchParams('tab=general&section=deployment'));
+    renderTopBar();
+
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Settings');
   });
 
   it('derives a sensible title for unknown routes from the path itself', () => {

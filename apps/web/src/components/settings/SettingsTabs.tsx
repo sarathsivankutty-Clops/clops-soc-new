@@ -1,16 +1,18 @@
 'use client';
 
+import { useSearchParams } from 'next/navigation';
 import { AuditLogView } from '@/components/audit/AuditLogView';
 import { ComplianceFrameworksView } from '@/components/compliance/ComplianceFrameworksView';
 import { ConnectorsView } from '@/components/connectors/ConnectorsView';
 import { MfaView } from '@/components/settings/MfaView';
 import { RBACView } from '@/components/settings/RBACView';
-import { SettingsView } from '@/components/settings/SettingsView';
+import { DeploymentAIPanel, SettingsView } from '@/components/settings/SettingsView';
 import { UsersView } from '@/components/settings/UsersView';
 import { SectionTabs, type SectionTabItem } from '@/components/ui/SectionTabs';
 
 const SETTINGS_TABS: readonly SectionTabItem[] = [
   { id: 'general', label: 'General', render: () => <SettingsView /> },
+  { id: 'deployment', label: 'AI Settings', render: () => <DeploymentAIPanel /> },
   { id: 'connectors', label: 'Connectors', render: () => <ConnectorsView /> },
   {
     id: 'users',
@@ -51,10 +53,16 @@ const SETTINGS_TABS: readonly SectionTabItem[] = [
 ];
 
 export function SettingsTabs({ defaultTab = 'general' }: { defaultTab?: string }) {
+  const searchParams = useSearchParams();
+  const initialTab =
+    searchParams?.get('section') === 'deployment' && !searchParams.get('tab')
+      ? 'deployment'
+      : defaultTab;
+
   return (
     <SectionTabs
       tabs={SETTINGS_TABS}
-      defaultTab={defaultTab}
+      defaultTab={initialTab}
       ariaLabel="Settings groups"
     />
   );

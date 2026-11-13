@@ -75,6 +75,7 @@ const NAV_ITEMS: { label: string; href: string; keywords: string[]; adminOnly?: 
   { label: 'Runbooks',            href: '/playbooks',               keywords: ['runbooks', 'playbooks', 'soar', 'automation'] },
   { label: 'Dashboards',          href: '/sla',                     keywords: ['sla', 'team analytics', 'mssp', 'cost', 'reports'] },
   { label: 'Settings',            href: '/settings',                keywords: ['preferences', 'profile', 'tenant', 'connectors', 'users', 'rbac', 'mfa', 'compliance', 'audit'] },
+  { label: 'AI Settings',         href: '/settings?section=deployment', keywords: ['ai', 'llm', 'provider', 'model', 'byok'] },
   // [HIDDEN-UI NAV-1 consolidated into SectionTabs or hidden from primary navigation]
   // { label: 'Cases',        href: '/cases',        keywords: ['investigations', 'tickets'] },
   // { label: 'Explore',      href: '/explore',      keywords: ['data explorer', 'lake', 'sql', 'bi', 'query', 'identity', 'intel'] },

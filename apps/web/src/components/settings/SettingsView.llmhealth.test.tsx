@@ -38,6 +38,7 @@ vi.mock('swr', () => ({
 const noop = vi.hoisted(() => vi.fn());
 vi.mock('@/lib/api', () => ({
   __esModule: true,
+  authApi: { currentUser: () => null },
   deploymentApi: {
     getAirgapStatus: noop,
     getLlmStatus: noop,
@@ -61,7 +62,7 @@ vi.mock('react-hot-toast', () => ({
   toast: { success: vi.fn(), error: vi.fn() },
 }));
 
-import { SettingsView } from './SettingsView';
+import { SettingsTabs } from './SettingsTabs';
 import type { LlmStatus } from '@/lib/api';
 
 const AIRGAP_KEY = 'settings:airgap-status';
@@ -101,7 +102,7 @@ async function renderWith(llm: LlmStatus) {
   swrData.set(CRED_KEY, undefined);
   // [HIDDEN-UI NAV-6 inner tab bar hidden; navigate via ?section=deployment]
   window.history.replaceState(null, '', '/settings?section=deployment');
-  render(<SettingsView />, { wrapper: NavigationTestProvider });
+  render(<SettingsTabs />, { wrapper: NavigationTestProvider });
 }
 
 beforeEach(() => {

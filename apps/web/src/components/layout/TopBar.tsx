@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { usePathname } from 'next/navigation';
+import { Suspense, useEffect, useState } from 'react';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { useBranding } from '@/hooks/useBranding';
 import { TimeWindowSelector } from './TimeWindowSelector';
 import { TenantSwitcher } from './TenantSwitcher';
@@ -15,7 +15,12 @@ import Link from 'next/link';
 
 // Order matters: longer/more specific paths first so startsWith() picks
 // the right label for nested routes (e.g. /detection/catalog before /detection).
-const routeLabels: Record<string, { title: string; description: string }> = {
+interface RouteInfo {
+  title: string;
+  description: string;
+}
+
+const routeLabels: Record<string, RouteInfo> = {
   '/dashboards/soc-insights': { title: 'SOC Insights', description: 'Rolling KPIs, MTTA, MTTR, and cost per investigation' },
   '/dashboards/operations': { title: 'SOC Operations', description: 'Pipeline health, connector fleet, and agent throughput' },
   '/detection/catalog': { title: 'Detection Catalog', description: 'Curated rule packs and templates' },
@@ -36,7 +41,7 @@ const routeLabels: Record<string, { title: string; description: string }> = {
   '/sla': { title: 'Dashboards', description: 'SLA, team analytics, MSSP, and cost' },
   '/mssp': { title: 'MSSP', description: 'Managed multi-tenant portfolio overview' },
   '/costs': { title: 'Cost', description: 'LLM spend, token usage, and BYOK savings' },
-  '/settings': { title: 'Settings', description: 'General, connectors, access, compliance, and audit logs' },
+  '/settings': { title: 'Settings', description: 'General, AI settings, connectors, access, compliance, and audit logs' },
   '/connectors': { title: 'Connectors', description: 'Security tool integrations' },
   '/compliance': { title: 'Compliance', description: 'Frameworks, controls, and evidence' },
   '/audit': { title: 'Audit Logs', description: 'Platform activity and security events' },
@@ -51,6 +56,36 @@ const routeLabels: Record<string, { title: string; description: string }> = {
   // '/purple-team': { title: 'Purple Team', description: 'Adversary emulation and detection coverage' },
   '/': { title: 'Dashboard', description: 'SOC overview and metrics' },
 };
+
+function TopBarHeading({
+  pathname,
+  routeInfo,
+}: {
+  pathname: string;
+  routeInfo: RouteInfo;
+}) {
+  const searchParams = useSearchParams();
+  const selectedSettingsTab =
+    searchParams?.get('tab') ??
+    (searchParams?.get('section') === 'deployment' ? 'deployment' : null);
+  const pageInfo =
+    pathname === '/settings' && selectedSettingsTab === 'deployment'
+      ? {
+          title: 'AI Settings',
+          description: 'LLM provider, BYOK, and air-gap configuration',
+        }
+      : routeInfo;
+
+  return (
+    <div className="min-w-0">
+      <h1 className="text-card-title font-semibold text-fg-primary leading-tight truncate">
+        {pageInfo.title}
+      </h1>
+      {/* [HIDDEN-UI THEME-2 description kept sr-only for a11y while TopBar displays plain title] */}
+      <p className="sr-only">{pageInfo.description}</p>
+    </div>
+  );
+}
 
 interface TopBarProps {
   /**
@@ -172,13 +207,18 @@ export function TopBar({
             </svg>
           </button>
         )}
-        <div className="min-w-0">
-          <h1 className="text-card-title font-semibold text-fg-primary leading-tight truncate">
-            {routeInfo.title}
-          </h1>
-          {/* [HIDDEN-UI THEME-2 description kept sr-only for a11y while TopBar displays plain title] */}
-          <p className="sr-only">{routeInfo.description}</p>
-        </div>
+        <Suspense
+          fallback={
+            <div className="min-w-0">
+              <h1 className="text-card-title font-semibold text-fg-primary leading-tight truncate">
+                {routeInfo.title}
+              </h1>
+              <p className="sr-only">{routeInfo.description}</p>
+            </div>
+          }
+        >
+          <TopBarHeading pathname={pathname} routeInfo={routeInfo} />
+        </Suspense>
       </div>
 
       {/* Center: command palette launcher */}
