@@ -76,6 +76,13 @@ afterEach(() => {
 });
 
 describe('creating a new case from the modal', () => {
+  it('hides the Create case button until Jira integration ships', () => {
+    render(<CreateCaseModal open onClose={vi.fn()} alert={alertWith('critical')} />);
+    expect(screen.queryByRole('button', { name: /create case/i })).toBeNull();
+  });
+
+  // [HIDDEN-UI NAV-6 Create case button hidden; TODO-BACKEND: Jira link / create issue]
+  /*
   it("submits the alert's severity, not the server default", async () => {
     render(<CreateCaseModal open onClose={vi.fn()} alert={alertWith('critical')} />);
 
@@ -127,6 +134,7 @@ describe('creating a new case from the modal', () => {
     await waitFor(() => expect(toastError).toHaveBeenCalled());
     expect(push).not.toHaveBeenCalled();
   });
+  */
 });
 
 describe('attaching the alert to an existing case', () => {

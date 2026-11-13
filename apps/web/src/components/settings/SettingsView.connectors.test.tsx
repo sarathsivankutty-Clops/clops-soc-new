@@ -20,6 +20,8 @@ describe('Settings integration links', () => {
     'routes "%s" to the existing connector inventory',
     async (name) => {
       const user = userEvent.setup();
+      // [HIDDEN-UI NAV-6 inner tab bar hidden; navigate via ?section=integrations]
+      window.history.replaceState(null, '', '/settings?section=integrations');
       // Keep the real view, Link and SWR behavior; isolate only the API and cache.
       render(
         <SWRConfig value={{ provider: () => new Map() }}>
@@ -27,10 +29,7 @@ describe('Settings integration links', () => {
         </SWRConfig>,
         { wrapper: NavigationTestProvider },
       );
-      // The sidebar button's accessible name concatenates the label and its
-      // description ("IntegrationsManage the connectors…"), so a \b after the
-      // label can never match — both sides are word characters.
-      await user.click(screen.getByRole('button', { name: /^Integrations/ }));
+      void user;
       await screen.findByRole('heading', { name: 'No connectors yet' });
 
       expect(connectorsApi.list).toHaveBeenCalled();

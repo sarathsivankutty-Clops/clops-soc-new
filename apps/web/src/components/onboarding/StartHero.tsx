@@ -128,8 +128,8 @@ export function StartHero() {
             ))}
           </ul>
 
-          {/* Three primary CTAs */}
-          <div className="mt-10 grid gap-3 sm:grid-cols-3">
+          {/* Primary CTAs */}
+          <div className="mt-10 grid gap-3 sm:grid-cols-2">
             <button
               type="button"
               onClick={handleTryDemo}
@@ -148,7 +148,8 @@ export function StartHero() {
               </span>
             </button>
 
-            <Link
+            {/* [HIDDEN-UI NAV-6 /onboarding route hidden] */}
+            {/* <Link
               href="/onboarding"
               data-testid="cta-connect-source"
               className="group flex flex-col items-start gap-2 rounded-xl border border-white/10 bg-white/[0.04] p-5 text-left transition hover:border-white/30 hover:bg-white/[0.08]"
@@ -163,7 +164,7 @@ export function StartHero() {
                 Pick from {CONNECTOR_COUNT} connectors — EDR, SIEM, cloud, IAM.
                 Credentials stay encrypted.
               </span>
-            </Link>
+            </Link> */}
 
             <Link
               href="/dashboard?welcome=1"

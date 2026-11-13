@@ -702,14 +702,15 @@ export function CaseWorkspace({ caseId }: { caseId: string }) {
         title="Couldn't load case"
         error={error}
         onRetry={() => void mutate()}
-        action={
-          <Link
-            href="/cases"
-            className="rounded-md border border-slate-700/70 bg-slate-800/50 px-3 py-1.5 text-sm font-medium text-slate-200 hover:border-slate-600"
-          >
-            Back to cases
-          </Link>
-        }
+        // [HIDDEN-UI NAV-6 /cases route hidden]
+        // action={
+        //   <Link
+        //     href="/cases"
+        //     className="rounded-md border border-slate-700/70 bg-slate-800/50 px-3 py-1.5 text-sm font-medium text-slate-200 hover:border-slate-600"
+        //   >
+        //     Back to cases
+        //   </Link>
+        // }
       />
     );
   }
@@ -727,9 +728,11 @@ export function CaseWorkspace({ caseId }: { caseId: string }) {
       {/* Breadcrumb + demo banner */}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2 text-xs">
-          <Link href="/cases" className="text-slate-500 hover:text-slate-300">
+          {/* [HIDDEN-UI NAV-6 /cases route hidden] */}
+          {/* <Link href="/cases" className="text-slate-500 hover:text-slate-300">
             Cases
-          </Link>
+          </Link> */}
+          <span className="text-slate-500">Cases</span>
           <span className="text-slate-600">/</span>
           <span className="font-mono text-slate-400">{caseRecord.id}</span>
         </div>

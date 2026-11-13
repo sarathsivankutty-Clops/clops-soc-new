@@ -14,7 +14,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
-import Link from 'next/link';
+// [HIDDEN-UI NAV-6 /copilot route hidden; keep floating chat]
+// import Link from 'next/link';
 import { clsx } from 'clsx';
 import { motion, AnimatePresence } from 'framer-motion';
 import { copilotApi, type CopilotMessage } from '@/lib/api';
@@ -200,7 +201,8 @@ export function CopilotDock() {
                 </div>
               </div>
               <div className="flex items-center gap-1">
-                <Link
+                {/* [HIDDEN-UI NAV-6 /copilot full page route hidden; keep floating chat] */}
+                {/* <Link
                   href="/copilot"
                   className="rounded-md p-1.5 text-slate-400 transition-colors hover:bg-slate-800 hover:text-white"
                   title="Open full page"
@@ -209,7 +211,7 @@ export function CopilotDock() {
                   <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
                   </svg>
-                </Link>
+                </Link> */}
                 <button
                   onClick={() => setOpen(false)}
                   className="rounded-md p-1.5 text-slate-400 transition-colors hover:bg-slate-800 hover:text-white"
@@ -266,13 +268,15 @@ export function CopilotDock() {
                           <div className="mt-2 flex flex-wrap gap-1.5">
                             {m.suggestions.map((s, idx) =>
                               s.startsWith('Open AI Copilot') ? (
-                                <Link
-                                  key={idx}
-                                  href="/copilot"
-                                  className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[11px] text-emerald-200 transition-colors hover:bg-emerald-500/20"
-                                >
-                                  {s} →
-                                </Link>
+                                // [HIDDEN-UI NAV-6 /copilot full page route hidden; keep floating chat]
+                                // <Link
+                                //   key={idx}
+                                //   href="/copilot"
+                                //   className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[11px] text-emerald-200 transition-colors hover:bg-emerald-500/20"
+                                // >
+                                //   {s} →
+                                // </Link>
+                                null
                               ) : (
                                 <button
                                   key={idx}

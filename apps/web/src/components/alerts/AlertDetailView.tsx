@@ -906,13 +906,15 @@ export function AlertDetailView({ alertId }: { alertId: string }) {
             </svg>
             Explain
           </button>
-          <button
+          {/* [HIDDEN-UI NAV-6 hide Create Case button] */}
+          {/* [TODO-BACKEND: Jira link / create issue] */}
+          {/* <button
             type="button"
             onClick={() => setCreateCaseOpen(true)}
             className="bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium px-4 py-1.5 rounded-lg transition-colors"
           >
             Create Case
-          </button>
+          </button> */}
         </div>
       </div>
 
@@ -1111,7 +1113,7 @@ export function AlertDetailView({ alertId }: { alertId: string }) {
         onClose={() => setExplainOpen(false)}
         alert={alert}
         onRunPlaybook={(pid) => {
-          toast.success(`Queued playbook ${pid}`);
+          toast.success(`Queued runbook ${pid}`);
           setExplainOpen(false);
         }}
       />

@@ -1,4 +1,6 @@
-import { AccessReviewView } from '@/components/access-review/AccessReviewView';
+import { redirect } from 'next/navigation';
+// [HIDDEN-UI NAV-5 route hidden from navigation]
+// import { AccessReviewView } from '@/components/access-review/AccessReviewView';
 
 export const metadata = {
   title: 'Access review',
@@ -6,12 +8,12 @@ export const metadata = {
     'What each principal was granted, through which object, and whether it was used. Read-only.',
 };
 
-// Tenant-scoped findings computed from this tenant's own posture and usage.
-// Nothing here is cacheable across requests.
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 export const fetchCache = 'force-no-store';
 
 export default function AccessReviewPage() {
-  return <AccessReviewView />;
+  // [HIDDEN-UI NAV-5 redirect with permanent:false (307) to /dashboard]
+  // return <AccessReviewView />;
+  redirect('/dashboard');
 }

@@ -33,11 +33,11 @@ function renderTopBar() {
 
 describe('TopBar', () => {
   it('shows the per-route title and description for known paths', () => {
-    pathnameMock.mockReturnValue('/cases');
+    pathnameMock.mockReturnValue('/playbooks');
     renderTopBar();
 
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Cases');
-    expect(screen.getByText('Incident case management')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Runbooks');
+    expect(screen.getByText('Automated response and SOAR workflows')).toBeInTheDocument();
   });
 
   it('matches the most specific nested route first', () => {

@@ -776,7 +776,7 @@ function NextStepsSection({
                   onClick={() => onRunPlaybook(s.playbook_id!)}
                   className="text-xs px-2.5 py-1 rounded bg-blue-500/15 text-blue-300 hover:bg-blue-500/25 ring-1 ring-inset ring-blue-500/30 transition"
                 >
-                  Run playbook
+                  Run runbook
                 </button>
               )}
             </div>
@@ -975,7 +975,7 @@ function SuggestedActionsSection({
                   onClick={() => onRunPlaybook(a.playbook_id!)}
                   className="shrink-0 text-xs px-2.5 py-1 rounded bg-blue-500/15 text-blue-300 hover:bg-blue-500/25 ring-1 ring-inset ring-blue-500/30 transition"
                 >
-                  Run playbook
+                  Run runbook
                 </button>
               )}
             </div>

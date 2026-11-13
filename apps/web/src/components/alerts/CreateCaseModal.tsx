@@ -251,7 +251,21 @@ export function CreateCaseModal({ open, onClose, alert }: CreateCaseModalProps) 
           >
             {t('common.cancel')}
           </button>
-          <button
+          {/* [HIDDEN-UI NAV-6 hide Create case button] */}
+          {/* [TODO-BACKEND: Jira link / create issue] */}
+          {mode === 'existing' ? (
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={submitting}
+              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {submitting
+                ? 'Working…'
+                : 'Add to case'}
+            </button>
+          ) : null}
+          {/* <button
             type="button"
             onClick={handleSubmit}
             disabled={submitting}
@@ -262,7 +276,7 @@ export function CreateCaseModal({ open, onClose, alert }: CreateCaseModalProps) 
               : mode === 'new'
                 ? 'Create case'
                 : 'Add to case'}
-          </button>
+          </button> */}
         </div>
       </div>
     </div>

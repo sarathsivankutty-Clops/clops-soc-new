@@ -92,8 +92,8 @@ describe('DraftFromPromptDialog', () => {
   it('renders the title and a submit-disabled state when prompt is empty', () => {
     render(<DraftFromPromptDialog open onClose={() => undefined} />);
     expect(screen.getByRole('dialog')).toBeInTheDocument();
-    expect(screen.getByText(/Draft a playbook from a prompt/i)).toBeInTheDocument();
-    const submit = screen.getByRole('button', { name: /draft playbook/i });
+    expect(screen.getByText(/Draft a runbook from a prompt/i)).toBeInTheDocument();
+    const submit = screen.getByRole('button', { name: /draft runbook/i });
     expect(submit).toBeDisabled();
   });
 
@@ -106,7 +106,7 @@ describe('DraftFromPromptDialog', () => {
     const ta = screen.getByRole('textbox');
     await user.type(ta, 'Isolate the host and notify the SOC');
 
-    const submit = screen.getByRole('button', { name: /draft playbook/i });
+    const submit = screen.getByRole('button', { name: /draft runbook/i });
     await user.click(submit);
 
     await waitFor(() => {
@@ -143,7 +143,7 @@ describe('DraftFromPromptDialog', () => {
     const ta = screen.getByRole('textbox');
     await user.type(ta, 'whatever');
 
-    await user.click(screen.getByRole('button', { name: /draft playbook/i }));
+    await user.click(screen.getByRole('button', { name: /draft runbook/i }));
 
     await waitFor(() => {
       expect(screen.getByRole('alert')).toHaveTextContent(/too long/i);

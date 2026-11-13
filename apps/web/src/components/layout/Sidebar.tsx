@@ -153,232 +153,80 @@ const UsersIcon = () => (
 const navSections: NavSection[] = [
   {
     items: [
-      {
-        label: 'Dashboard',
-        href: '/dashboard',
-        icon: <ChartBarIcon />,
-      },
-      {
-        label: 'SOC Insights',
-        href: '/dashboards/soc-insights',
-        icon: <ChartBarIcon />,
-      },
-      {
-        label: 'SOC Operations',
-        href: '/dashboards/operations',
-        icon: <ChartBarIcon />,
-      },
-    ],
-  },
-  {
-    title: 'Threat Operations',
-    items: [
-      {
-        label: 'Alerts',
-        href: '/alerts',
-        icon: <BellIcon />,
-        badge: 0,
-        badgeColor: 'bg-red-500',
-      },
+      { label: 'Dashboard', href: '/dashboard', icon: <ChartBarIcon /> },
+      { label: 'SOC Insights', href: '/dashboards/soc-insights', icon: <ChartBarIcon /> },
+      { label: 'SOC Operations', href: '/dashboards/operations', icon: <ChartBarIcon /> },
+      { label: 'Alerts', href: '/alerts', icon: <BellIcon /> },
       {
         label: 'Investigation Queue',
         href: '/queue',
         icon: <InboxIcon />,
         liveBadge: <LiveQueueBadge />,
       },
-      {
-        label: 'Cases',
-        href: '/cases',
-        icon: <FolderIcon />,
-      },
-      {
-        label: 'Hunt',
-        href: '/hunt',
-        icon: <SearchIcon />,
-      },
-      {
-        label: 'Federated Search',
-        href: '/federated-search',
-        icon: <SearchIcon />,
-      },
-      {
-        label: 'Access Review',
-        href: '/access-review',
-        icon: <ShieldIcon />,
-      },
-      {
-        label: 'Evaluate on History',
-        href: '/evaluate',
-        icon: <ChartBarIcon />,
-      },
-      {
-        label: 'Explore',
-        href: '/explore',
-        icon: <SearchIcon />,
-      },
-      {
-        label: 'Detection Rules',
-        href: '/detection',
-        icon: <EyeIcon />,
-      },
-      {
-        label: 'Detection Catalog',
-        href: '/detection/catalog',
-        icon: <SearchIcon />,
-      },
-      {
-        label: 'MITRE Coverage',
-        href: '/detection/coverage',
-        icon: <ChartBarIcon />,
-      },
-      {
-        label: 'Detection Tuning',
-        href: '/detection/tuning',
-        icon: <ChartBarIcon />,
-      },
-      {
-        label: 'Shifts',
-        href: '/shifts',
-        icon: <ClockIcon />,
-      },
+      { label: 'Hunt', href: '/hunt', icon: <SearchIcon /> },
+      { label: 'Detection', href: '/detection', icon: <EyeIcon /> },
+      { label: 'Runbooks', href: '/playbooks', icon: <PlaybookIcon /> },
+      { label: 'Dashboards', href: '/sla', icon: <ChartBarIcon /> },
+      { label: 'Settings', href: '/settings', icon: <CogIcon /> },
+    ],
+  },
+  // [HIDDEN-UI NAV-1 flattened to 10 top-level nav items; sub-pages consolidated into SectionTabs or hidden]
+  /*
+  {
+    title: 'Threat Operations',
+    items: [
+      { label: 'Cases', href: '/cases', icon: <FolderIcon /> },
+      { label: 'Federated Search', href: '/federated-search', icon: <SearchIcon /> },
+      { label: 'Access Review', href: '/access-review', icon: <ShieldIcon /> },
+      { label: 'Evaluate on History', href: '/evaluate', icon: <ChartBarIcon /> },
+      { label: 'Explore', href: '/explore', icon: <SearchIcon /> },
+      { label: 'Detection Rules', href: '/detection', icon: <EyeIcon /> },
+      { label: 'Detection Catalog', href: '/detection/catalog', icon: <SearchIcon /> },
+      { label: 'MITRE Coverage', href: '/detection/coverage', icon: <ChartBarIcon /> },
+      { label: 'Detection Tuning', href: '/detection/tuning', icon: <ChartBarIcon /> },
+      { label: 'Shifts', href: '/shifts', icon: <ClockIcon /> },
     ],
   },
   {
     title: 'Intelligence',
     items: [
-      {
-        label: 'Threat Intel',
-        href: '/threat-intel',
-        icon: <GlobeIcon />,
-      },
-      {
-        label: 'Attack Graph',
-        href: '/graph',
-        icon: <GraphIcon />,
-      },
-      {
-        label: 'AI Copilot',
-        href: '/copilot',
-        icon: <SparklesIcon />,
-      },
-      {
-        label: 'Coverage Advisor',
-        href: '/coverage-advisor',
-        icon: <ShieldIcon />,
-      },
-      {
-        label: 'EASM',
-        href: '/easm',
-        icon: <ScanIcon />,
-      },
+      { label: 'Threat Intel', href: '/threat-intel', icon: <GlobeIcon /> },
+      { label: 'Attack Graph', href: '/graph', icon: <GraphIcon /> },
+      { label: 'AI Copilot', href: '/copilot', icon: <SparklesIcon /> },
+      { label: 'Coverage Advisor', href: '/coverage-advisor', icon: <ShieldIcon /> },
+      { label: 'EASM', href: '/easm', icon: <ScanIcon /> },
     ],
   },
   {
     title: 'Automation',
     items: [
-      {
-        label: 'Playbooks',
-        href: '/playbooks',
-        icon: <PlaybookIcon />,
-      },
-      {
-        label: 'Marketplace',
-        href: '/marketplace',
-        icon: <MarketplaceIcon />,
-      },
-      {
-        label: 'File Integrity (FIM)',
-        href: '/fim',
-        icon: <FolderIcon />,
-      },
-      {
-        label: 'Honeytokens',
-        href: '/honeytokens',
-        icon: <EyeIcon />,
-      },
-      {
-        label: 'AI Estate',
-        href: '/ai-estate',
-        icon: <EyeIcon />,
-      },
-      {
-        label: 'Purple Team',
-        href: '/purple-team',
-        icon: <ShieldIcon />,
-      },
+      { label: 'Playbooks', href: '/playbooks', icon: <PlaybookIcon /> },
+      { label: 'Marketplace', href: '/marketplace', icon: <MarketplaceIcon /> },
+      { label: 'File Integrity (FIM)', href: '/fim', icon: <FolderIcon /> },
+      { label: 'Honeytokens', href: '/honeytokens', icon: <EyeIcon /> },
+      { label: 'AI Estate', href: '/ai-estate', icon: <EyeIcon /> },
+      { label: 'Purple Team', href: '/purple-team', icon: <ShieldIcon /> },
     ],
   },
   {
     title: 'Platform',
     items: [
-      {
-        label: 'Get started',
-        href: '/onboarding',
-        icon: <SparklesIcon />,
-      },
-      {
-        label: 'Connectors',
-        href: '/connectors',
-        icon: <PuzzleIcon />,
-      },
-      {
-        label: 'Users',
-        href: '/settings/users',
-        icon: <UsersIcon />,
-        adminOnly: true,
-      },
-      {
-        label: 'Roles & Permissions',
-        href: '/settings/rbac',
-        icon: <ShieldIcon />,
-      },
-      {
-        label: 'Two-factor auth',
-        href: '/settings/mfa',
-        icon: <ShieldIcon />,
-      },
-      {
-        label: 'Compliance',
-        href: '/compliance',
-        icon: <ShieldIcon />,
-      },
-      {
-        label: 'MSSP Dashboard',
-        href: '/mssp',
-        icon: <GlobeIcon />,
-      },
-      {
-        label: 'Team Analytics',
-        href: '/analytics/team',
-        icon: <ChartBarIcon />,
-      },
-      {
-        label: 'SLA Tracking',
-        href: '/sla',
-        icon: <ChartBarIcon />,
-      },
-      {
-        label: 'Executive Digest',
-        href: '/reports/digest',
-        icon: <DocumentReportIcon />,
-      },
-      {
-        label: 'Cost Dashboard',
-        href: '/costs',
-        icon: <CurrencyIcon />,
-      },
-      {
-        label: 'Audit Log',
-        href: '/audit',
-        icon: <EyeIcon />,
-      },
-      {
-        label: 'Settings',
-        href: '/settings',
-        icon: <CogIcon />,
-      },
+      { label: 'Get started', href: '/onboarding', icon: <SparklesIcon /> },
+      { label: 'Connectors', href: '/connectors', icon: <PuzzleIcon /> },
+      { label: 'Users', href: '/settings/users', icon: <UsersIcon />, adminOnly: true },
+      { label: 'Roles & Permissions', href: '/settings/rbac', icon: <ShieldIcon /> },
+      { label: 'Two-factor auth', href: '/settings/mfa', icon: <ShieldIcon /> },
+      { label: 'Compliance', href: '/compliance', icon: <ShieldIcon /> },
+      { label: 'MSSP Dashboard', href: '/mssp', icon: <GlobeIcon /> },
+      { label: 'Team Analytics', href: '/analytics/team', icon: <ChartBarIcon /> },
+      { label: 'SLA Tracking', href: '/sla', icon: <ChartBarIcon /> },
+      { label: 'Executive Digest', href: '/reports/digest', icon: <DocumentReportIcon /> },
+      { label: 'Cost Dashboard', href: '/costs', icon: <CurrencyIcon /> },
+      { label: 'Audit Log', href: '/audit', icon: <EyeIcon /> },
+      { label: 'Settings', href: '/settings', icon: <CogIcon /> },
     ],
   },
+  */
 ];
 
 export function Sidebar() {

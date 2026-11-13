@@ -171,7 +171,7 @@ export function StepInspector({
           disabled={readOnly}
           className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-1.5 text-white text-sm focus:outline-none focus:border-blue-500 disabled:opacity-60"
         >
-          <option value="abort">Abort playbook</option>
+          <option value="abort">Abort runbook</option>
           <option value="continue">Continue</option>
           <option value="retry">Retry</option>
         </select>

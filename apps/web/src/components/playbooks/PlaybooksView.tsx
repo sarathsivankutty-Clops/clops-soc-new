@@ -66,7 +66,7 @@ function RunHistoryTab() {
     <FailureBanner
       title="Run history unavailable"
       message={describeApiFailure(error, {
-        subject: 'playbook run history',
+        subject: 'runbook run history',
         service: 'agents service',
       })}
       onRetry={() => mutate()}
@@ -77,8 +77,8 @@ function RunHistoryTab() {
     return (
       <EmptyState
         icon={EmptyStateIcons.ledger}
-        title="No playbook runs yet"
-        description="Run history shows up after you trigger a playbook — either manually from the editor's dry-run button, or automatically when an alert matches a playbook trigger."
+        title="No runbook runs yet"
+        description="Run history shows up after you trigger a runbook — either manually from the editor's dry-run button, or automatically when an alert matches a runbook trigger."
         className="bg-transparent py-12"
       />
     );
@@ -157,7 +157,7 @@ function CommunityPlaybooksTab() {
       setItems(data.items ?? []);
       setTotal(data.total ?? 0);
     } catch {
-      setError('Failed to load community playbooks.');
+      setError('Failed to load community runbooks.');
     } finally {
       setLoading(false);
     }
@@ -209,7 +209,7 @@ function CommunityPlaybooksTab() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && load(search, sortBy, 1)}
-            placeholder="Search community playbooks…"
+            placeholder="Search community runbooks…"
             className="flex-1 rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 focus:border-zinc-500 focus:outline-none"
           />
           <button
@@ -239,20 +239,20 @@ function CommunityPlaybooksTab() {
           onClick={() => setSubmitOpen(!submitOpen)}
           className="rounded-lg border border-blue-700/60 bg-blue-900/30 px-3 py-2 text-sm text-blue-300 hover:bg-blue-900/50 transition-colors"
         >
-          + Submit Playbook
+          + Submit Runbook
         </button>
       </div>
 
       {/* Submit panel */}
       {submitOpen && (
         <div className="rounded-xl border border-zinc-700/60 bg-zinc-800/60 p-4 space-y-3">
-          <h3 className="text-sm font-semibold text-zinc-100">Submit a Community Playbook</h3>
-          <p className="text-xs text-zinc-400">Paste your playbook definition as JSON. It will be reviewed before appearing in the catalog.</p>
+          <h3 className="text-sm font-semibold text-zinc-100">Submit a Community Runbook</h3>
+          <p className="text-xs text-zinc-400">Paste your runbook definition as JSON. It will be reviewed before appearing in the catalog.</p>
           <textarea
             value={submitJson}
             onChange={(e) => setSubmitJson(e.target.value)}
             rows={8}
-            placeholder={'{\n  "name": "My Playbook",\n  "description": "...",\n  "author": "you",\n  "steps": [...]\n}'}
+            placeholder={'{\n  "name": "My Runbook",\n  "description": "...",\n  "author": "you",\n  "steps": [...]\n}'}
             className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs font-mono text-zinc-200 focus:border-zinc-500 focus:outline-none resize-y"
           />
           {submitResult && (
@@ -278,7 +278,7 @@ function CommunityPlaybooksTab() {
         </div>
       )}
 
-      {loading && <div className="py-12 text-center text-sm text-zinc-500">Loading community playbooks…</div>}
+      {loading && <div className="py-12 text-center text-sm text-zinc-500">Loading community runbooks…</div>}
       {error && (
           <div className="rounded-md border border-amber-500/30 bg-amber-500/5 px-4 py-2 text-xs text-amber-200">
             {error}
@@ -291,7 +291,7 @@ function CommunityPlaybooksTab() {
         // index-not-built state.
         <EmptyState
           icon={EmptyStateIcons.search}
-          title={search ? 'No community playbooks match your search' : 'No community playbooks indexed yet'}
+          title={search ? 'No community runbooks match your search' : 'No community runbooks indexed yet'}
           description={
             search
               ? 'Try a different search term, or browse the full catalog by clearing the search.'
@@ -448,7 +448,7 @@ export function PlaybooksView() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-white">Playbooks</h1>
+          <h1 className="text-xl font-bold text-white">Runbooks</h1>
           <p className="text-sm text-gray-500 mt-0.5">
             Automated response workflows triggered by alerts and cases
           </p>
@@ -458,7 +458,7 @@ export function PlaybooksView() {
             type="button"
             onClick={() => setNlDialogOpen(true)}
             className="px-4 py-2 rounded-lg border border-blue-600/60 bg-blue-950/40 text-blue-300 hover:bg-blue-900/40 hover:text-blue-200 text-sm font-medium transition-colors"
-            title="T3.7 — describe a playbook in natural language and AiSOC drafts the DAG."
+            title="T3.7 — describe a runbook in natural language and AiSOC drafts the DAG."
           >
             ✨ Draft from prompt
           </button>
@@ -466,7 +466,7 @@ export function PlaybooksView() {
             href="/playbooks/new"
             className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium transition-colors"
           >
-            + New Playbook
+            + New Runbook
           </Link>
         </div>
       </div>
@@ -481,7 +481,7 @@ export function PlaybooksView() {
         >
           {/* '…' means "still loading"; on a failed request the count is not
               pending, it is unknown. */}
-          Playbooks ({data?.length ?? (error ? '—' : '…')})
+          Runbooks ({data?.length ?? (error ? '—' : '…')})
         </button>
         <button
           onClick={() => setTab('runs')}
@@ -513,7 +513,7 @@ export function PlaybooksView() {
             onApply={handleApplyView}
           />
 
-          {isLoading && <div className="text-gray-600 text-sm">Loading playbooks…</div>}
+          {isLoading && <div className="text-gray-600 text-sm">Loading runbooks…</div>}
 
           {/* Outside the hosted demo there are no demo playbooks to show:
               `fallbackData` is `undefined`, and a truthy `error` also
@@ -522,17 +522,17 @@ export function PlaybooksView() {
           {error && (
             <>
               <FailureBanner
-                title="Playbooks unavailable"
+                title="Runbooks unavailable"
                 message={describeApiFailure(error, {
-                  subject: 'playbook list',
+                  subject: 'runbook list',
                   service: 'agents service',
                 })}
                 onRetry={() => mutate()}
               />
               <div className="flex flex-col items-center justify-center gap-1 rounded-xl border border-gray-800/60 bg-gray-900/40 px-4 py-12 text-center">
-                <p className="text-sm text-amber-200/80">The playbook list could not be loaded.</p>
+                <p className="text-sm text-amber-200/80">The runbook list could not be loaded.</p>
                 <p className="text-[11px] text-gray-600">
-                  Treat this as unknown rather than as a tenant with no playbooks.
+                  Treat this as unknown rather than as a tenant with no runbooks.
                 </p>
               </div>
             </>
@@ -544,15 +544,15 @@ export function PlaybooksView() {
             // a blank YAML file.
             <EmptyState
               icon={EmptyStateIcons.ledger}
-              title="No playbooks yet"
-              description="Playbooks automate your SOC response — isolate hosts, enrich IOCs, page on-call, post to Slack. Start from a community template or write your own from scratch."
+              title="No runbooks yet"
+              description="Runbooks automate your SOC response — isolate hosts, enrich IOCs, page on-call, post to Slack. Start from a community template or write your own from scratch."
               action={
                 <div className="flex items-center gap-2">
                   <Link
                     href="/playbooks/new"
                     className="px-3 py-1.5 rounded-md bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium transition-colors"
                   >
-                    Create your first playbook
+                    Create your first runbook
                   </Link>
                   <button
                     onClick={() => setTab('community')}

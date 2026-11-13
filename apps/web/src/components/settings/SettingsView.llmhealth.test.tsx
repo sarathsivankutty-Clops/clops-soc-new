@@ -99,10 +99,9 @@ async function renderWith(llm: LlmStatus) {
   swrData.set(AIRGAP_KEY, airgapFixture);
   swrData.set(LLM_KEY, llm);
   swrData.set(CRED_KEY, undefined);
+  // [HIDDEN-UI NAV-6 inner tab bar hidden; navigate via ?section=deployment]
+  window.history.replaceState(null, '', '/settings?section=deployment');
   render(<SettingsView />, { wrapper: NavigationTestProvider });
-  await userEvent.click(
-    await screen.findByRole('button', { name: /deployment.*ai/i }),
-  );
 }
 
 beforeEach(() => {

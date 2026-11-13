@@ -204,8 +204,8 @@ export function PlaybooksGallery({ playbooks, initialFilters }: PlaybooksGallery
             type="search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search playbooks by name, tag, description…"
-            aria-label="Search playbooks"
+            placeholder="Search runbooks by name, tag, description…"
+            aria-label="Search runbooks"
             className="flex-1 rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:border-blue-500 focus:outline-none"
           />
         </div>
@@ -213,7 +213,7 @@ export function PlaybooksGallery({ playbooks, initialFilters }: PlaybooksGallery
         <div
           className="flex gap-1 rounded-lg border border-gray-700 bg-gray-900 p-1"
           role="tablist"
-          aria-label="Playbook source"
+          aria-label="Runbook source"
         >
           <SourcePill
             label="All"
@@ -359,15 +359,15 @@ export function PlaybooksGallery({ playbooks, initialFilters }: PlaybooksGallery
       {/* Empty state */}
       {filtered.length === 0 && (
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <div className="text-lg font-medium text-gray-400 mb-2">No matching playbooks</div>
+          <div className="text-lg font-medium text-gray-400 mb-2">No matching runbooks</div>
           <div className="text-sm text-gray-600 mb-6">
-            Try clearing your filters, or create a new playbook from scratch.
+            Try clearing your filters, or create a new runbook from scratch.
           </div>
           <Link
             href="/playbooks/new"
             className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm transition-colors"
           >
-            Create a playbook
+            Create a runbook
           </Link>
         </div>
       )}

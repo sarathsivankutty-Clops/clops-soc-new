@@ -15,7 +15,8 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 import { __setDemoModeForTests } from '@/lib/demoMode';
-import { CONNECTOR_COUNT } from '@/data/connectorCount';
+// [HIDDEN-UI NAV-6 /onboarding tip hidden]
+// import { CONNECTOR_COUNT } from '@/data/connectorCount';
 
 vi.mock('next/link', () => ({
   __esModule: true,
@@ -49,13 +50,14 @@ afterEach(() => {
 });
 
 describe('DashboardWelcome outside demo mode', () => {
-  it('quotes the connector count from the generated registry, not a literal', () => {
+  it('hides the retired /onboarding tip CTA', () => {
     render(<DashboardWelcome />);
 
     expect(screen.getByTestId('dashboard-welcome')).toBeTruthy();
-    expect(screen.getByText(new RegExp(`Pick from ${CONNECTOR_COUNT} vendors`))).toBeTruthy();
-    // The stale literal must be gone rather than merely nudged.
+    // [HIDDEN-UI NAV-6 /onboarding route hidden]
+    // expect(screen.getByText(new RegExp(`Pick from ${CONNECTOR_COUNT} vendors`))).toBeTruthy();
     expect(screen.queryByText(/26 vendors/)).toBeNull();
+    expect(hrefs()).not.toContain('/onboarding');
   });
 
   it('publishes no playbook count it cannot source', () => {
@@ -79,9 +81,9 @@ describe('DashboardWelcome outside demo mode', () => {
   it('every remaining call to action points at a route the console defines', () => {
     render(<DashboardWelcome />);
 
-    // Both survive on any deployment: the connector gallery and the playbook
-    // gallery are static routes, not seeded content.
-    expect(hrefs()).toEqual(['/onboarding', '/playbooks']);
+    // [HIDDEN-UI NAV-6 /onboarding route hidden]
+    // expect(hrefs()).toEqual(['/onboarding', '/playbooks']);
+    expect(hrefs()).toEqual(['/playbooks']);
   });
 });
 
