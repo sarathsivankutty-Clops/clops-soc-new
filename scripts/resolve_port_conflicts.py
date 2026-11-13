@@ -298,7 +298,7 @@ def render(moves: list[tuple[int, str, int, int]]) -> str:
         lines.append("    ports: !override")
         # Every port this service publishes, in the order the inventory
         # lists them, with the moved ones substituted.
-        for host, container in published.get(service, []):
+        for host, container in published.get(service) or [(by_container[c], c) for c in by_container]:
             lines.append(f'      - "{by_container.get(container, host)}:{container}"')
     return "\n".join(lines) + "\n"
 
@@ -328,10 +328,10 @@ def _self_test() -> int:
         held.close()
     results.append(("a free port is reported free", _listening(port) is False))
 
-    rendered = render([(5432, "postgres", 5432, 15432)])
+    rendered = render([(16333, "qdrant", 6333, 15432)])
     results.append(("the overlay uses ports: !override", "ports: !override" in rendered))
-    results.append(("the overlay publishes the new port", '"15432:5432"' in rendered))
-    results.append(("the inventory parses out of doctor.sh", len(inventory()) >= 16))
+    results.append(("the overlay publishes the new port", '"15432:6333"' in rendered))
+    results.append(("the inventory parses out of doctor.sh", len(inventory()) >= 13))
 
     # A service publishing two ports with both taken. One block per move
     # wrote its key twice, and compose refuses the whole file with
@@ -395,7 +395,7 @@ def main() -> int:
             if not args.quiet:
                 print("  every port is free again; removed docker-compose.ports.yml")
         elif not args.quiet:
-            print("  all 16 host ports are free")
+            print(f"  all {len(inventory())} host ports are free")
         return 0
 
     if args.dry_run:
@@ -440,7 +440,7 @@ def _rewrite_console_url(port: int) -> None:
     if "AISOC_CONSOLE_URL=" in text:
         text = re.sub(r"^AISOC_CONSOLE_URL=.*$", f"AISOC_CONSOLE_URL={url}", text, flags=re.M)
     else:
-        text = text.rstrip("\n") + f"\n\n# The console moved off 3000; see docker-compose.ports.yml\nAISOC_CONSOLE_URL={url}\n"
+        text = text.rstrip("\n") + f"\n\n# The console moved off 13000; see docker-compose.ports.yml\nAISOC_CONSOLE_URL={url}\n"
     env.write_text(text)
     print(f"  The console moved, so AISOC_CONSOLE_URL now reads {url}")
     print()

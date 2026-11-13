@@ -104,8 +104,8 @@ jobs:
           deadline=$(( $(date +%s) + HEALTH_BUDGET_SECONDS ))
 
           probe_postgres() {
-            docker compose ps --format '{{.Name}} {{.Health}}' \
-              | awk '$1=="aisoc-postgres" && $2=="healthy" {found=1} END {exit !found}'
+            docker compose ps --format '{{.Service}} {{.Health}}' \
+              | awk '$1=="postgres" && $2=="healthy" {found=1} END {exit !found}'
           }
 
           probe_http() {
@@ -130,11 +130,11 @@ jobs:
               ok_postgres=1
               echo "✓ postgres healthy"
             fi
-            if [ "$ok_api" -eq 0 ] && probe_http "http://localhost:8000/health" "200"; then
+            if [ "$ok_api" -eq 0 ] && probe_http "http://localhost:${API_PORT:-18000}/health" "200"; then
               ok_api=1
               echo "✓ api /health 200"
             fi
-            if [ "$ok_web" -eq 0 ] && probe_http "http://localhost:3000" "200"; then
+            if [ "$ok_web" -eq 0 ] && probe_http "http://localhost:${WEB_PORT:-13000}" "200"; then
               ok_web=1
               echo "✓ web 200"
             fi

@@ -41,11 +41,11 @@ import uuid
 import httpx
 import websockets
 
-API = "http://localhost:8000"
-INGEST = "http://localhost:8081"
-FUSION = "http://localhost:8003"
-REALTIME_HTTP = "http://localhost:8086"
-REALTIME_WS = "ws://localhost:8086"
+API = f"http://localhost:{os.environ.get('API_PORT', '18000')}"
+INGEST = f"http://localhost:{os.environ.get('INGEST_HTTP_PORT', '18081')}"
+FUSION = f"http://localhost:{os.environ.get('FUSION_PORT', '18003')}"
+REALTIME_HTTP = f"http://localhost:{os.environ.get('REALTIME_PORT', '18086')}"
+REALTIME_WS = f"ws://localhost:{os.environ.get('REALTIME_PORT', '18086')}"
 TENANT = "00000000-0000-0000-0000-000000000001"
 
 #: /v1/ingest is authenticated and the tenant is derived from the

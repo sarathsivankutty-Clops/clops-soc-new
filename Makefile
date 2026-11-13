@@ -74,8 +74,13 @@ CONSOLE_URL = $(shell sed -n 's/^AISOC_CONSOLE_URL=//p' .env 2>/dev/null | tail 
 #
 # The overlay line reads `  # web: 3000 was in use, published on 15000
 # instead`, so the digits are the original and then the replacement.
-CONSOLE_PORT = $(shell grep -m1 'web: 3000 was in use, published on' docker-compose.ports.yml 2>/dev/null | tr -cd '0-9 ' | tr ' ' '\n' | grep -v '^$$' | tail -n1)
-console_url = $(if $(strip $(CONSOLE_URL)),$(strip $(CONSOLE_URL)),http://localhost:$(if $(strip $(CONSOLE_PORT)),$(strip $(CONSOLE_PORT)),3000))
+CONSOLE_PORT = $(shell grep -m1 'web: 13000 was in use, published on' docker-compose.ports.yml 2>/dev/null | tr -cd '0-9 ' | tr ' ' '\n' | grep -v '^$$' | tail -n1)
+WEB_PORT_CFG = $(shell sed -n 's/^WEB_PORT=//p' .env 2>/dev/null | tail -n1 | tr -d '\r')
+API_PORT_CFG = $(shell sed -n 's/^API_PORT=//p' .env 2>/dev/null | tail -n1 | tr -d '\r')
+PUBLIC_HOST_CFG = $(shell sed -n 's/^PUBLIC_HOST=//p' .env 2>/dev/null | tail -n1 | tr -d '\r')
+console_host = $(if $(strip $(PUBLIC_HOST_CFG)),$(strip $(PUBLIC_HOST_CFG)),localhost)
+console_url = $(if $(strip $(CONSOLE_URL)),$(strip $(CONSOLE_URL)),http://$(console_host):$(if $(strip $(CONSOLE_PORT)),$(strip $(CONSOLE_PORT)),$(if $(strip $(WEB_PORT_CFG)),$(strip $(WEB_PORT_CFG)),13000)))
+api_port = $(if $(strip $(API_PORT_CFG)),$(strip $(API_PORT_CFG)),18000)
 
 .PHONY: help install env up up-dev up-full up-gpu up-host-llm _gpu_preflight _llm_note pull down restart status doctor smoke _anonymous_write_is_refused demo logs clean \
         bootstrap ingest-token api-token test test-unit test-integration test-e2e stats papers \
@@ -147,7 +152,7 @@ up: env _ports _refresh _schema_guard
 	@$(MAKE) --no-print-directory _wait
 	@echo ""
 	@echo "  Console:  $(console_url)"
-	@echo "  API:      http://localhost:8000  (spec: docs/openapi.yaml; interactive"
+	@echo "  API:      http://localhost:$(api_port)  (spec: docs/openapi.yaml; interactive"
 	@echo "            docs are off in this production-class stack)"
 	@echo ""
 	@echo "Prove the pipeline works:  make smoke"
@@ -198,7 +203,7 @@ up-dev: env _ports _refresh
 	@$(MAKE) --no-print-directory _wait
 	@echo ""
 	@echo "  Console:  $(console_url)"
-	@echo "  API:      http://localhost:8000  (spec: docs/openapi.yaml; interactive"
+	@echo "  API:      http://localhost:$(api_port)  (spec: docs/openapi.yaml; interactive"
 	@echo "            docs are off in this production-class stack)"
 	@echo ""
 	@echo "  Anonymous access is ON. This overlay is for a laptop, not a host"
@@ -211,7 +216,7 @@ up-full: env _ports _refresh _schema_guard
 	@$(MAKE) --no-print-directory _wait PROFILE=full
 	@echo ""
 	@echo "  Console:  $(console_url)"
-	@echo "  API:      http://localhost:8000  (spec: docs/openapi.yaml; interactive"
+	@echo "  API:      http://localhost:$(api_port)  (spec: docs/openapi.yaml; interactive"
 	@echo "            docs are off in this production-class stack)"
 	@echo ""
 	@echo "Prove the pipeline works:  make smoke"
@@ -241,7 +246,7 @@ up-gpu: env _gpu_preflight _ports _refresh _schema_guard
 	@$(MAKE) --no-print-directory _wait
 	@echo ""
 	@echo "  Console:  $(console_url)"
-	@echo "  API:      http://localhost:8000"
+	@echo "  API:      http://localhost:$(api_port)"
 	@echo ""
 	@echo "  Ollama is running with an NVIDIA device reserved. Confirm the model"
 	@echo "  actually loaded onto it:  docker compose exec ollama ollama ps"
@@ -259,7 +264,7 @@ up-host-llm: env _ports _refresh _schema_guard
 	@$(MAKE) --no-print-directory _wait
 	@echo ""
 	@echo "  Console:  $(console_url)"
-	@echo "  API:      http://localhost:8000"
+	@echo "  API:      http://localhost:$(api_port)"
 	@echo ""
 	@echo "  Using your host's Ollama. The bundled one was not started."
 	@echo "  If triage reports no model, check it is listening on all interfaces:"
@@ -670,7 +675,7 @@ _anonymous_write_is_refused:
 	@# neither branch and fell through to FAIL — reporting an unreachable
 	@# port as "an uncredentialed caller was served", which is the most
 	@# alarming thing this script can say and was not true.
-	@for target in "http://localhost:8000/api/v1/cases" "$(console_url)/api/v1/cases"; do \
+	@for target in "http://localhost:$(api_port)/api/v1/cases" "$(console_url)/api/v1/cases"; do \
 	  code=$$(curl -s -o /dev/null -w '%{http_code}' -X POST "$$target" \
 	    -H 'Content-Type: application/json' -d '{"title":"anonymous write probe"}' \
 	    --max-time 10 2>/dev/null); \

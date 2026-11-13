@@ -279,12 +279,11 @@ svc_base_url() { # <service> <container-port> <fallback-url>
 # next service added to the profile cannot quietly skip the check.
 #
 # host-port service container-port
-for spec in "5432 postgres 5432" "6379 redis 6379" "9092 kafka 9092" \
-            "8000 api 8000" "8081 ingest-worker 8080" "9090 ingest-worker 9090" \
-            "3000 web 3000" "4000 litellm 4000" "11434 ollama 11434" \
-            "6333 qdrant 6333" "8001 agents 8084" "8002 actions 8085" \
-            "8003 fusion 8003" "8005 threatintel 8005" "8086 realtime 4000" \
-            "8088 connectors 8003"; do
+for spec in "18000 api 8000" "18081 ingest-worker 8080" "19090 ingest-worker 9090" \
+            "13000 web 3000" "14000 litellm 4000" "21434 ollama 11434" \
+            "16333 qdrant 6333" "18001 agents 8084" "18002 actions 8085" \
+            "18003 fusion 8003" "18005 threatintel 8005" "18086 realtime 4000" \
+            "18088 connectors 8003"; do
   # shellcheck disable=SC2086 # deliberate word splitting of a fixed 3-field spec
   set -- $spec; port="$1"; owner="$2"; cport="$3"
   ours="$(svc_published_port "$owner" "$cport" || true)"
@@ -471,8 +470,8 @@ check_http_service() {
   esac
 }
 
-API_BASE="${AISOC_API_URL:-$(svc_base_url api 8000 http://localhost:8000)}"
-INGEST_BASE="${AISOC_INGEST_URL:-$(svc_base_url ingest-worker 8080 http://localhost:8081)}"
+API_BASE="${AISOC_API_URL:-$(svc_base_url api 8000 "http://localhost:${API_PORT:-18000}")}"
+INGEST_BASE="${AISOC_INGEST_URL:-$(svc_base_url ingest-worker 8080 "http://localhost:${INGEST_HTTP_PORT:-18081}")}"
 
 check_http_service api           "${API_BASE}/health"    "$COMPOSE_HINT logs api | tail -40"
 check_http_service ingest-worker "${INGEST_BASE}/health" "$COMPOSE_HINT logs ingest-worker | tail -40"
@@ -496,7 +495,7 @@ if svc_running fusion; then
   # Probe the service rather than grepping its log. A log line scrolls out of
   # retention and a restart loses it, so log-grep reported a working fusion as
   # broken. The HTTP probe answers the same question durably.
-  fusion_code="$(http_ok "${AISOC_FUSION_URL:-$(svc_base_url fusion 8003 http://localhost:8003)}/health" 6)"
+  fusion_code="$(http_ok "${AISOC_FUSION_URL:-$(svc_base_url fusion 8003 "http://localhost:${FUSION_PORT:-18003}")}/health" 6)"
   if [ "$fusion_code" = "200" ]; then
     pass "fusion healthy"
   elif $COMPOSE logs fusion 2>/dev/null | grep -q 'Fusion worker started'; then
@@ -527,10 +526,10 @@ fi
 # route under `/api/v1`, so `/health` there is a 404 — a probe that reports a
 # working service as broken is worse than no probe, because it teaches the
 # operator to skim this output.
-for spec in "3000 web 3000 /" "8086 realtime 4000 /health" "8001 agents 8084 /health" \
-            "8088 connectors 8003 /api/v1/health" "8002 actions 8085 /health" \
-            "8005 threatintel 8005 /health" "6333 qdrant 6333 /readyz" \
-            "4000 litellm 4000 /health/liveliness" "11434 ollama 11434 /api/tags"; do
+for spec in "13000 web 3000 /" "18086 realtime 4000 /health" "18001 agents 8084 /health" \
+            "18088 connectors 8003 /api/v1/health" "18002 actions 8085 /health" \
+            "18005 threatintel 8005 /health" "16333 qdrant 6333 /readyz" \
+            "14000 litellm 4000 /health/liveliness" "21434 ollama 11434 /api/tags"; do
   # shellcheck disable=SC2086 # deliberate word splitting of a fixed 4-field spec
   set -- $spec; port="$1"; name="$2"; cport="$3"; path="$4"
   if svc_running "$name"; then
@@ -607,7 +606,7 @@ MODEL_NAME="${MODEL_NAME:-llama3.2:3b-instruct-q4_K_M}"
 if ! svc_running ollama; then
   warn "ollama is not running, so there is no local model — AI triage falls back to the deterministic path" \
        "$COMPOSE_HINT up -d ollama ollama-pull"
-elif tags="$(curl -s -m 8 "$(svc_base_url ollama 11434 http://localhost:11434)/api/tags" 2>/dev/null)" \
+elif tags="$(curl -s -m 8 "$(svc_base_url ollama 11434 "http://localhost:${OLLAMA_PORT:-21434}")/api/tags" 2>/dev/null)" \
      && printf '%s' "$tags" | grep -q '"models"'; then
   if printf '%s' "$tags" | grep -qF "\"$MODEL_NAME\""; then
     pass "local model present: $MODEL_NAME"

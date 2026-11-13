@@ -386,7 +386,7 @@ def main(argv: list[str] | None = None) -> int:
     sub = parser.add_subparsers(dest="command")
 
     run = sub.add_parser("run", help="read history, replay it, write a signed bundle")
-    run.add_argument("--api-url", default=os.environ.get("AISOC_API_URL", "http://localhost:8000"))
+    run.add_argument("--api-url", default=os.environ.get("AISOC_API_URL", f"http://localhost:{os.environ.get('API_PORT', '18000')}"))
     run.add_argument("--api-key", default=None, help="defaults to $AISOC_API_KEY. The tenant comes from the key.")
     run.add_argument("--connector-id", default=os.environ.get("AISOC_REPLAY_CONNECTOR_ID"))
     run.add_argument("--vendor", default=None, help="override the vendor inferred from the connector")

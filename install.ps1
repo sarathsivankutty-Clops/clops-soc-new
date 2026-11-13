@@ -870,12 +870,9 @@ pnpm-lock.yaml disagree — re-clone, or run:
 # The host ports CORE publishes, as service + container port, in the same
 # order and with the same owners scripts/doctor.sh checks under --ports-only.
 $script:CorePortSpecs = @(
-    @{ Port = 5432; Service = 'postgres';      ContainerPort = 5432 },
-    @{ Port = 6379; Service = 'redis';         ContainerPort = 6379 },
-    @{ Port = 9092; Service = 'kafka';         ContainerPort = 9092 },
-    @{ Port = 8000; Service = 'api';           ContainerPort = 8000 },
-    @{ Port = 8081; Service = 'ingest-worker'; ContainerPort = 8080 },
-    @{ Port = 3000; Service = 'web';           ContainerPort = 3000 }
+    @{ Port = 18000; Service = 'api';           ContainerPort = 8000 },
+    @{ Port = 18081; Service = 'ingest-worker'; ContainerPort = 8080 },
+    @{ Port = 13000; Service = 'web';           ContainerPort = 3000 }
 )
 
 # The host port this deployment's own container publishes for a service, or
@@ -1034,7 +1031,7 @@ function Get-ComposeArgs {
 # Printing a hardcoded localhost:3000 after moving the console hands the
 # operator a URL that answers nothing — worse than the conflict itself.
 function Get-ConsoleUrl {
-    $default = 'http://localhost:3000'
+    $default = 'http://localhost:13000'
     if ($null -eq $script:RepoRoot) { return $default }
     $envPath = Join-Path $script:RepoRoot '.env'
     if (-not (Test-Path $envPath)) { return $default }
@@ -1328,13 +1325,13 @@ function Write-SuccessBanner {
     }
     Write-Host ''
     Write-Host "  Web console:    $(Get-ConsoleUrl)"
-    Write-Host '  API:            http://localhost:8000'
+    Write-Host '  API:            http://localhost:18000'
     # Not /api/docs: interactive docs are deliberately off in this
     # production-class stack, so advertising them hands the reader a 404.
     # install.sh's banner says the same thing.
     Write-Host '  API spec:       docs/openapi.yaml  (interactive docs are off in'
     Write-Host '                  this production-class stack, which is the posture to keep)'
-    Write-Host '  Realtime WS:    ws://localhost:8086'
+    Write-Host '  Realtime WS:    ws://localhost:18086'
     Write-Host ''
     Write-Host "  Sign in as:     $adminEmail"
     Write-Host '  The password was printed above, once, when the administrator was'

@@ -86,9 +86,9 @@ jobs:
         run: |
           set -euo pipefail
           for i in $(seq 1 60); do
-            api=$(curl -s -o /dev/null -m 5 -w '%{http_code}' http://localhost:8000/health || echo 000)
-            ing=$(curl -s -o /dev/null -m 5 -w '%{http_code}' http://localhost:8081/health || echo 000)
-            fus=$(curl -s -o /dev/null -m 5 -w '%{http_code}' http://localhost:8003/health || echo 000)
+            api=$(curl -s -o /dev/null -m 5 -w '%{http_code}' http://localhost:${API_PORT:-18000}/health || echo 000)
+            ing=$(curl -s -o /dev/null -m 5 -w '%{http_code}' http://localhost:${INGEST_HTTP_PORT:-18081}/health || echo 000)
+            fus=$(curl -s -o /dev/null -m 5 -w '%{http_code}' http://localhost:${FUSION_PORT:-18003}/health || echo 000)
             echo "attempt $i: api=$api ingest=$ing fusion=$fus"
             [ "$api$ing$fus" = "200200200" ] && exit 0
             sleep 5
@@ -124,7 +124,7 @@ jobs:
           fi
 
           code="$(curl -s -o /tmp/login.json -w '%{http_code}' \
-            -X POST http://localhost:8000/api/v1/auth/login \
+            -X POST http://localhost:${API_PORT:-18000}/api/v1/auth/login \
             -H 'Content-Type: application/json' \
             --data "$(python3 -c 'import json,sys; print(json.dumps({"email":sys.argv[1],"password":sys.argv[2]}))' "$email" "$password")")"
 

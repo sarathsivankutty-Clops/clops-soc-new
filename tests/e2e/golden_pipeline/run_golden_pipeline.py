@@ -28,8 +28,8 @@ Environment:
                           `make smoke` mints it for you; by hand it is
                           `docker compose run --rm -T api \
                                python -m app.scripts.mint_ingest_token --quiet`
-    AISOC_INGEST_URL      default http://localhost:8081
-    AISOC_API_URL         default http://localhost:8000
+    AISOC_INGEST_URL      default http://localhost:18081
+    AISOC_API_URL         default http://localhost:18000
     AISOC_API_TOKEN       required — the bearer the alert reads need. Mint
                           one with `make api-token`; `make smoke` does it.
     AISOC_TENANT_ID       default the seeded canonical tenant
@@ -55,8 +55,8 @@ import urllib.request
 import uuid
 from dataclasses import dataclass, field
 
-INGEST_URL = os.environ.get("AISOC_INGEST_URL", "http://localhost:8081").rstrip("/")
-API_URL = os.environ.get("AISOC_API_URL", "http://localhost:8000").rstrip("/")
+INGEST_URL = os.environ.get("AISOC_INGEST_URL", f"http://localhost:{os.environ.get('INGEST_HTTP_PORT', '18081')}").rstrip("/")
+API_URL = os.environ.get("AISOC_API_URL", f"http://localhost:{os.environ.get('API_PORT', '18000')}").rstrip("/")
 TENANT_ID = os.environ.get("AISOC_TENANT_ID", "00000000-0000-0000-0000-000000000001")
 TIMEOUT_SECONDS = int(os.environ.get("AISOC_GOLDEN_TIMEOUT", "90"))
 INGEST_TOKEN = os.environ.get("AISOC_INGEST_TOKEN", "").strip()

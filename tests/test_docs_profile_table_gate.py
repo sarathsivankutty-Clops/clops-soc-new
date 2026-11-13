@@ -126,9 +126,12 @@ def test_documented_host_ports_match_compose() -> None:
             # and carries colons of its own. A pattern anchored on a literal
             # IP silently matched nothing and reported every service as
             # publishing no host port at all.
-            fields = str(mapping).split("/")[0].split(":")
-            if len(fields) >= 2 and fields[-2].isdigit():
-                published.add(fields[-2])
+            no_proto = str(mapping).split("/", 1)[0]
+            if ":" in no_proto:
+                left, _cport = no_proto.rsplit(":", 1)
+                m = re.search(r"(?:\$\{[A-Za-z0-9_]+:-(\d+)\}|(\d+))$", left)
+                if m:
+                    published.add(m.group(1) or m.group(2))
         actual[name] = published
 
     wrong: list[str] = []

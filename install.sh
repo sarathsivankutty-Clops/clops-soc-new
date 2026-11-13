@@ -949,11 +949,11 @@ print_success() {
 
 ${C_BOLD}${C_GREEN}AiSOC is up and running${C_RESET}${C_GREEN}, and a real event reached the API.${C_RESET}
 
-  ${C_BOLD}Web console:${C_RESET}     http://localhost:3000
-  ${C_BOLD}API:${C_RESET}             http://localhost:8000
+  ${C_BOLD}Web console:${C_RESET}     http://localhost:${WEB_PORT:-13000}
+  ${C_BOLD}API:${C_RESET}             http://localhost:${API_PORT:-18000}
   ${C_BOLD}API spec:${C_RESET}        docs/openapi.yaml  (interactive docs are off in
                    this production-class stack, which is the posture to keep)
-  ${C_BOLD}Realtime WS:${C_RESET}     ws://localhost:8086
+  ${C_BOLD}Realtime WS:${C_RESET}     ws://localhost:${REALTIME_PORT:-18086}
 
   ${C_BOLD}Sign in as:${C_RESET}      ${AISOC_ADMIN_EMAIL:-admin@aisoc.internal}
   The password was printed above, once, when the administrator was created.

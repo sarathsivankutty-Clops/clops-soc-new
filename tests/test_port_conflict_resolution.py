@@ -134,9 +134,9 @@ class TestTheInventory:
         the one nothing checked.
         """
         ports = module.inventory()
-        assert len(ports) >= 16, f"only {len(ports)} ports parsed out of doctor.sh"
+        assert len(ports) >= 13, f"only {len(ports)} ports parsed out of doctor.sh"
         hosts = {p for p, _s, _c in ports}
-        for expected in (5432, 3000, 8000, 11434):
+        for expected in (13000, 18000, 16333, 21434):
             assert expected in hosts, f"port {expected} is not in the inventory"
 
     def test_every_entry_names_a_service_and_a_container_port(self, module) -> None:  # noqa: ANN001
@@ -151,22 +151,22 @@ class TestTheOverlay:
         """A plain override *appends*, leaving the conflicting binding
         published — so compose fails anyway, with the file in place and
         looking correct."""
-        rendered = module.render([(5432, "postgres", 5432, 15432)])
+        rendered = module.render([(16333, "qdrant", 6333, 15432)])
         assert "ports: !override" in rendered
-        assert '"15432:5432"' in rendered
+        assert '"15432:6333"' in rendered
 
     def test_it_says_which_port_moved_and_why(self, module) -> None:  # noqa: ANN001
-        rendered = module.render([(11434, "ollama", 11434, 15434)])
-        assert "11434" in rendered and "15434" in rendered
+        rendered = module.render([(21434, "ollama", 11434, 15434)])
+        assert "21434" in rendered and "15434" in rendered
         assert "in use" in rendered
 
     def test_it_is_valid_yaml(self, module) -> None:  # noqa: ANN001
         yaml = pytest.importorskip("yaml")
         # `!override` is a compose-specific tag, so a plain loader rejects
         # it. Confirming the *structure* parses is still worth doing.
-        rendered = module.render([(5432, "postgres", 5432, 15432)])
+        rendered = module.render([(16333, "qdrant", 6333, 15432)])
         parsed = yaml.safe_load(rendered.replace("ports: !override", "ports:"))
-        assert parsed["services"]["postgres"]["ports"] == ["15432:5432"]
+        assert parsed["services"]["qdrant"]["ports"] == ["15432:6333"]
 
 
 class TestTheMakefileWiring:
