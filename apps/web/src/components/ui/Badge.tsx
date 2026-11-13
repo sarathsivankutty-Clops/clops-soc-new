@@ -25,23 +25,54 @@ export type BadgeTone =
   | 'severity-high'
   | 'severity-critical';
 
-const TONE_CLASSES: Record<BadgeTone, string> = {
-  neutral: 'bg-gray-800/80 text-gray-300 border-gray-700',
-  info: 'bg-blue-900/40 text-blue-300 border-blue-800',
-  success: 'bg-green-900/40 text-green-300 border-green-800',
-  warning: 'bg-amber-900/40 text-amber-200 border-amber-800',
-  danger: 'bg-red-900/40 text-red-300 border-red-800',
-  'severity-info': 'bg-slate-800 text-slate-300 border-slate-700',
-  'severity-low': 'bg-blue-900/40 text-blue-300 border-blue-800',
-  'severity-medium': 'bg-amber-900/40 text-amber-200 border-amber-800',
-  'severity-high': 'bg-orange-900/50 text-orange-300 border-orange-800',
-  'severity-critical': 'bg-red-900/60 text-red-200 border-red-700',
+const TONE_CLASSES: Record<BadgeTone, { badge: string; dot: string }> = {
+  /* [HIDDEN-UI THEME-3 replaced bordered gray/900 badges with dot + soft tint, no border] */
+  neutral: {
+    badge: 'bg-pill-neutral-bg text-fg-muted',
+    dot: 'bg-dot-neutral',
+  },
+  info: {
+    badge: 'bg-pill-info-bg text-accent',
+    dot: 'bg-dot-info',
+  },
+  success: {
+    badge: 'bg-pill-success-bg text-tone-success',
+    dot: 'bg-dot-success',
+  },
+  warning: {
+    badge: 'bg-pill-warning-bg text-tone-warning',
+    dot: 'bg-dot-warning',
+  },
+  danger: {
+    badge: 'bg-pill-danger-bg text-tone-danger',
+    dot: 'bg-dot-danger',
+  },
+  'severity-info': {
+    badge: 'bg-severity-bg-info text-severity-ink-info',
+    dot: 'bg-severity-dot-info',
+  },
+  'severity-low': {
+    badge: 'bg-severity-bg-low text-severity-ink-low',
+    dot: 'bg-severity-dot-low',
+  },
+  'severity-medium': {
+    badge: 'bg-severity-bg-medium text-severity-ink-medium',
+    dot: 'bg-severity-dot-medium',
+  },
+  'severity-high': {
+    badge: 'bg-severity-bg-high text-severity-ink-high',
+    dot: 'bg-severity-dot-high',
+  },
+  'severity-critical': {
+    badge: 'bg-severity-bg-critical text-severity-ink-critical',
+    dot: 'bg-severity-dot-critical',
+  },
 };
 
 export interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
   tone?: BadgeTone;
   icon?: ReactNode;
-  /** Small dot on the left, common for status indicators. */
+  /** Small dot on the left; defaults to true on semantic/severity tones. */
   dot?: boolean;
 }
 
@@ -53,19 +84,21 @@ export function Badge({
   children,
   ...rest
 }: BadgeProps) {
+  const showDot = dot ?? tone !== 'neutral';
+  const styles = TONE_CLASSES[tone];
   return (
     <span
       className={clsx(
-        'inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-[11px] font-medium',
-        TONE_CLASSES[tone],
+        'inline-flex items-center gap-1.5 rounded-pill px-2.5 py-0.5 text-caption font-medium whitespace-nowrap',
+        styles.badge,
         className,
       )}
       {...rest}
     >
-      {dot && (
+      {showDot && (
         <span
           aria-hidden="true"
-          className="h-1.5 w-1.5 rounded-full bg-current opacity-80"
+          className={clsx('h-1.5 w-1.5 shrink-0 rounded-pill', styles.dot)}
         />
       )}
       {icon}

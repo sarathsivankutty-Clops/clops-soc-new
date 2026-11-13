@@ -32,6 +32,9 @@ import { PipelineHealth } from './PipelineHealth';
 import { demoFallback } from '@/lib/demoFallback';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorState } from '@/components/ui/ErrorState';
+import { KpiStrip } from '@/components/ui/KpiStrip';
+import { Card } from '@/components/ui/Card';
+import { PageHead } from '@/components/ui/PageHead';
 
 const RechartsArea = dynamic(
   () => import('recharts').then((m) => {
@@ -175,44 +178,10 @@ const MOCK_METRICS: DashboardMetrics = {
 
 // ─── Metric Card ──────────────────────────────────────────────────────────────
 
-interface MetricCardProps {
-  label: string;
-  value: string | number;
-  sub?: string;
-  color?: 'red' | 'orange' | 'yellow' | 'green' | 'blue' | 'purple' | 'gray';
-  trend?: { value: number; label: string };
-}
-
-const COLOR_MAP = {
-  red: 'text-red-400',
-  orange: 'text-orange-400',
-  yellow: 'text-yellow-400',
-  green: 'text-green-400',
-  blue: 'text-blue-400',
-  purple: 'text-purple-400',
-  gray: 'text-gray-400',
-};
-
-function MetricCard({ label, value, sub, color = 'blue', trend }: MetricCardProps) {
-  return (
-    <div className="bg-gray-900/60 border border-gray-800/60 rounded-xl p-5">
-      <div>
-        <p className="text-xs text-gray-500 font-medium uppercase tracking-wider mb-2">{label}</p>
-        <p className={clsx('text-3xl font-bold', COLOR_MAP[color])}>{value}</p>
-        {sub && <p className="text-xs text-gray-500 mt-1">{sub}</p>}
-      </div>
-      {trend && (
-        <div className={clsx(
-          'flex items-center gap-1 mt-3 text-xs',
-          trend.value >= 0 ? 'text-red-400' : 'text-green-400'
-        )}>
-          <span>{trend.value >= 0 ? '+' : '-'}{Math.abs(trend.value)}%</span>
-          <span className="text-gray-600">{trend.label}</span>
-        </div>
-      )}
-    </div>
-  );
-}
+/* [HIDDEN-UI THEME-4 inline MetricCard replaced by shared KpiStrip in top-metrics]
+interface MetricCardProps ...
+function MetricCard(...) { ... }
+*/
 
 // ─── Honest data-absent panel ─────────────────────────────────────────────────
 
@@ -616,74 +585,54 @@ export function DashboardView() {
 
     'top-metrics': (
       <div>
-        {/* Section header */}
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h2 className="text-xl font-semibold text-gray-100">Security Operations Center</h2>
-            <p className="text-sm text-gray-500 mt-0.5">
-              Entity-risk alerting, confidence-scored triage, and{' '}
-              {metrics ? activeSourceCount : '—'}
-              {' '}connected sources
-            </p>
-          </div>
-        </div>
+        <PageHead
+          eyebrow="Overview"
+          title="Security Operations Center"
+          description={`Entity-risk alerting, confidence-scored triage, and ${metrics ? activeSourceCount : '—'} connected sources`}
+          className="mb-4"
+        />
         {metrics ? (
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
-            {/* No `trend` props here. The three that used to sit on these cards
-                were literals (+12% / -3% / -8%), not deltas the API returns —
-                /metrics/dashboard has no period-over-period comparison. The
-                funnel strip above does publish real deltas. */}
-            <MetricCard
-              label="Active Alerts"
-              value={metrics.alerts.active ?? metrics.alerts.total}
-              sub={`${metrics.alerts.total} in last ${periodLabel}`}
-              color="blue"
-            />
-            <MetricCard
-              label="Critical Active"
-              value={metrics.alerts.criticalActive ?? metrics.alerts.critical}
-              sub={`${metrics.alerts.resolved ?? 0} resolved`}
-              color={metrics.alerts.criticalActive ? 'red' : 'gray'}
-            />
-            <MetricCard
-              label="Open Cases"
-              value={metrics.cases.open}
-              sub={`${metrics.cases.inProgress} in progress · ${metrics.cases.openedThisWeek ?? 0} opened / ${metrics.cases.closedThisWeek ?? 0} closed (7d)`}
-              color="orange"
-            />
-            {/* `mttr` is hours and this rendered it with an `m` suffix, so a
-                1.5-hour MTTR would have read "1.5m". It only ever showed
-                "0m" because the figure was averaged over a column nothing
-                writes during case work — and 0 with no closures is not a
-                measurement, so the tile now says so. */}
-            <MetricCard
-              label="MTTR"
-              value={
-                metrics.alerts.mttr_sample_count === 0
-                  ? '—'
-                  : `${metrics.alerts.mttr.toFixed(1)}h`
-              }
-              sub={
-                metrics.alerts.mttr_sample_count === 0
-                  ? 'not measured · no cases closed'
-                  : 'Mean time to resolve'
-              }
-              color="green"
-            />
-            <MetricCard
-              label="Connected Sources"
-              value={activeSourceCount}
-              // The caption used to be the literal "EDR, SIEM, Cloud, IAM,
-              // SaaS" beside a live count, so the card read "5 — EDR, SIEM,
-              // Cloud, IAM, SaaS" on a tenant whose five sources were
-              // CloudTrail, CrowdStrike, Kubernetes Audit, Okta and an NDR,
-              // with zero connectors configured. A dynamic number paired
-              // with a fixed caption describes a different set from the one
-              // it counted.
-              sub={describeConnectedSources(sources)}
-              color="purple"
-            />
-          </div>
+          <KpiStrip
+            cols={5}
+            items={[
+              {
+                label: 'Active Alerts',
+                value: metrics.alerts.active ?? metrics.alerts.total,
+                sub: `${metrics.alerts.total} in last ${periodLabel}`,
+                tone: 'info',
+              },
+              {
+                label: 'Critical Active',
+                value: metrics.alerts.criticalActive ?? metrics.alerts.critical,
+                sub: `${metrics.alerts.resolved ?? 0} resolved`,
+                tone: metrics.alerts.criticalActive ? 'bad' : 'default',
+              },
+              {
+                label: 'Open Cases',
+                value: metrics.cases.open,
+                sub: `${metrics.cases.inProgress} in progress · ${metrics.cases.openedThisWeek ?? 0} opened / ${metrics.cases.closedThisWeek ?? 0} closed (7d)`,
+                tone: 'warn',
+              },
+              {
+                label: 'MTTR',
+                value:
+                  metrics.alerts.mttr_sample_count === 0
+                    ? '—'
+                    : `${metrics.alerts.mttr.toFixed(1)}h`,
+                sub:
+                  metrics.alerts.mttr_sample_count === 0
+                    ? 'not measured · no cases closed'
+                    : 'Mean time to resolve',
+                tone: 'ok',
+              },
+              {
+                label: 'Connected Sources',
+                value: activeSourceCount,
+                sub: describeConnectedSources(sources),
+                tone: 'purple',
+              },
+            ]}
+          />
         ) : (
           <PanelUnavailable
             error={metricsError}
@@ -697,11 +646,11 @@ export function DashboardView() {
     ),
 
     'charts-row': (
-      <div className="grid grid-cols-3 gap-4">
-        <div className="col-span-2 bg-gray-900/60 border border-gray-800/60 rounded-xl p-5">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <Card className="lg:col-span-2">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-medium text-gray-300">Alert Volume ({periodLabel})</h3>
-            <span className="text-xs text-gray-500">Last {periodLabel}</span>
+            <h3 className="text-card-title font-semibold text-fg-primary">Alert Volume ({periodLabel})</h3>
+            <span className="text-caption text-fg-muted">Last {periodLabel}</span>
           </div>
           {trendData.length > 0 ? (
             <RechartsArea data={trendData} />
@@ -716,20 +665,20 @@ export function DashboardView() {
               emptyDescription="The volume curve plots alert counts once alerts start arriving."
             />
           )}
-        </div>
-        <div className="bg-gray-900/60 border border-gray-800/60 rounded-xl p-5">
-          <h3 className="text-sm font-medium text-gray-300 mb-4">Severity Breakdown</h3>
+        </Card>
+        <Card>
+          <h3 className="text-card-title font-semibold text-fg-primary mb-4">Severity Breakdown</h3>
           {metrics ? (
             <>
               <RechartsPie data={SEVERITY_CHART_DATA} />
               <div className="space-y-1.5 mt-2">
                 {SEVERITY_CHART_DATA.map((d) => (
-                  <div key={d.name} className="flex items-center justify-between text-xs">
+                  <div key={d.name} className="flex items-center justify-between text-control-sm">
                     <div className="flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full" style={{ background: d.color }} />
-                      <span className="text-gray-400">{d.name}</span>
+                      <span className="w-2 h-2 rounded-pill" style={{ background: d.color }} />
+                      <span className="text-fg-secondary">{d.name}</span>
                     </div>
-                    <span className="text-gray-300 font-medium">{d.value}</span>
+                    <span className="text-fg-primary font-mono font-semibold">{d.value}</span>
                   </div>
                 ))}
               </div>
@@ -743,14 +692,14 @@ export function DashboardView() {
               emptyDescription="Severity counts appear once the API returns alert metrics."
             />
           )}
-        </div>
+        </Card>
       </div>
     ),
 
     'bottom-row': (
-      <div className="grid grid-cols-3 gap-4">
-        <div className="bg-gray-900/60 border border-gray-800/60 rounded-xl p-5">
-          <h3 className="text-sm font-medium text-gray-300 mb-4">Top MITRE ATT&CK Tactics</h3>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <Card>
+          <h3 className="text-card-title font-semibold text-fg-primary mb-4">Top MITRE ATT&CK Tactics</h3>
           {topMitre.length > 0 ? (
             <RechartsBar data={topMitre} />
           ) : (
@@ -758,21 +707,13 @@ export function DashboardView() {
               error={metricsError}
               pending={metricsPending}
               onRetry={retryMetrics}
-              // This panel ranks *tactics*, and said "technique" — the unit
-              // the SOC Performance coverage row measures. Two panels using
-              // each other's vocabulary is why they read as contradicting.
-              //
-              // The old description also promised tactics would appear "once
-              // detections start firing", which is not true: the detection
-              // engine writes `mitre_techniques` and never `mitre_tactics`,
-              // so a tenant whose rules fire all day still sees this empty.
               emptyTitle="No tactic coverage yet"
               emptyDescription="Ranks ATT&CK tactics by alert count. Alerts tagged only with technique IDs are counted under MITRE coverage in SOC Performance instead."
             />
           )}
-        </div>
-        <div className="bg-gray-900/60 border border-gray-800/60 rounded-xl p-5">
-          <h3 className="text-sm font-medium text-gray-300 mb-4">Connected Sources</h3>
+        </Card>
+        <Card>
+          <h3 className="text-card-title font-semibold text-fg-primary mb-4">Connected Sources</h3>
           {sources.length === 0 ? (
             <PanelUnavailable
               error={metricsError}
@@ -783,7 +724,7 @@ export function DashboardView() {
               action={
                 <Link
                   href="/connectors"
-                  className="text-xs text-blue-400 underline underline-offset-2 hover:text-blue-300"
+                  className="text-control-sm text-accent underline underline-offset-2 hover:text-accent-hover"
                 >
                   Go to connectors
                 </Link>
@@ -799,22 +740,22 @@ export function DashboardView() {
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-2">
                       <span className={clsx(
-                        'w-1.5 h-1.5 rounded-full',
-                        src.status === 'active' ? 'bg-green-500' : 'bg-gray-500'
+                        'w-1.5 h-1.5 rounded-pill',
+                        src.status === 'active' ? 'bg-dot-success' : 'bg-dot-neutral'
                       )} />
-                      <span className="text-xs text-gray-300">{src.name}</span>
+                      <span className="text-control-sm text-fg-primary">{src.name}</span>
                     </div>
-                    <span className="text-xs text-gray-500">{src.count}</span>
+                    <span className="text-caption font-mono text-fg-muted">{src.count}</span>
                   </div>
-                  <div className="h-1 bg-gray-800 rounded-full">
-                    <div className="h-1 bg-blue-500/60 rounded-full" style={{ width: `${pct}%` }} />
+                  <div className="h-1.5 bg-surface-subtle rounded-pill overflow-hidden">
+                    <div className="h-1.5 bg-accent rounded-pill" style={{ width: `${pct}%` }} />
                   </div>
                 </div>
               );
             })}
           </div>
           )}
-        </div>
+        </Card>
         <LiveFeedPanel />
       </div>
     ),
@@ -823,8 +764,8 @@ export function DashboardView() {
       <div className="pt-2">
         <div className="flex items-center justify-between mb-3">
           <div>
-            <h2 className="text-base font-semibold text-gray-100">SOC Performance</h2>
-            <p className="text-xs text-gray-500 mt-0.5">
+            <h2 className="text-card-title font-semibold text-fg-primary">SOC Performance</h2>
+            <p className="text-caption text-fg-muted mt-0.5">
               Outcome metrics, agent calibration, and technique coverage. Auto-computed every 30s.
             </p>
           </div>
@@ -838,12 +779,12 @@ export function DashboardView() {
     <DashboardErrorBoundary>
       <div className="space-y-5">
         {metricsErrorMessage && (
-          <div className="rounded-xl border border-red-900/60 bg-red-950/40 px-4 py-3 text-sm text-red-200">
+          <div className="rounded-container border border-tone-danger/30 bg-pill-danger-bg px-4 py-3 text-body text-tone-danger">
             <p className="font-semibold">Dashboard metrics unavailable</p>
-            <p className="mt-1 text-xs text-red-300/80">
+            <p className="mt-1 text-caption text-fg-secondary">
               {metricsErrorMessage}
             </p>
-            <p className="mt-1 text-xs text-red-300/60">
+            <p className="mt-1 text-caption text-fg-muted">
               Panels below are blank rather than showing placeholder figures.
               Retrying every 4s.
             </p>

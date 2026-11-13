@@ -23,21 +23,21 @@ type Role = RbacRole;
 // read roles) from a 500 (the API is broken) from a 422 (the console is).
 
 const CATEGORY_COLORS: Record<string, string> = {
-  cases: 'bg-blue-500/20 text-blue-300',
-  alerts: 'bg-red-500/20 text-red-300',
-  playbooks: 'bg-purple-500/20 text-purple-300',
-  detections: 'bg-orange-500/20 text-orange-300',
-  connectors: 'bg-teal-500/20 text-teal-300',
-  api_keys: 'bg-yellow-500/20 text-yellow-300',
-  audit: 'bg-gray-500/20 text-gray-300',
-  compliance: 'bg-green-500/20 text-green-300',
-  admin: 'bg-pink-500/20 text-pink-300',
+  cases: 'bg-pill-info-bg text-tone-info',
+  alerts: 'bg-pill-danger-bg text-tone-danger',
+  playbooks: 'bg-pill-purple-bg text-tone-purple',
+  detections: 'bg-severity-high-bg text-severity-high-ink',
+  connectors: 'bg-accent-subtle text-accent',
+  api_keys: 'bg-pill-warning-bg text-tone-warning',
+  audit: 'bg-pill-neutral-bg text-tone-neutral',
+  compliance: 'bg-pill-success-bg text-tone-success',
+  admin: 'bg-pill-danger-bg text-tone-danger',
 };
 
 function PermissionBadge({ perm }: { perm: Permission }) {
-  const cls = CATEGORY_COLORS[perm.category ?? ''] ?? 'bg-gray-500/20 text-gray-300';
+  const cls = CATEGORY_COLORS[perm.category ?? ''] ?? 'bg-pill-neutral-bg text-tone-neutral';
   return (
-    <span className={`inline-block rounded px-2 py-0.5 text-xs font-medium ${cls}`} title={perm.description ?? ''}>
+    <span className={`inline-block rounded-pill px-2 py-0.5 text-xs font-medium ${cls}`} title={perm.description ?? ''}>
       {perm.name}
     </span>
   );
@@ -45,48 +45,48 @@ function PermissionBadge({ perm }: { perm: Permission }) {
 
 function RoleCard({ role, onEdit, onDelete }: { role: Role; onEdit: (r: Role) => void; onDelete: (r: Role) => void }) {
   return (
-    <div className="rounded-xl border border-gray-800/60 bg-gray-900/60 p-5">
+    <div className="rounded-container border border-surface-border bg-surface-card p-5">
       <div className="flex items-start justify-between gap-2">
         <div>
           <div className="flex items-center gap-2">
-            <span className="text-base font-semibold text-gray-100">{role.label || role.name}</span>
-            {role.label && <span className="font-mono text-xs text-gray-500">{role.name}</span>}
+            <span className="text-card-title font-semibold text-fg-primary">{role.label || role.name}</span>
+            {role.label && <span className="font-mono text-xs text-fg-muted">{role.name}</span>}
             {role.is_system && (
-              <span className="rounded bg-indigo-100 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-indigo-700">
+              <span className="rounded-pill bg-pill-info-bg px-2 py-0.5 text-eyebrow font-bold uppercase tracking-wide text-tone-info">
                 system
               </span>
             )}
           </div>
-          {role.description && <p className="mt-0.5 text-sm text-gray-400">{role.description}</p>}
+          {role.description && <p className="mt-0.5 text-body text-fg-muted">{role.description}</p>}
         </div>
         {!role.is_system && (
           <div className="flex shrink-0 gap-2">
             <button
               onClick={() => onEdit(role)}
-              className="rounded px-2 py-1 text-xs text-gray-400 hover:bg-gray-800"
+              className="rounded-control px-2 py-1 text-xs text-fg-muted hover:bg-surface-hover hover:text-fg-primary"
             >
               Edit
             </button>
             <button
               onClick={() => onDelete(role)}
-              className="rounded px-2 py-1 text-xs text-red-400 hover:bg-red-900/30"
+              className="rounded-control px-2 py-1 text-xs text-tone-danger hover:bg-pill-danger-bg"
             >
               Delete
             </button>
           </div>
         )}
       </div>
-      <div className="mt-3 flex items-center gap-3 text-xs text-gray-400">
+      <div className="mt-3 flex items-center gap-3 text-xs text-fg-muted">
         <span title="Users holding this role in this workspace">
           {role.user_count} user{role.user_count === 1 ? '' : 's'}
         </span>
         {role.is_sso_default && (
-          <span className="rounded bg-sky-500/20 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-sky-300" title="New SSO sign-ins are provisioned with this role">
+          <span className="rounded-pill bg-pill-info-bg px-2 py-0.5 text-eyebrow font-bold uppercase tracking-wide text-tone-info" title="New SSO sign-ins are provisioned with this role">
             SSO default · protected
           </span>
         )}
         {role.is_system && !role.is_sso_default && (
-          <span className="rounded bg-gray-700/60 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-gray-300">
+          <span className="rounded-pill bg-pill-neutral-bg px-2 py-0.5 text-eyebrow font-bold uppercase tracking-wide text-tone-neutral">
             protected · non-deletable
           </span>
         )}
@@ -98,12 +98,12 @@ function RoleCard({ role, onEdit, onDelete }: { role: Role; onEdit: (r: Role) =>
           (byCat.get(cat) ?? byCat.set(cat, []).get(cat)!).push(p);
         }
         return role.permissions.length === 0 ? (
-          <p className="mt-3 text-xs italic text-gray-600">No permissions assigned</p>
+          <p className="mt-3 text-xs italic text-fg-subtle">No permissions assigned</p>
         ) : (
           <div className="mt-3 space-y-2">
             {[...byCat.entries()].sort().map(([cat, perms]) => (
               <div key={cat}>
-                <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-gray-500">{cat}</p>
+                <p className="mb-1 text-eyebrow font-semibold uppercase tracking-wide text-fg-muted">{cat}</p>
                 <div className="flex flex-wrap gap-1.5">
                   {perms.map((p) => <PermissionBadge key={p.id} perm={p} />)}
                 </div>
@@ -362,13 +362,13 @@ export function RBACView() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-gray-100">Roles & Permissions</h2>
-          <p className="mt-0.5 text-sm text-gray-500">Manage access control for your organization.</p>
+          <h2 className="text-page-title font-bold text-fg-primary">Roles &amp; Permissions</h2>
+          <p className="mt-0.5 text-body text-fg-muted">Manage access control for your organization.</p>
         </div>
         {isAdmin && (
           <button
             onClick={() => setShowCreate(true)}
-            className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+            className="rounded-control bg-btn-grad px-4 py-2 text-control font-semibold text-white hover:brightness-105"
           >
             + New Role
           </button>
@@ -385,9 +385,9 @@ export function RBACView() {
             message={describeApiFailure(rolesError, { subject: 'role list' })}
             onRetry={() => reloadRoles()}
           />
-          <div className="flex flex-col items-center justify-center gap-1 rounded-xl border border-gray-800/60 bg-gray-900/40 px-4 py-12 text-center">
-            <p className="text-sm text-amber-200/80">The role list could not be loaded.</p>
-            <p className="text-[11px] text-gray-600">
+          <div className="flex flex-col items-center justify-center gap-1 rounded-container border border-surface-border bg-surface-card px-4 py-12 text-center">
+            <p className="text-body text-tone-warning">The role list could not be loaded.</p>
+            <p className="text-caption text-fg-muted">
               Treat this as unknown rather than as a tenant with no roles defined.
             </p>
           </div>
@@ -397,7 +397,7 @@ export function RBACView() {
       {!roles && !rolesError && (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-32 animate-pulse rounded-xl bg-gray-800/60" />
+            <div key={i} className="h-32 animate-pulse rounded-container bg-surface-subtle" />
           ))}
         </div>
       )}
@@ -414,14 +414,14 @@ export function RBACView() {
                   type="button"
                   onClick={handleSeed}
                   disabled={seeding}
-                  className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 transition-colors disabled:opacity-50"
+                  className="rounded-control bg-btn-grad px-4 py-2 text-control font-semibold text-white hover:brightness-105 transition-all disabled:opacity-50"
                 >
                   {seeding ? 'Seeding…' : 'Seed roles'}
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowCreate(true)}
-                  className="rounded-lg border border-gray-700 px-4 py-2 text-sm font-medium text-gray-200 hover:bg-gray-800 transition-colors"
+                  className="rounded-control border border-surface-border bg-surface-elevated px-4 py-2 text-control font-medium text-fg-primary hover:bg-surface-hover transition-colors"
                 >
                   + New Role
                 </button>
@@ -432,7 +432,7 @@ export function RBACView() {
       )}
 
       {seedMsg && (
-        <p className="rounded-lg border border-indigo-800/60 bg-indigo-950/40 px-4 py-2 text-sm text-indigo-200">{seedMsg}</p>
+        <p className="rounded-control border border-accent/30 bg-accent-subtle px-4 py-2 text-body text-accent">{seedMsg}</p>
       )}
 
       {roles && roles.length > 0 && (

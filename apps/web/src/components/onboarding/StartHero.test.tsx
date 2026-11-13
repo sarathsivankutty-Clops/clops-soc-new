@@ -90,7 +90,8 @@ describe('StartHero', () => {
       /Detect\.\s*Triage\.\s*Hunt\.\s*Respond/i,
     );
 
-    const strip = screen.getByLabelText(/four AiSOC agents/i);
+    // [HIDDEN-UI THEME-7 product label updated; prior accessible name: /four AiSOC agents/i]
+    const strip = screen.getByLabelText(/four ClopsSOC agents/i);
     for (const name of ['Detect', 'Triage', 'Hunt', 'Respond']) {
       expect(strip).toHaveTextContent(new RegExp(name, 'i'));
     }

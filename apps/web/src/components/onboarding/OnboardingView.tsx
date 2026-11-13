@@ -304,7 +304,7 @@ export function OnboardingView() {
       <section className="mt-12 grid sm:grid-cols-2 gap-4">
         <NextStepCard
           title="Bring your own data"
-          body="No connector for your tool? Push raw events into AiSOC over a tenant-scoped HTTPS endpoint."
+          body={/* [HIDDEN-UI THEME-7 prior endpoint copy named AiSOC] */ 'No connector for your tool? Push raw events into ClopsSOC over a tenant-scoped HTTPS endpoint.'}
           href="https://beenuar.github.io/AiSOC/docs/operations/credentials/"
           cta="Push-ingest docs"
         />

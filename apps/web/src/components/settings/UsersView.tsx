@@ -40,8 +40,8 @@ function RoleBadge({ name }: { name: string }) {
     <span
       className={
         isAdmin
-          ? 'inline-block rounded bg-amber-500/20 px-2 py-0.5 text-xs font-bold uppercase tracking-wide text-amber-300 ring-1 ring-amber-500/40'
-          : 'inline-block rounded bg-indigo-500/15 px-2 py-0.5 text-xs font-medium text-indigo-300 ring-1 ring-indigo-500/30'
+          ? 'inline-block rounded-pill bg-pill-warning-bg px-2 py-0.5 text-xs font-bold uppercase tracking-wide text-tone-warning'
+          : 'inline-block rounded-pill bg-pill-info-bg px-2 py-0.5 text-xs font-medium text-tone-info'
       }
     >
       {name}
@@ -51,12 +51,12 @@ function RoleBadge({ name }: { name: string }) {
 
 function StatusBadge({ active }: { active: boolean }) {
   return active ? (
-    <span className="inline-flex items-center gap-1 text-xs text-emerald-300">
-      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> active
+    <span className="inline-flex items-center gap-1.5 text-xs text-tone-success">
+      <span className="h-1.5 w-1.5 rounded-full bg-dot-success" /> active
     </span>
   ) : (
-    <span className="inline-flex items-center gap-1 text-xs text-amber-300">
-      <span className="h-1.5 w-1.5 rounded-full bg-amber-400" /> disabled
+    <span className="inline-flex items-center gap-1.5 text-xs text-tone-warning">
+      <span className="h-1.5 w-1.5 rounded-full bg-dot-warning" /> disabled
     </span>
   );
 }
@@ -361,12 +361,12 @@ export function UsersView() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search name or email…"
-            className="w-56 rounded-lg border border-gray-700 bg-gray-950 px-3 py-1.5 text-sm text-gray-100 placeholder-gray-600 focus:border-indigo-500 focus:outline-none"
+            className="w-56 rounded-control border border-surface-border bg-surface-card px-3 py-1.5 text-body text-fg-primary placeholder:text-fg-subtle focus:border-accent focus:outline-none"
           />
           <select
             value={roleFilter}
             onChange={(e) => { setRoleFilter(e.target.value); setOffset(0); }}
-            className="rounded-lg border border-gray-700 bg-gray-950 px-2 py-1.5 text-sm text-gray-200"
+            className="rounded-control border border-surface-border bg-surface-card px-2 py-1.5 text-body text-fg-primary focus:border-accent focus:outline-none"
           >
             <option value="">All roles</option>
             {(roles ?? []).map((r) => (
@@ -376,82 +376,82 @@ export function UsersView() {
           <select
             value={statusFilter}
             onChange={(e) => { setStatusFilter(e.target.value); setOffset(0); }}
-            className="rounded-lg border border-gray-700 bg-gray-950 px-2 py-1.5 text-sm text-gray-200"
+            className="rounded-control border border-surface-border bg-surface-card px-2 py-1.5 text-body text-fg-primary focus:border-accent focus:outline-none"
           >
             <option value="">Any status</option>
             <option value="active">Active</option>
             <option value="disabled">Disabled</option>
           </select>
-          <button type="submit" className="rounded-lg border border-gray-700 px-3 py-1.5 text-sm text-gray-200 hover:bg-gray-800">
+          <button type="submit" className="rounded-control border border-surface-border bg-surface-elevated px-3 py-1.5 text-control text-fg-primary hover:bg-surface-hover">
             Search
           </button>
         </form>
-        <span className="ml-auto text-xs text-gray-500">{failed ? '' : `${total} member${total === 1 ? '' : 's'}`}</span>
+        <span className="ml-auto text-xs text-fg-muted">{failed ? '' : `${total} member${total === 1 ? '' : 's'}`}</span>
       </div>
 
       {failed && (
-        <div className="rounded-xl border border-red-900/60 bg-red-950/30 px-4 py-6 text-center">
-          <p className="text-sm text-red-300">The user list could not be loaded.</p>
-          <p className="mt-1 text-[11px] text-gray-500">{(error as Error).message || 'Unknown error'}</p>
-          <button type="button" onClick={refresh} className="mt-3 rounded-lg border border-red-800 px-3 py-1.5 text-xs text-red-200 hover:bg-red-900/40">
+        <div className="rounded-container border border-severity-critical-ink/30 bg-severity-critical-bg px-4 py-6 text-center">
+          <p className="text-body text-severity-critical-ink">The user list could not be loaded.</p>
+          <p className="mt-1 text-caption text-fg-muted">{(error as Error).message || 'Unknown error'}</p>
+          <button type="button" onClick={refresh} className="mt-3 rounded-control border border-severity-critical-ink/40 px-3 py-1.5 text-xs text-severity-critical-ink hover:brightness-110">
             Retry
           </button>
         </div>
       )}
 
       {empty && (
-        <div className="rounded-xl border border-gray-800/60 bg-gray-900/40 px-4 py-12 text-center">
-          <p className="text-sm text-gray-300">No users match these filters.</p>
-          <p className="mt-1 text-[11px] text-gray-600">
+        <div className="rounded-container border border-surface-border bg-surface-card px-4 py-12 text-center">
+          <p className="text-body text-fg-primary">No users match these filters.</p>
+          <p className="mt-1 text-caption text-fg-muted">
             This is an empty result set, not a load failure — the server answered successfully.
           </p>
         </div>
       )}
 
       {!failed && (
-        <div className="overflow-x-auto rounded-xl border border-gray-800/60">
-          <table className="w-full text-left text-sm">
-            <thead className="border-b border-gray-800 bg-gray-900/70">
+        <div className="overflow-x-auto rounded-container border border-surface-border bg-surface-card">
+          <table className="w-full text-left text-body">
+            <thead className="border-b border-surface-border bg-surface-elevated">
               <tr>
                 <th className="px-4 py-2.5">{headerSort('name', 'Name')}</th>
                 <th className="px-4 py-2.5">{headerSort('email', 'Email')}</th>
                 <th className="px-4 py-2.5">{headerSort('status', 'Status')}</th>
-                <th className="px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-gray-500">Role(s)</th>
-                <th className="px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-gray-500">Provider</th>
+                <th className="px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-fg-muted">Role(s)</th>
+                <th className="px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-fg-muted">Provider</th>
                 <th className="px-4 py-2.5">{headerSort('last_login', 'Last login')}</th>
                 <th className="px-4 py-2.5">{headerSort('created', 'Created')}</th>
-                <th className="px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-gray-500">Actions</th>
+                <th className="px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-fg-muted">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-800/60">
+            <tbody className="divide-y divide-surface-border">
               {isLoading && rows.length === 0 && (
                 Array.from({ length: 4 }).map((_, i) => (
                   <tr key={i}>
                     {Array.from({ length: 8 }).map((__, j) => (
-                      <td key={j} className="px-4 py-3"><div className="h-4 w-full max-w-28 animate-pulse rounded bg-gray-800/70" /></td>
+                      <td key={j} className="px-4 py-3"><div className="h-4 w-full max-w-28 animate-pulse rounded-control bg-surface-subtle" /></td>
                     ))}
                   </tr>
                 ))
               )}
               {rows.map((u) => (
-                <tr key={u.id} className="hover:bg-gray-900/50">
-                  <td className="px-4 py-3 text-gray-100">{u.username || '—'}</td>
-                  <td className="px-4 py-3 text-gray-300">{u.email}</td>
+                <tr key={u.id} className="hover:bg-surface-hover">
+                  <td className="px-4 py-3 text-fg-primary">{u.username || '—'}</td>
+                  <td className="px-4 py-3 text-fg-secondary">{u.email}</td>
                   <td className="px-4 py-3"><StatusBadge active={u.is_active} /></td>
                   <td className="px-4 py-3">
                     <div className="flex flex-wrap gap-1">
                       {(u.roles.length ? u.roles : [u.role]).map((r) => <RoleBadge key={r} name={r} />)}
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-xs uppercase tracking-wide text-gray-400">{u.provider}</td>
-                  <td className="px-4 py-3 text-xs text-gray-400">{formatDate(u.last_login)}</td>
-                  <td className="px-4 py-3 text-xs text-gray-400">{formatDate(u.created_at)}</td>
+                  <td className="px-4 py-3 text-xs uppercase tracking-wide text-fg-muted">{u.provider}</td>
+                  <td className="px-4 py-3 text-xs text-fg-muted">{formatDate(u.last_login)}</td>
+                  <td className="px-4 py-3 text-xs text-fg-muted">{formatDate(u.created_at)}</td>
                   <td className="px-4 py-3">
                     <div className="flex justify-end gap-2">
                       <button
                         type="button"
                         onClick={() => setEditing(u)}
-                        className="rounded-lg border border-gray-700 px-2.5 py-1 text-xs text-gray-200 hover:bg-gray-800"
+                        className="rounded-control border border-surface-border bg-surface-elevated px-2.5 py-1 text-xs text-fg-primary hover:bg-surface-hover"
                       >
                         Edit role
                       </button>
@@ -460,7 +460,7 @@ export function UsersView() {
                           type="button"
                           disabled={busyId === u.id}
                           onClick={() => setStatus(u, false)}
-                          className="rounded-lg border border-amber-800/60 px-2.5 py-1 text-xs text-amber-300 hover:bg-amber-950/40 disabled:opacity-50"
+                          className="rounded-control border border-tone-warning/40 bg-pill-warning-bg px-2.5 py-1 text-xs text-tone-warning hover:brightness-110 disabled:opacity-50"
                         >
                           Disable
                         </button>
@@ -469,7 +469,7 @@ export function UsersView() {
                           type="button"
                           disabled={busyId === u.id}
                           onClick={() => setStatus(u, true)}
-                          className="rounded-lg border border-emerald-800/60 px-2.5 py-1 text-xs text-emerald-300 hover:bg-emerald-950/40 disabled:opacity-50"
+                          className="rounded-control border border-tone-success/40 bg-pill-success-bg px-2.5 py-1 text-xs text-tone-success hover:brightness-110 disabled:opacity-50"
                         >
                           Enable
                         </button>
@@ -479,7 +479,7 @@ export function UsersView() {
                         disabled={busyId === u.id || (meId !== null && u.id === meId)}
                         onClick={() => deleteUser(u)}
                         title={meId !== null && u.id === meId ? 'You cannot delete your own account' : 'Permanently delete this member'}
-                        className="rounded-lg border border-red-800/70 px-2.5 py-1 text-xs text-red-300 hover:bg-red-950/50 disabled:cursor-not-allowed disabled:opacity-40"
+                        className="rounded-control border border-severity-critical-ink/40 bg-severity-critical-bg px-2.5 py-1 text-xs text-severity-critical-ink hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40"
                       >
                         Delete
                       </button>
@@ -493,12 +493,12 @@ export function UsersView() {
       )}
 
       {!failed && total > PAGE_SIZE && (
-        <div className="flex items-center justify-end gap-3 text-sm text-gray-400">
+        <div className="flex items-center justify-end gap-3 text-body text-fg-muted">
           <button
             type="button"
             disabled={offset === 0}
             onClick={() => setOffset(Math.max(0, offset - PAGE_SIZE))}
-            className="rounded-lg border border-gray-700 px-3 py-1.5 hover:bg-gray-800 disabled:opacity-40"
+            className="rounded-control border border-surface-border bg-surface-card px-3 py-1.5 text-fg-primary hover:bg-surface-hover disabled:opacity-40"
           >
             ← Prev
           </button>
@@ -509,7 +509,7 @@ export function UsersView() {
             type="button"
             disabled={offset + PAGE_SIZE >= total}
             onClick={() => setOffset(offset + PAGE_SIZE)}
-            className="rounded-lg border border-gray-700 px-3 py-1.5 hover:bg-gray-800 disabled:opacity-40"
+            className="rounded-control border border-surface-border bg-surface-card px-3 py-1.5 text-fg-primary hover:bg-surface-hover disabled:opacity-40"
           >
             Next →
           </button>

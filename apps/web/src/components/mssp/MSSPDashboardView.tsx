@@ -68,18 +68,18 @@ function formatTimestamp(value: string | null): string {
 }
 
 const SEVERITY_STYLES: Record<string, string> = {
-  critical: 'bg-red-500/20 text-red-300',
-  high: 'bg-orange-500/20 text-orange-300',
-  medium: 'bg-amber-500/20 text-amber-300',
-  low: 'bg-sky-500/20 text-sky-300',
-  info: 'bg-gray-500/20 text-gray-300',
+  critical: 'bg-severity-critical-bg text-severity-critical-ink',
+  high: 'bg-severity-high-bg text-severity-high-ink',
+  medium: 'bg-severity-medium-bg text-severity-medium-ink',
+  low: 'bg-severity-low-bg text-severity-low-ink',
+  info: 'bg-severity-info-bg text-severity-info-ink',
 };
 
 function connectorTone(tenant: PortfolioTenant): string {
-  if (tenant.connectors.total === 0) return 'text-gray-500';
-  if (tenant.connectors.error > 0) return 'text-red-400';
-  if (tenant.connectors.stale > 0) return 'text-amber-400';
-  return 'text-green-400';
+  if (tenant.connectors.total === 0) return 'text-fg-subtle';
+  if (tenant.connectors.error > 0) return 'text-tone-danger';
+  if (tenant.connectors.stale > 0) return 'text-tone-warning';
+  return 'text-tone-success';
 }
 
 /**
@@ -184,12 +184,12 @@ export default function MSSPDashboardView() {
 
   const header = (
     <div>
-      <h1 className="text-2xl font-bold text-white">Managed portfolio</h1>
-      <p className="text-gray-400 mt-1">
+      <h1 className="text-page-title font-bold text-fg-primary">Managed portfolio</h1>
+      <p className="text-fg-muted mt-1 text-body">
         {portfolio?.org_name ? (
           <>
             Tenants managed by{' '}
-            <span className="text-gray-200">{portfolio.org_name}</span>
+            <span className="text-fg-primary">{portfolio.org_name}</span>
           </>
         ) : (
           'Security posture across the tenants you manage'
@@ -200,7 +200,7 @@ export default function MSSPDashboardView() {
 
   if (notAMember) {
     return (
-      <div className="space-y-8 p-6 max-w-7xl mx-auto">
+      <div className="space-y-6">
         {header}
         <EmptyState
           icon={EmptyStateIcons.shield}
@@ -213,7 +213,7 @@ export default function MSSPDashboardView() {
 
   if (portfolioError) {
     return (
-      <div className="space-y-8 p-6 max-w-7xl mx-auto">
+      <div className="space-y-6">
         {header}
         <ErrorState
           title="Could not load the portfolio"
@@ -227,9 +227,9 @@ export default function MSSPDashboardView() {
 
   if (isLoading || !portfolio) {
     return (
-      <div className="space-y-8 p-6 max-w-7xl mx-auto">
+      <div className="space-y-6">
         {header}
-        <p className="text-sm text-gray-500" role="status">
+        <p className="text-body text-fg-muted" role="status">
           Loading portfolio…
         </p>
       </div>
@@ -239,11 +239,11 @@ export default function MSSPDashboardView() {
   const hasTenants = tenants.length > 0;
 
   return (
-    <div className="space-y-8 p-6 max-w-7xl mx-auto">
+    <div className="space-y-6">
       {header}
 
       {portfolio.summary.synthetic_alerts > 0 && (
-        <p className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-4 py-2 text-sm text-amber-300">
+        <p className="rounded-control border border-tone-warning/30 bg-pill-warning-bg px-4 py-2 text-body text-tone-warning">
           {portfolio.summary.synthetic_alerts} seeded demo alert(s) are counted separately and excluded from the
           figures above.
         </p>
@@ -251,17 +251,17 @@ export default function MSSPDashboardView() {
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         {summaryCards(portfolio).map((c) => (
-          <div key={c.label} className="rounded-xl border border-gray-800/60 bg-gray-900/40 p-4">
-            <p className="text-xs text-gray-400 uppercase tracking-wider">{c.label}</p>
-            <p className="mt-1 text-2xl font-semibold text-white">{c.value}</p>
-            {c.hint && <p className="mt-1 text-xs text-gray-500">{c.hint}</p>}
+          <div key={c.label} className="rounded-container border border-surface-border bg-surface-card p-4">
+            <p className="text-caption text-fg-muted uppercase tracking-wider">{c.label}</p>
+            <p className="mt-1 text-kpi font-semibold font-mono tabular-nums text-fg-primary">{c.value}</p>
+            {c.hint && <p className="mt-1 text-xs text-fg-subtle">{c.hint}</p>}
           </div>
         ))}
       </div>
 
-      <section className="rounded-xl border border-gray-800/60 bg-gray-900/40 overflow-hidden">
-        <div className="px-5 py-4 border-b border-gray-800/60 flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-lg font-semibold text-white">Tenants</h2>
+      <section className="rounded-container border border-surface-border bg-surface-card overflow-hidden">
+        <div className="px-5 py-4 border-b border-surface-border flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-card-title font-semibold text-fg-primary">Tenants</h2>
           <div className="flex items-center gap-3">
             {FILTERS.map((f) => (
               <button
@@ -271,8 +271,8 @@ export default function MSSPDashboardView() {
                 aria-pressed={filter === f.key}
                 onClick={() => setFilter(f.key)}
                 className={clsx(
-                  'rounded-md px-2.5 py-1 text-xs font-medium transition',
-                  filter === f.key ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-gray-300',
+                  'rounded-pill px-2.5 py-1 text-xs font-medium transition',
+                  filter === f.key ? 'bg-nav-active-bg text-fg-primary' : 'text-fg-muted hover:text-fg-primary',
                 )}
               >
                 {f.label}
@@ -282,7 +282,7 @@ export default function MSSPDashboardView() {
               type="button"
               disabled={visible.length === 0}
               onClick={() => downloadCsv(visible)}
-              className="text-sm px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-40 disabled:hover:bg-blue-600 text-white transition-colors"
+              className="text-control px-3 py-1.5 rounded-control border border-surface-border bg-surface-elevated hover:bg-surface-hover disabled:opacity-40 text-fg-primary transition-colors"
             >
               Export CSV
             </button>
@@ -312,7 +312,7 @@ export default function MSSPDashboardView() {
               <button
                 type="button"
                 onClick={() => setFilter('all')}
-                className="rounded-lg bg-gray-800 px-4 py-2 text-sm text-gray-200 hover:bg-gray-700 transition-colors"
+                className="rounded-control border border-surface-border bg-surface-elevated px-4 py-2 text-control text-fg-primary hover:bg-surface-hover transition-colors"
               >
                 Show all tenants
               </button>
@@ -320,9 +320,9 @@ export default function MSSPDashboardView() {
           />
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-body">
               <thead>
-                <tr className="border-b border-gray-800/60 text-left text-gray-400">
+                <tr className="border-b border-surface-border text-left text-caption uppercase tracking-wider text-fg-muted">
                   <th scope="col" className="px-5 py-3 font-medium">Tenant</th>
                   <th scope="col" className="px-5 py-3 font-medium text-right">Open alerts</th>
                   <th scope="col" className="px-5 py-3 font-medium text-right">Critical</th>
@@ -336,30 +336,30 @@ export default function MSSPDashboardView() {
               </thead>
               <tbody>
                 {visible.map((t) => (
-                  <tr key={t.tenant_id} className="border-b border-gray-800/40 hover:bg-gray-800/30 transition-colors">
-                    <td className="px-5 py-3 font-medium text-white">
+                  <tr key={t.tenant_id} className="border-b border-surface-border hover:bg-surface-hover transition-colors">
+                    <td className="px-5 py-3 font-medium text-fg-primary">
                       {t.name}
-                      {!t.is_active && <span className="ml-2 text-xs text-gray-500">(inactive)</span>}
+                      {!t.is_active && <span className="ml-2 text-xs text-fg-muted">(inactive)</span>}
                       {t.synthetic_alerts > 0 && (
-                        <span className="ml-2 rounded px-1.5 py-0.5 text-[10px] uppercase tracking-wide bg-amber-500/15 text-amber-300">
+                        <span className="ml-2 rounded-pill px-1.5 py-0.5 text-eyebrow uppercase tracking-wide bg-pill-warning-bg text-tone-warning">
                           {t.synthetic_alerts} seeded
                         </span>
                       )}
                     </td>
-                    <td className="px-5 py-3 text-right text-gray-300">{t.open_alerts}</td>
-                    <td className={clsx('px-5 py-3 text-right font-medium', t.critical_alerts > 0 ? 'text-red-400' : 'text-gray-500')}>
+                    <td className="px-5 py-3 text-right font-mono tabular-nums text-fg-secondary">{t.open_alerts}</td>
+                    <td className={clsx('px-5 py-3 text-right font-medium font-mono tabular-nums', t.critical_alerts > 0 ? 'text-tone-danger' : 'text-fg-subtle')}>
                       {t.critical_alerts}
                     </td>
-                    <td className="px-5 py-3 text-right text-gray-300">{t.untriaged_alerts}</td>
-                    <td className="px-5 py-3 text-right text-gray-300">{t.open_cases}</td>
-                    <td className={clsx('px-5 py-3 text-right', t.sla_breached_cases > 0 ? 'text-amber-400' : 'text-gray-500')}>
+                    <td className="px-5 py-3 text-right font-mono tabular-nums text-fg-secondary">{t.untriaged_alerts}</td>
+                    <td className="px-5 py-3 text-right font-mono tabular-nums text-fg-secondary">{t.open_cases}</td>
+                    <td className={clsx('px-5 py-3 text-right font-mono tabular-nums', t.sla_breached_cases > 0 ? 'text-tone-warning' : 'text-fg-subtle')}>
                       {t.sla_breached_cases}
                     </td>
-                    <td className="px-5 py-3 text-right text-gray-300">{formatMinutes(t.mttr_minutes)}</td>
-                    <td className={clsx('px-5 py-3 text-right', connectorTone(t))}>
+                    <td className="px-5 py-3 text-right font-mono tabular-nums text-fg-secondary">{formatMinutes(t.mttr_minutes)}</td>
+                    <td className={clsx('px-5 py-3 text-right font-mono tabular-nums', connectorTone(t))}>
                       {t.connectors.total === 0 ? 'None' : `${t.connectors.healthy}/${t.connectors.total}`}
                     </td>
-                    <td className="px-5 py-3 text-gray-400">{formatTimestamp(t.last_event_at)}</td>
+                    <td className="px-5 py-3 text-fg-muted">{formatTimestamp(t.last_event_at)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -368,9 +368,9 @@ export default function MSSPDashboardView() {
         )}
       </section>
 
-      <section className="rounded-xl border border-gray-800/60 bg-gray-900/40 overflow-hidden">
-        <div className="px-5 py-4 border-b border-gray-800/60">
-          <h2 className="text-lg font-semibold text-white">Open alerts across the portfolio</h2>
+      <section className="rounded-container border border-surface-border bg-surface-card overflow-hidden">
+        <div className="px-5 py-4 border-b border-surface-border">
+          <h2 className="text-card-title font-semibold text-fg-primary">Open alerts across the portfolio</h2>
         </div>
         {alertsError ? (
           <ErrorState
@@ -380,7 +380,7 @@ export default function MSSPDashboardView() {
             className="m-5"
           />
         ) : !alerts ? (
-          <p className="px-5 py-6 text-sm text-gray-500" role="status">
+          <p className="px-5 py-6 text-body text-fg-muted" role="status">
             Loading alerts…
           </p>
         ) : alerts.length === 0 ? (
@@ -390,22 +390,22 @@ export default function MSSPDashboardView() {
             description="No tenant in this portfolio has an open alert right now."
           />
         ) : (
-          <ul className="divide-y divide-gray-800/40">
+          <ul className="divide-y divide-surface-border">
             {alerts.map((a) => (
               <li key={a.alert_id} className="px-5 py-3 flex items-center gap-4">
                 <span
                   className={clsx(
-                    'rounded-full px-2.5 py-0.5 text-xs font-medium capitalize shrink-0',
+                    'rounded-pill px-2.5 py-0.5 text-xs font-medium capitalize shrink-0',
                     SEVERITY_STYLES[a.severity] ?? SEVERITY_STYLES.info,
                   )}
                 >
                   {a.severity}
                 </span>
-                <Link href={`/alerts/${a.alert_id}`} className="text-sm text-gray-200 hover:text-white truncate">
+                <Link href={`/alerts/${a.alert_id}`} className="text-body text-fg-primary hover:text-accent truncate">
                   {a.title}
                 </Link>
-                <span className="ml-auto text-xs text-gray-500 shrink-0">{a.tenant_name}</span>
-                <span className="text-xs text-gray-600 shrink-0">{formatTimestamp(a.event_time ?? a.created_at)}</span>
+                <span className="ml-auto text-xs text-fg-muted shrink-0">{a.tenant_name}</span>
+                <span className="text-xs text-fg-subtle shrink-0">{formatTimestamp(a.event_time ?? a.created_at)}</span>
               </li>
             ))}
           </ul>

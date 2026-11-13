@@ -61,19 +61,19 @@ export function AgentThroughputPanel() {
   return (
     <section
       aria-labelledby="ops-agent-heading"
-      className="rounded-xl border border-gray-800/60 bg-gray-900/40"
+      className="rounded-container border border-surface-border bg-surface-card shadow-card overflow-hidden"
     >
-      <div className="px-4 py-3">
-        <h2 id="ops-agent-heading" className="text-sm font-medium text-gray-300">
+      <div className="px-5 py-4 border-b border-surface-divider">
+        <h2 id="ops-agent-heading" className="text-card-title font-semibold text-fg-primary">
           Agent throughput and spend
         </h2>
-        <p className="mt-0.5 text-[11px] text-gray-500">
+        <p className="mt-0.5 text-caption text-fg-muted">
           Recorded token usage from the last {WINDOW_DAYS} days of investigation runs.
         </p>
       </div>
 
       {isLoading && !data ? (
-        <div className="m-4 h-28 animate-pulse rounded bg-gray-800/40" />
+        <div className="m-4 h-28 animate-pulse rounded-control bg-surface-subtle" />
       ) : error ? (
         <ErrorState
           title="Agent telemetry unavailable"
@@ -90,7 +90,7 @@ export function AgentThroughputPanel() {
           className="m-4"
         />
       ) : (
-        <div className="space-y-4 px-4 pb-4">
+        <div className="space-y-4 p-5">
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <Stat label="Runs" value={headline.total_runs.toLocaleString()} />
             <Stat label="LLM calls" value={formatCompact(headline.total_calls)} />
@@ -101,15 +101,12 @@ export function AgentThroughputPanel() {
             />
           </div>
 
-          {/* Only render the derived per-run figure the server computed. When
-              it is null the server had no basis for it, and dividing here
-              would invent one. */}
           {anyMeasured && headline.avg_cost_per_run_usd != null ? (
-            <p className="text-[11px] text-gray-500">
+            <p className="text-caption text-fg-muted">
               {`${formatUsd(headline.avg_cost_per_run_usd)} per run on average, measured over ${measuredCalls.toLocaleString()} calls.`}
             </p>
           ) : (
-            <p className="text-[11px] text-gray-500">
+            <p className="text-caption text-fg-muted">
               {estimatedCalls > 0
                 ? `Spend not measured — the gateway reported no cost. List price for the models involved is ~${formatUsd(headline.estimated_cost_usd)}.`
                 : 'Spend not measured: no call in this window reported a cost.'}
@@ -118,17 +115,17 @@ export function AgentThroughputPanel() {
 
           {byModel.length > 0 && (
             <div>
-              <p className="mb-2 text-[11px] uppercase tracking-wider text-gray-500">
+              <p className="mb-2 text-eyebrow uppercase tracking-wider text-fg-muted">
                 By model
               </p>
               <ul className="space-y-2">
                 {byModel.map((m) => (
                   <li key={m.model}>
                     <div className="mb-1 flex items-baseline justify-between gap-3">
-                      <span className="truncate font-mono text-[11px] text-gray-300">
+                      <span className="truncate font-mono text-caption text-fg-primary">
                         {m.model}
                       </span>
-                      <span className="shrink-0 text-[11px] text-gray-500">
+                      <span className="shrink-0 text-caption font-mono text-fg-muted">
                         {`${m.runs} runs · ${
                           (m.measured_call_count ?? 0) > 0
                             ? formatUsd(m.total_cost_usd)
@@ -139,9 +136,9 @@ export function AgentThroughputPanel() {
                       </span>
                     </div>
                     {anyMeasured && (
-                      <div className="h-1 rounded-full bg-gray-800">
+                      <div className="h-1.5 rounded-pill bg-surface-subtle overflow-hidden">
                         <div
-                          className="h-1 rounded-full bg-indigo-500/60"
+                          className="h-1.5 rounded-pill bg-accent"
                           style={{
                             width: `${Math.round((m.total_cost_usd / maxModelCost) * 100)}%`,
                           }}
@@ -162,8 +159,8 @@ export function AgentThroughputPanel() {
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-[11px] uppercase tracking-wider text-gray-500">{label}</p>
-      <p className="text-xl font-semibold text-gray-100">{value}</p>
+      <p className="text-eyebrow uppercase tracking-wider text-fg-muted">{label}</p>
+      <p className="text-page-title font-bold font-mono text-fg-primary">{value}</p>
     </div>
   );
 }

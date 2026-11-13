@@ -1,5 +1,6 @@
 /**
  * T3.8 — Storybook visual-regression snapshots.
+ * [HIDDEN-UI THEME-3 snapshots regenerated for token/radius/dot-tint restyled primitives]
  *
  * Vitest serializes each design-system primitive into a textual
  * snapshot in storybook-snapshots.test.tsx.snap so a structural

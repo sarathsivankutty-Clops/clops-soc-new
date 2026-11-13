@@ -156,7 +156,8 @@ export function DraftFromPromptDialog({ open, onClose }: DraftFromPromptDialogPr
               Draft a runbook from a prompt
             </h2>
             <p className="mt-0.5 text-xs text-gray-500">
-              Describe what should happen — AiSOC drafts the DAG, you review and save.
+              {/* [HIDDEN-UI THEME-7 prior product label: AiSOC drafts the DAG] */}
+              Describe what should happen — ClopsSOC drafts the DAG, you review and save.
             </p>
           </div>
           <button

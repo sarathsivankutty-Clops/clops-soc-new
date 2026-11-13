@@ -22,6 +22,9 @@ import {
 
 import { InsightTileCard } from './InsightTileCard';
 import { Sparkline } from './Sparkline';
+import { PageHead } from '@/components/ui/PageHead';
+import { ErrorState as SharedErrorState } from '@/components/ui/ErrorState';
+import { Skeleton } from '@/components/ui/Skeleton';
 
 const WINDOW_OPTIONS: InsightsWindow[] = ['24h', '7d', '30d'];
 
@@ -76,7 +79,7 @@ export function SOCInsightsView() {
   }, [last, mutate]);
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6">
       <Header
         window={window}
         clamped={clamped}
@@ -122,29 +125,28 @@ function Header({ window, clamped, onWindowChange, generatedAt, manualMinutes }:
   }, [generatedAt]);
 
   return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">SOC Insights</h1>
-        <p className="mt-1 max-w-prose text-sm text-muted-foreground">
-          Seven operational tiles for the SOC, refreshed every 30 seconds and
-          on case changes. Deltas compare against the immediately preceding
-          window. Hours-saved assumes {manualMinutes ?? 45} minutes of analyst
-          time per auto-closed case.
+    <div className="space-y-1">
+      {/* [HIDDEN-UI THEME-4 restyled Header to shared PageHead] */}
+      <PageHead
+        className="mb-0"
+        title="SOC Insights"
+        description={`Seven operational tiles for the SOC, refreshed every 30 seconds and on case changes. Deltas compare against the immediately preceding window. Hours-saved assumes ${manualMinutes ?? 45} minutes of analyst time per auto-closed case.`}
+        actions={
+          <div className="flex items-center gap-3">
+            {stamp ? (
+              <span className="text-caption text-fg-muted" aria-live="polite">
+                Updated {stamp}
+              </span>
+            ) : null}
+            <WindowSelector value={window} onChange={onWindowChange} />
+          </div>
+        }
+      />
+      {clamped ? (
+        <p className="text-caption text-tone-warning">
+          These tiles have no 1-hour window, so they are showing 24 hours.
         </p>
-        {clamped ? (
-          <p className="mt-1 text-xs text-amber-500/90">
-            These tiles have no 1-hour window, so they are showing 24 hours.
-          </p>
-        ) : null}
-      </div>
-      <div className="flex items-center gap-4">
-        {stamp ? (
-          <span className="text-xs text-muted-foreground" aria-live="polite">
-            Updated {stamp}
-          </span>
-        ) : null}
-        <WindowSelector value={window} onChange={onWindowChange} />
-      </div>
+      ) : null}
     </div>
   );
 }
@@ -159,7 +161,7 @@ function WindowSelector({ value, onChange }: WindowSelectorProps) {
     <div
       role="radiogroup"
       aria-label="Window"
-      className="inline-flex rounded-md border border-border bg-card p-0.5 text-xs"
+      className="inline-flex rounded-control border border-surface-border bg-surface-card p-1 gap-0.5 text-control-sm"
     >
       {WINDOW_OPTIONS.map((option) => {
         const active = option === value;
@@ -172,8 +174,8 @@ function WindowSelector({ value, onChange }: WindowSelectorProps) {
             onClick={() => onChange(option)}
             className={
               active
-                ? 'rounded bg-primary px-3 py-1 font-medium text-primary-foreground'
-                : 'rounded px-3 py-1 text-muted-foreground hover:text-foreground'
+                ? 'rounded-control bg-surface-subtle px-3 py-1 font-semibold text-fg-primary'
+                : 'rounded-control px-3 py-1 text-fg-muted hover:text-fg-primary transition-colors'
             }
           >
             {option}
@@ -218,10 +220,7 @@ function LoadingSkeleton() {
       aria-label="Loading SOC insights"
     >
       {Array.from({ length: 7 }).map((_, i) => (
-        <div
-          key={i}
-          className="h-32 animate-pulse rounded-lg border border-border bg-card"
-        />
+        <Skeleton key={i} className="h-32 rounded-container border border-surface-border" />
       ))}
     </div>
   );
@@ -234,21 +233,10 @@ interface ErrorStateProps {
 
 function ErrorState({ message, onRetry }: ErrorStateProps) {
   return (
-    <div
-      role="alert"
-      className="rounded-lg border border-destructive/30 bg-destructive/5 p-6 text-sm"
-    >
-      <p className="font-medium text-destructive">
-        SOC Insights are temporarily unavailable.
-      </p>
-      <p className="mt-1 text-muted-foreground">{message}</p>
-      <button
-        type="button"
-        onClick={onRetry}
-        className="mt-3 rounded border border-border bg-background px-3 py-1.5 text-xs font-medium hover:bg-muted"
-      >
-        Retry
-      </button>
-    </div>
+    <SharedErrorState
+      title="SOC Insights are temporarily unavailable."
+      description={message}
+      onRetry={onRetry}
+    />
   );
 }

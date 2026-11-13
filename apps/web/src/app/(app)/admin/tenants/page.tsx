@@ -102,7 +102,8 @@ export default function AdminTenantsPage() {
           Tenants
         </h1>
         <p className="mt-1 text-sm text-gray-400">
-          Read-only directory of every tenant in this AiSOC deployment.
+          {/* [HIDDEN-UI THEME-7 prior deployment copy named AiSOC] */}
+          Read-only directory of every tenant in this ClopsSOC deployment.
           Managed tenants — provisioned through the waitlist flow — are
           tagged in the list so the support team can scope their attention.
         </p>

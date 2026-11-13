@@ -17,25 +17,43 @@ const siteUrl = getPublicSiteUrl();
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
+  /* [HIDDEN-UI THEME-2 visible product name changed to ClopsSOC]
   applicationName: 'AiSOC',
   title: {
     default: 'AiSOC — Open-Source AI Security Operations Center',
     template: '%s | AiSOC',
   },
+  */
+  applicationName: 'ClopsSOC',
+  title: {
+    default: 'ClopsSOC — AI Security Operations Center',
+    template: '%s | ClopsSOC',
+  },
+  /* [HIDDEN-UI THEME-7 prior metadata copy used the AiSOC product name]
   description:
     'AiSOC is a free, self-hostable AI-powered Security Operations Center (SOC). Real-time threat detection, alert fusion, purple-team exercises, MITRE ATT&CK-aware autonomous investigation, and detection-as-code — MIT-licensed and community-driven.',
+  */
+  description:
+    'ClopsSOC is a free, self-hostable AI-powered Security Operations Center (SOC). Real-time threat detection, alert fusion, purple-team exercises, MITRE ATT&CK-aware autonomous investigation, and detection-as-code — MIT-licensed and community-driven.',
   keywords: [...DISCOVERY_KEYWORDS],
+  /* [HIDDEN-UI THEME-7 prior publisher labels: AiSOC Community and AiSOC]
   authors: [{ name: 'AiSOC Community', url: 'https://github.com/beenuar/AiSOC' }],
   creator: 'AiSOC Community',
   publisher: 'AiSOC',
+  */
+  authors: [{ name: 'ClopsSOC Community', url: 'https://github.com/beenuar/AiSOC' }],
+  creator: 'ClopsSOC Community',
+  publisher: 'ClopsSOC',
   category: 'cybersecurity',
   classification: 'Security Software',
   openGraph: {
-    title: 'AiSOC — Free, Open-Source AI Security Operations Center',
+    /* [HIDDEN-UI THEME-7 prior social title used AiSOC] */
+    title: 'ClopsSOC — Free, Open-Source AI Security Operations Center',
     description:
       'Self-hostable AI SOC with real-time threat detection, alert fusion, purple-team drills, MITRE ATT&CK investigation, and detection-as-code. MIT-licensed.',
     type: 'website',
-    siteName: 'AiSOC',
+    /* [HIDDEN-UI THEME-7 prior social site name: AiSOC] */
+    siteName: 'ClopsSOC',
     url: siteUrl,
     locale: 'en_US',
     images: [
@@ -43,14 +61,16 @@ export const metadata: Metadata = {
         url: '/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'AiSOC — open-source AI SOC platform for security operations teams',
+        /* [HIDDEN-UI THEME-7 prior social image label: AiSOC] */
+        alt: 'ClopsSOC — open-source AI SOC platform for security operations teams',
         type: 'image/png',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'AiSOC — Free Open-Source AI SOC Platform',
+    /* [HIDDEN-UI THEME-7 prior social title used AiSOC] */
+    title: 'ClopsSOC — Free Open-Source AI SOC Platform',
     description:
       'AI-powered SOC: threat detection, alert fusion, purple team, MITRE ATT&CK mapping, detection-as-code, and eval harness in CI. Self-host for free.',
     site: '@aisoc_dev',

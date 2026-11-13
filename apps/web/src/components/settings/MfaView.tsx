@@ -145,23 +145,23 @@ export function MfaView() {
 
   return (
     <div className="space-y-6 max-w-2xl">
-      <section className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-5 space-y-4">
+      <section className="rounded-container border border-surface-border bg-surface-card p-5 space-y-4">
         <header>
-          <h2 className="text-base font-semibold text-zinc-100">Two-factor authentication</h2>
-          <p className="text-sm text-zinc-400 mt-1">
+          <h2 className="text-card-title font-semibold text-fg-primary">Two-factor authentication</h2>
+          <p className="text-body text-fg-muted mt-1">
             A time-based code from an authenticator app, in addition to your password.
           </p>
         </header>
 
         {loadError ? (
-          <p role="alert" className="text-sm text-red-300">
+          <p role="alert" className="text-body text-tone-danger">
             {loadError}
           </p>
         ) : status === null ? (
-          <p className="text-sm text-zinc-500">Checking…</p>
+          <p className="text-body text-fg-muted">Checking…</p>
         ) : (
           <>
-            <p className="text-sm text-zinc-300">
+            <p className="text-body text-fg-secondary">
               {status.enrolled
                 ? `Enrolled. ${status.recovery_codes_remaining} recovery code${status.recovery_codes_remaining === 1 ? "" : "s"} left.`
                 : "Not enrolled."}
@@ -173,7 +173,7 @@ export function MfaView() {
                 type="button"
                 onClick={begin}
                 disabled={phase === "pending"}
-                className="rounded-lg bg-indigo-500 hover:bg-indigo-400 px-4 py-2 text-sm font-medium text-white transition disabled:bg-zinc-800 disabled:text-zinc-500"
+                className="rounded-control bg-btn-grad hover:brightness-105 px-4 py-2 text-control font-semibold text-white transition disabled:opacity-50"
               >
                 Set up
               </button>
@@ -181,15 +181,15 @@ export function MfaView() {
 
             {enrolment ? (
               <form onSubmit={confirm} className="space-y-3">
-                <p className="text-xs text-zinc-400">
+                <p className="text-xs text-fg-muted">
                   Add this key to your authenticator app, then enter the code it shows.
                 </p>
-                <code className="block break-all rounded-lg bg-zinc-950 px-3 py-2 text-xs tracking-wider text-indigo-300">
+                <code className="block break-all rounded-control bg-surface-elevated border border-surface-border px-3 py-2 text-xs tracking-wider text-accent">
                   {enrolment.secret}
                 </code>
                 <a
                   href={enrolment.otpauth_uri}
-                  className="inline-block text-xs text-indigo-400 hover:text-indigo-300 underline-offset-2 hover:underline"
+                  className="inline-block text-xs text-accent hover:text-accent-hover underline-offset-2 hover:underline"
                 >
                   Open in your authenticator app
                 </a>
@@ -199,12 +199,12 @@ export function MfaView() {
                   placeholder="123456"
                   value={code}
                   onChange={(e) => setCode(e.target.value)}
-                  className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
+                  className="w-full rounded-control border border-surface-border bg-surface-elevated px-3 py-2 text-body text-fg-primary focus:border-accent focus:outline-none"
                 />
                 <button
                   type="submit"
                   disabled={phase === "pending" || !code}
-                  className="rounded-lg bg-indigo-500 hover:bg-indigo-400 px-4 py-2 text-sm font-medium text-white transition disabled:bg-zinc-800 disabled:text-zinc-500"
+                  className="rounded-control bg-btn-grad hover:brightness-105 px-4 py-2 text-control font-semibold text-white transition disabled:opacity-50"
                 >
                   Confirm
                 </button>
@@ -212,11 +212,11 @@ export function MfaView() {
             ) : null}
 
             {recoveryCodes ? (
-              <div className="rounded-lg border border-amber-500/40 bg-amber-500/5 px-4 py-3 space-y-2">
-                <p className="text-xs font-medium text-amber-300">
+              <div className="rounded-control border border-tone-warning/40 bg-pill-warning-bg px-4 py-3 space-y-2">
+                <p className="text-xs font-medium text-tone-warning">
                   Save these recovery codes. They are shown once and each works once.
                 </p>
-                <ul className="grid grid-cols-2 gap-1 font-mono text-[11px] text-zinc-300">
+                <ul className="grid grid-cols-2 gap-1 font-mono text-caption text-fg-primary">
                   {recoveryCodes.map((rc) => (
                     <li key={rc}>{rc}</li>
                   ))}
@@ -225,8 +225,8 @@ export function MfaView() {
             ) : null}
 
             {status.enrolled && !enrolment ? (
-              <form onSubmit={disable} className="space-y-2 border-t border-zinc-800 pt-4">
-                <p className="text-xs text-zinc-500">
+              <form onSubmit={disable} className="space-y-2 border-t border-surface-border pt-4">
+                <p className="text-xs text-fg-muted">
                   Removing your factor needs a current code, so a stolen session cannot strip the
                   thing protecting it.
                 </p>
@@ -237,12 +237,12 @@ export function MfaView() {
                     placeholder="Code or recovery code"
                     value={code}
                     onChange={(e) => setCode(e.target.value)}
-                    className="flex-1 rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
+                    className="flex-1 rounded-control border border-surface-border bg-surface-elevated px-3 py-2 text-body text-fg-primary focus:border-accent focus:outline-none"
                   />
                   <button
                     type="submit"
                     disabled={phase === "pending" || !code}
-                    className="rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-2 text-sm font-medium text-red-300 transition hover:bg-red-500/20 disabled:opacity-50"
+                    className="rounded-control border border-severity-critical-ink/40 bg-severity-critical-bg px-4 py-2 text-control font-medium text-severity-critical-ink transition hover:brightness-110 disabled:opacity-50"
                   >
                     Remove
                   </button>
@@ -251,7 +251,7 @@ export function MfaView() {
             ) : null}
 
             {error ? (
-              <p role="alert" className="text-sm text-red-300">
+              <p role="alert" className="text-body text-tone-danger">
                 {error}
               </p>
             ) : null}
@@ -259,27 +259,27 @@ export function MfaView() {
         )}
       </section>
 
-      <section className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-5 space-y-3">
+      <section className="rounded-container border border-surface-border bg-surface-card p-5 space-y-3">
         <header>
-          <h2 className="text-base font-semibold text-zinc-100">Security key or passkey</h2>
-          <p className="text-sm text-zinc-400 mt-1">
+          <h2 className="text-card-title font-semibold text-fg-primary">Security key or passkey</h2>
+          <p className="text-body text-fg-muted mt-1">
             A hardware key, or the fingerprint or face unlock built into this device. It counts as
             your second factor on its own, so you do not also need an authenticator app.
           </p>
         </header>
         {status === null ? (
-          <p className="text-sm text-zinc-500">Checking…</p>
+          <p className="text-body text-fg-muted">Checking…</p>
         ) : (
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={addSecurityKey}
               disabled={phase === "pending" || !isWebAuthnSupported()}
-              className="rounded-lg border border-zinc-700 bg-zinc-800/60 px-4 py-2 text-sm font-medium text-zinc-200 transition hover:bg-zinc-800 disabled:opacity-50"
+              className="rounded-control border border-surface-border bg-surface-elevated px-4 py-2 text-control font-medium text-fg-primary transition hover:bg-surface-hover disabled:opacity-50"
             >
               Add a security key
             </button>
-            <span className="text-xs text-zinc-500">
+            <span className="text-xs text-fg-muted">
               {!isWebAuthnSupported()
                 ? "This browser does not support security keys."
                 : status.has_webauthn
@@ -290,10 +290,10 @@ export function MfaView() {
         )}
       </section>
 
-      <section className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-5 space-y-3">
+      <section className="rounded-container border border-surface-border bg-surface-card p-5 space-y-3">
         <header>
-          <h2 className="text-base font-semibold text-zinc-100">Require it across this tenant</h2>
-          <p className="text-sm text-zinc-400 mt-1">
+          <h2 className="text-card-title font-semibold text-fg-primary">Require it across this tenant</h2>
+          <p className="text-body text-fg-muted mt-1">
             Everyone signs in with a second factor. Members who have not enrolled are asked to set
             one up at their next sign-in rather than being locked out.
           </p>
@@ -305,17 +305,17 @@ export function MfaView() {
               setPolicy(!(status?.tenant_requires_totp ?? false), status?.require_for_roles ?? [])
             }
             disabled={status === null}
-            className="rounded-lg border border-zinc-700 bg-zinc-800/60 px-4 py-2 text-sm font-medium text-zinc-200 transition hover:bg-zinc-800 disabled:opacity-50"
+            className="rounded-control border border-surface-border bg-surface-elevated px-4 py-2 text-control font-medium text-fg-primary transition hover:bg-surface-hover disabled:opacity-50"
           >
             {status?.tenant_requires_totp ? "Stop requiring" : "Require for everyone"}
           </button>
-          <span className="text-xs text-zinc-500">
+          <span className="text-xs text-fg-muted">
             {status?.tenant_requires_totp ? "Currently required" : "Currently optional"}
           </span>
         </div>
-        <div className="pt-2 border-t border-zinc-800 space-y-2">
-          <h3 className="text-sm font-medium text-zinc-200">Or require it of particular roles</h3>
-          <p className="text-xs text-zinc-500">
+        <div className="pt-2 border-t border-surface-border space-y-2">
+          <h3 className="text-body font-medium text-fg-primary">Or require it of particular roles</h3>
+          <p className="text-xs text-fg-muted">
             Useful when the people who can change things should carry a second factor and the people
             who can only read need not. Requiring it of everyone above covers every role, whatever
             is selected here.
@@ -330,10 +330,10 @@ export function MfaView() {
                     onClick={() => toggleRole(role)}
                     disabled={status === null}
                     aria-pressed={on}
-                    className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition disabled:opacity-50 ${
+                    className={`rounded-control border px-3 py-1.5 text-xs font-medium transition disabled:opacity-50 ${
                       on
-                        ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-300"
-                        : "border-zinc-700 bg-zinc-800/60 text-zinc-300 hover:bg-zinc-800"
+                        ? "border-tone-success/40 bg-pill-success-bg text-tone-success"
+                        : "border-surface-border bg-surface-elevated text-fg-secondary hover:bg-surface-hover"
                     }`}
                   >
                     {role.replace(/_/g, " ")}
@@ -344,7 +344,7 @@ export function MfaView() {
           </ul>
         </div>
         {policyError ? (
-          <p role="alert" className="text-sm text-red-300">
+          <p role="alert" className="text-body text-tone-danger">
             {policyError}
           </p>
         ) : null}

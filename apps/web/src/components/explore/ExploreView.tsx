@@ -443,7 +443,7 @@ function QueryDisclosure({ answer }: { answer: NlQueryExecuteResponse }) {
     answer.executed_against === 'elasticsearch'
       ? 'your connected Elasticsearch'
       : answer.executed_against === 'lake'
-        ? "AiSOC's event lake"
+        ? /* [HIDDEN-UI THEME-7 prior label named AiSOC] */ "ClopsSOC's event lake"
         : null;
 
   return (

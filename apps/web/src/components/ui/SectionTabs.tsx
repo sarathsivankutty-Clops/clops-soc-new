@@ -49,7 +49,7 @@ function SectionTabsInner({
   return (
     <div className="space-y-6">
       <nav aria-label={ariaLabel} className="border-b border-surface-border">
-        <div role="tablist" aria-label={ariaLabel} className="flex flex-wrap gap-1 -mb-px">
+        <div role="tablist" aria-label={ariaLabel} className="flex flex-wrap items-center gap-6 -mb-px">
           {visibleTabs.map((item) => {
             const selected = item.id === activeTab.id;
             return (
@@ -60,11 +60,18 @@ function SectionTabsInner({
                 aria-selected={selected}
                 onClick={() => setActiveId(item.id)}
                 className={clsx(
+                  /* [HIDDEN-UI THEME-5 previous pill-bg tab style]
                   'px-4 py-2.5 text-sm font-medium border-b-2 transition-colors whitespace-nowrap',
                   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40',
                   selected
                     ? 'border-brand-500 text-fg-primary bg-surface-card/60'
                     : 'border-transparent text-fg-muted hover:text-fg-secondary hover:bg-surface-hover/50',
+                  */
+                  'px-1 py-2.5 text-control font-medium border-b-2 transition-colors whitespace-nowrap',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-control',
+                  selected
+                    ? 'border-accent text-fg-primary'
+                    : 'border-transparent text-fg-muted hover:text-fg-secondary',
                 )}
               >
                 {item.label}

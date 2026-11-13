@@ -5,7 +5,8 @@ import { redirect } from 'next/navigation';
 export const metadata = {
   title: 'MITRE ATT&CK Coverage',
   description:
-    "MITRE ATT&CK coverage matrix derived from AiSOC's shipped detections, broken down by tier (native, imported, community).",
+    /* [HIDDEN-UI THEME-7 prior description named AiSOC] */
+    "MITRE ATT&CK coverage matrix derived from ClopsSOC's shipped detections, broken down by tier (native, imported, community).",
 };
 
 export default function CoveragePage() {

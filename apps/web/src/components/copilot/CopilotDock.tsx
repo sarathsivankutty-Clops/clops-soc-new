@@ -155,7 +155,10 @@ export function CopilotDock() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 12 }}
             onClick={() => setOpen(true)}
+            /* [HIDDEN-UI THEME-6 previous emerald floating launcher replaced by --btn-grad pill]
             className="fixed bottom-5 right-5 z-40 flex items-center gap-2 rounded-full bg-emerald-500 px-4 py-3 text-sm font-semibold text-emerald-950 shadow-lg shadow-emerald-900/30 transition-colors hover:bg-emerald-400"
+            */
+            className="fixed bottom-5 right-5 z-40 flex items-center gap-2 rounded-pill bg-btn-grad px-4 py-3 text-control font-semibold text-white shadow-overlay transition-all hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
             aria-label="Open AI Copilot"
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -167,7 +170,7 @@ export function CopilotDock() {
               />
             </svg>
             Ask Copilot
-            <kbd className="rounded bg-emerald-900/30 px-1.5 py-0.5 text-[10px] font-mono text-emerald-100">
+            <kbd className="rounded-pill bg-white/20 px-1.5 py-0.5 text-eyebrow font-mono text-white">
               ⌘J
             </kbd>
           </motion.button>
@@ -183,19 +186,19 @@ export function CopilotDock() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 24, scale: 0.98 }}
             transition={{ duration: 0.18 }}
-            className="fixed bottom-5 right-5 z-40 flex h-[32rem] w-[24rem] max-w-[calc(100vw-2.5rem)] flex-col overflow-hidden rounded-2xl border border-slate-800/80 bg-slate-900/95 shadow-2xl shadow-black/40 backdrop-blur"
+            className="fixed bottom-5 right-5 z-40 flex h-[32rem] w-[24rem] max-w-[calc(100vw-2.5rem)] flex-col overflow-hidden rounded-container border border-surface-border-strong bg-surface-card shadow-overlay"
             role="dialog"
             aria-label="AI Copilot"
           >
             {/* Header */}
-            <div className="flex items-center justify-between border-b border-slate-800/80 px-3 py-2">
+            <div className="flex items-center justify-between border-b border-surface-border bg-surface-elevated px-3 py-2">
               <div className="flex items-center gap-2">
-                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500/15 text-[10px] font-semibold uppercase tracking-wider text-emerald-300">
+                <span className="flex h-7 w-7 items-center justify-center rounded-pill bg-btn-grad text-eyebrow font-semibold uppercase tracking-wider text-white">
                   ai
                 </span>
                 <div>
-                  <p className="text-sm font-semibold text-white">AI Copilot</p>
-                  <p className="text-[11px] text-slate-400">
+                  <p className="text-body font-semibold text-fg-primary">AI Copilot</p>
+                  <p className="text-caption text-fg-muted">
                     {offline ? 'Copilot unavailable' : 'Connected'}
                   </p>
                 </div>
@@ -214,7 +217,7 @@ export function CopilotDock() {
                 </Link> */}
                 <button
                   onClick={() => setOpen(false)}
-                  className="rounded-md p-1.5 text-slate-400 transition-colors hover:bg-slate-800 hover:text-white"
+                  className="rounded-control p-1.5 text-fg-muted transition-colors hover:bg-surface-hover hover:text-fg-primary"
                   aria-label="Close Copilot"
                 >
                   <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -228,7 +231,7 @@ export function CopilotDock() {
             <div ref={scrollerRef} className="min-h-0 flex-1 overflow-y-auto p-3">
               {messages.length === 0 ? (
                 <div className="flex h-full flex-col justify-center">
-                  <p className="px-1 text-xs text-slate-400">
+                  <p className="px-1 text-xs text-fg-muted">
                     Ask about ingested alerts, cases, and observed entity risk.
                     Reads use your permissions; unavailable data is reported explicitly.
                   </p>
@@ -237,7 +240,7 @@ export function CopilotDock() {
                       <li key={p}>
                         <button
                           onClick={() => void send(p)}
-                          className="w-full rounded-md border border-slate-800 bg-slate-900/60 px-3 py-2 text-left text-xs text-slate-200 transition-colors hover:border-emerald-500/40 hover:bg-slate-800/60"
+                          className="w-full rounded-control border border-surface-border bg-surface-elevated px-3 py-2 text-left text-xs text-fg-secondary transition-colors hover:border-accent hover:bg-surface-hover hover:text-fg-primary"
                         >
                           {p}
                         </button>
@@ -257,10 +260,10 @@ export function CopilotDock() {
                     >
                       <div
                         className={clsx(
-                          'max-w-[85%] whitespace-pre-wrap rounded-2xl px-3 py-2 text-sm',
+                          'max-w-[85%] whitespace-pre-wrap rounded-container px-3 py-2 text-body',
                           m.role === 'user'
-                            ? 'bg-emerald-500/15 text-white ring-1 ring-emerald-500/30'
-                            : 'bg-slate-800/70 text-slate-100 ring-1 ring-slate-700/60',
+                            ? 'bg-nav-active-bg text-fg-primary border border-accent/30'
+                            : 'bg-surface-elevated text-fg-primary border border-surface-border',
                         )}
                       >
                         {m.content}
@@ -281,7 +284,7 @@ export function CopilotDock() {
                                 <button
                                   key={idx}
                                   onClick={() => void send(s)}
-                                  className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[11px] text-emerald-200 transition-colors hover:bg-emerald-500/20"
+                                  className="rounded-pill border border-surface-border bg-surface-card px-2.5 py-0.5 text-caption text-accent transition-colors hover:bg-surface-hover"
                                 >
                                   {s}
                                 </button>
@@ -294,12 +297,12 @@ export function CopilotDock() {
                   ))}
                   {sending && (
                     <li className="flex justify-start">
-                      <div className="rounded-2xl bg-slate-800/70 px-3 py-2 ring-1 ring-slate-700/60">
+                      <div className="rounded-container border border-surface-border bg-surface-elevated px-3 py-2">
                         <span className="inline-flex items-center gap-1">
                           {[0, 1, 2].map((i) => (
                             <motion.span
                               key={i}
-                              className="block h-1.5 w-1.5 rounded-full bg-slate-400"
+                              className="block h-1.5 w-1.5 rounded-full bg-fg-subtle"
                               animate={{ opacity: [0.2, 1, 0.2] }}
                               transition={{
                                 duration: 1.1,
@@ -317,8 +320,8 @@ export function CopilotDock() {
             </div>
 
             {/* Composer */}
-            <div className="border-t border-slate-800/80 p-2">
-              <div className="flex items-end gap-2 rounded-xl border border-slate-700/70 bg-slate-950/40 p-1.5 focus-within:border-emerald-500/50">
+            <div className="border-t border-surface-border bg-surface-elevated p-2">
+              <div className="flex items-end gap-2 rounded-control border border-surface-border bg-surface-card p-1.5 focus-within:border-accent">
                 <textarea
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
@@ -330,16 +333,16 @@ export function CopilotDock() {
                   }}
                   rows={1}
                   placeholder="Ask Copilot…"
-                  className="flex-1 resize-none bg-transparent px-2 py-1.5 text-sm text-slate-100 placeholder-slate-500 outline-none"
+                  className="flex-1 resize-none bg-transparent px-2 py-1.5 text-body text-fg-primary placeholder:text-fg-subtle outline-none"
                 />
                 <button
                   onClick={() => void send(input)}
                   disabled={!input.trim() || sending}
                   className={clsx(
-                    'flex-none rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-colors',
+                    'flex-none rounded-control px-2.5 py-1.5 text-xs font-semibold transition-all',
                     input.trim() && !sending
-                      ? 'bg-emerald-500 text-emerald-950 hover:bg-emerald-400'
-                      : 'bg-slate-800 text-slate-500',
+                      ? 'bg-btn-grad text-white hover:brightness-105'
+                      : 'bg-surface-subtle text-fg-subtle',
                   )}
                   aria-label="Send"
                 >

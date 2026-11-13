@@ -21,43 +21,46 @@ import { clsx } from 'clsx';
 import { ContextualActions } from '@/components/copilot/ContextualActions';
 import { ExplainDrawer } from '@/components/alerts/ExplainDrawer';
 import { CreateCaseModal, alertSeverityToCaseSeverity } from '@/components/alerts/CreateCaseModal';
+import { Button } from '@/components/ui/Button';
+import { Badge } from '@/components/ui/Badge';
 import { demoFallback } from '@/lib/demoFallback';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const SEVERITY_CONFIG = {
-  critical: { label: 'Critical', badge: 'bg-red-500/10 text-red-400 ring-red-500/20', dot: 'bg-red-500' },
-  high: { label: 'High', badge: 'bg-orange-500/10 text-orange-400 ring-orange-500/20', dot: 'bg-orange-500' },
-  medium: { label: 'Medium', badge: 'bg-yellow-500/10 text-yellow-400 ring-yellow-500/20', dot: 'bg-yellow-500' },
-  low: { label: 'Low', badge: 'bg-blue-500/10 text-blue-400 ring-blue-500/20', dot: 'bg-blue-500' },
-  info: { label: 'Info', badge: 'bg-gray-500/10 text-gray-400 ring-gray-500/20', dot: 'bg-gray-500' },
+  /* [HIDDEN-UI THEME-4 kept all 5 severity tiers distinct with dot + soft tint, no border] */
+  critical: { label: 'Critical', badge: 'bg-severity-bg-critical text-severity-ink-critical', dot: 'bg-severity-dot-critical' },
+  high: { label: 'High', badge: 'bg-severity-bg-high text-severity-ink-high', dot: 'bg-severity-dot-high' },
+  medium: { label: 'Medium', badge: 'bg-severity-bg-medium text-severity-ink-medium', dot: 'bg-severity-dot-medium' },
+  low: { label: 'Low', badge: 'bg-severity-bg-low text-severity-ink-low', dot: 'bg-severity-dot-low' },
+  info: { label: 'Info', badge: 'bg-severity-bg-info text-severity-ink-info', dot: 'bg-severity-dot-info' },
 } as const;
 
 const STATUS_CONFIG = {
-  new: { label: 'New', badge: 'bg-blue-500/10 text-blue-400 ring-blue-500/20' },
-  triaged: { label: 'Triaged', badge: 'bg-purple-500/10 text-purple-400 ring-purple-500/20' },
-  investigating: { label: 'Investigating', badge: 'bg-yellow-500/10 text-yellow-400 ring-yellow-500/20' },
-  resolved: { label: 'Resolved', badge: 'bg-green-500/10 text-green-400 ring-green-500/20' },
-  false_positive: { label: 'False Positive', badge: 'bg-gray-500/10 text-gray-400 ring-gray-500/20' },
+  new: { label: 'New', badge: 'bg-pill-info-bg text-accent', dot: 'bg-dot-info' },
+  triaged: { label: 'Triaged', badge: 'bg-pill-purple-bg text-tone-purple', dot: 'bg-tone-purple' },
+  investigating: { label: 'Investigating', badge: 'bg-pill-warning-bg text-tone-warning', dot: 'bg-dot-warning' },
+  resolved: { label: 'Resolved', badge: 'bg-pill-success-bg text-tone-success', dot: 'bg-dot-success' },
+  false_positive: { label: 'False Positive', badge: 'bg-pill-neutral-bg text-fg-muted', dot: 'bg-dot-neutral' },
 } as const;
 
 const CONFIDENCE_CONFIG: Record<ConfidenceLabel, { label: string; badge: string; dot: string; description: string }> = {
   high: {
     label: 'High Confidence',
-    badge: 'bg-emerald-500/10 text-emerald-400 ring-emerald-500/20',
-    dot: 'bg-emerald-500',
+    badge: 'bg-pill-success-bg text-tone-success',
+    dot: 'bg-dot-success',
     description: 'Multiple corroborating signals; low risk of false positive.',
   },
   medium: {
     label: 'Medium Confidence',
-    badge: 'bg-amber-500/10 text-amber-400 ring-amber-500/20',
-    dot: 'bg-amber-500',
+    badge: 'bg-pill-warning-bg text-tone-warning',
+    dot: 'bg-dot-warning',
     description: 'Mixed signals; review supporting evidence before action.',
   },
   low: {
     label: 'Low Confidence',
-    badge: 'bg-slate-500/10 text-slate-300 ring-slate-500/20',
-    dot: 'bg-slate-400',
+    badge: 'bg-pill-neutral-bg text-fg-muted',
+    dot: 'bg-dot-neutral',
     description: 'Weak or partial signal; likely needs analyst validation.',
   },
 };
@@ -142,8 +145,8 @@ const MOCK_ALERT: Alert = {
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="bg-gray-900/60 border border-gray-800/60 rounded-xl p-5">
-      <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">{title}</h3>
+    <div className="bg-surface-card border border-surface-border rounded-container p-5 shadow-card">
+      <h3 className="text-eyebrow font-semibold text-fg-muted uppercase tracking-wider mb-4">{title}</h3>
       {children}
     </div>
   );
@@ -151,9 +154,9 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 function Field({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div className="flex items-start gap-4">
-      <span className="text-xs text-gray-500 w-32 shrink-0 pt-0.5">{label}</span>
-      <span className="text-sm text-gray-200">{value}</span>
+    <div className="flex items-start justify-between gap-4 py-1.5 border-b border-surface-divider last:border-b-0">
+      <span className="text-caption text-fg-muted shrink-0">{label}</span>
+      <span className="text-control text-fg-primary text-right break-words min-w-0">{value}</span>
     </div>
   );
 }
@@ -161,19 +164,19 @@ function Field({ label, value }: { label: string; value: React.ReactNode }) {
 function IOCBadge({ type, value, malicious }: { type: string; value: string; malicious?: boolean }) {
   return (
     <div className={clsx(
-      'flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-mono',
+      'flex items-center gap-2 px-3 py-2 rounded-control text-control-sm font-mono border',
       malicious
-        ? 'bg-red-500/10 border border-red-500/20 text-red-300'
-        : 'bg-gray-800/60 border border-gray-700/60 text-gray-300'
+        ? 'bg-pill-danger-bg border-tone-danger/25 text-tone-danger'
+        : 'bg-surface-elevated border-surface-border text-fg-primary'
     )}>
       <span className={clsx(
-        'px-1.5 py-0.5 rounded text-xs font-bold uppercase',
-        malicious ? 'bg-red-500/20 text-red-400' : 'bg-gray-700 text-gray-400'
+        'px-1.5 py-0.5 rounded-pill text-eyebrow font-bold uppercase',
+        malicious ? 'bg-surface-card text-tone-danger' : 'bg-surface-subtle text-fg-muted'
       )}>
         {type}
       </span>
       <span className="truncate max-w-xs">{value}</span>
-      {malicious && <span className="ml-auto text-red-400 shrink-0 text-[10px] font-semibold uppercase tracking-wide">malicious</span>}
+      {malicious && <span className="ml-auto text-tone-danger shrink-0 text-eyebrow font-semibold uppercase tracking-wide">malicious</span>}
     </div>
   );
 }
@@ -191,15 +194,15 @@ function ConfidenceChip({ label, score }: { label: ConfidenceLabel; score?: numb
   return (
     <span
       className={clsx(
-        'inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded ring-1 ring-inset',
+        'inline-flex items-center gap-1.5 px-2.5 py-0.5 text-caption font-medium rounded-pill whitespace-nowrap',
         cfg.badge,
       )}
       title={cfg.description}
     >
-      <span className={clsx('w-2 h-2 rounded-full', cfg.dot)} />
+      <span className={clsx('w-1.5 h-1.5 rounded-pill', cfg.dot)} />
       {cfg.label}
       {points !== null && (
-        <span className="opacity-70 font-mono">{`· ${points}/100`}</span>
+        <span className="opacity-75 font-mono">{`· ${points}/100`}</span>
       )}
     </span>
   );
@@ -222,19 +225,21 @@ function ConfidenceFactorBar({ factor }: { factor: ConfidenceFactor }) {
   return (
     <div>
       <div className="flex items-baseline justify-between gap-3 mb-1">
-        <span className="text-sm text-gray-200">{factor.label}</span>
-        <span className="text-xs font-mono text-gray-500 shrink-0">
+        {/* [HIDDEN-UI THEME-7 use the approved 13px body scale]
+            <span className="text-sm text-fg-primary">{factor.label}</span> */}
+        <span className="text-body text-fg-primary">{factor.label}</span>
+        <span className="text-xs font-mono text-fg-muted shrink-0">
           {`${signedContribution(factor.contribution)} / ${factor.weight.toFixed(2)}`}
         </span>
       </div>
-      <div className="h-1.5 bg-gray-800 rounded overflow-hidden">
+      <div className="h-1.5 bg-surface-subtle rounded-pill overflow-hidden">
         <div
-          className={clsx('h-full', negative ? 'bg-red-500/70' : 'bg-emerald-500/70')}
+          className={clsx('h-full', negative ? 'bg-dot-danger' : 'bg-dot-success')}
           style={{ width: `${widthPct}%` }}
           aria-hidden="true"
         />
       </div>
-      <div className="text-[10px] text-gray-600 uppercase tracking-wider mt-1 font-mono">
+      <div className="text-eyebrow text-fg-subtle uppercase tracking-wider mt-1 font-mono">
         {factor.factor}
       </div>
     </div>
@@ -262,20 +267,22 @@ function ConfidenceExplainability({
           <span className={clsx('w-2.5 h-2.5 rounded-full mt-1.5 shrink-0', cfg.dot)} />
           <div className="flex-1">
             <div className="flex items-baseline gap-3">
-              <span className="text-sm font-semibold text-gray-100">{cfg.label}</span>
+              {/* [HIDDEN-UI THEME-7 use the approved 13px body scale]
+                  <span className="text-sm font-semibold text-fg-primary">{cfg.label}</span> */}
+              <span className="text-body font-semibold text-fg-primary">{cfg.label}</span>
               {typeof score === 'number' && (
-                <span className="text-xs font-mono text-gray-500">
+                <span className="text-xs font-mono text-fg-muted">
                   {`score ${Math.round(score)}/100`}
                 </span>
               )}
             </div>
-            <p className="text-xs text-gray-500 mt-0.5">{cfg.description}</p>
+            <p className="text-xs text-fg-muted mt-0.5">{cfg.description}</p>
           </div>
         </div>
 
         {sortedRationale.length > 0 && (
-          <div className="space-y-3 pt-2 border-t border-gray-800/60">
-            <p className="text-xs font-medium text-gray-400">
+          <div className="space-y-3 pt-2 border-t border-surface-border">
+            <p className="text-xs font-medium text-fg-secondary">
               Why this score
             </p>
             <div className="space-y-3">
@@ -287,7 +294,7 @@ function ConfidenceExplainability({
         )}
 
         {ledgerRunId && (
-          <div className="pt-3 border-t border-gray-800/60">
+          <div className="pt-3 border-t border-surface-border">
             <LedgerEvidenceChain runId={ledgerRunId} />
           </div>
         )}
@@ -305,27 +312,27 @@ function LedgerEvidenceChain({ runId }: { runId: string }) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <p className="text-xs font-medium text-gray-400">Investigation Ledger evidence chain</p>
+        <p className="text-xs font-medium text-fg-secondary">Investigation Ledger evidence chain</p>
         <Link
           href={`/investigations/${runId}`}
-          className="text-xs text-blue-400 hover:text-blue-300"
+          className="text-xs text-accent hover:text-accent-hover"
         >
           Open full ledger →
         </Link>
       </div>
 
       {isLoading && (
-        <p className="text-xs text-gray-600">Loading evidence chain…</p>
+        <p className="text-xs text-fg-subtle">Loading evidence chain…</p>
       )}
 
       {error && !data && (
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-fg-muted">
           Evidence chain not yet available for this alert.
         </p>
       )}
 
       {data && data.items.length === 0 && (
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-fg-muted">
           No ledger events recorded yet — start an investigation to populate the chain.
         </p>
       )}
@@ -335,21 +342,21 @@ function LedgerEvidenceChain({ runId }: { runId: string }) {
           {data.items.map((event) => (
             <li key={event.id} className="flex gap-3">
               <div className="flex flex-col items-center shrink-0 pt-1">
-                <span className="w-1.5 h-1.5 bg-blue-500 rounded-full" />
+                <span className="w-1.5 h-1.5 bg-dot-info rounded-full" />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-baseline gap-2">
-                  <span className="text-[10px] font-mono text-gray-600 shrink-0">
+                  <span className="text-eyebrow font-mono text-fg-subtle shrink-0">
                     #{event.seq}
                   </span>
-                  <span className="text-xs font-mono text-blue-400 shrink-0">
+                  <span className="text-xs font-mono text-accent shrink-0">
                     {event.kind}
                   </span>
-                  <span className="text-xs text-gray-200 truncate">
+                  <span className="text-xs text-fg-primary truncate">
                     {event.summary}
                   </span>
                 </div>
-                <div className="text-[10px] text-gray-600 mt-0.5" suppressHydrationWarning>
+                <div className="text-eyebrow text-fg-subtle mt-0.5" suppressHydrationWarning>
                   {event.agent} · {format(new Date(event.ts), 'HH:mm:ss')}
                 </div>
               </div>
@@ -421,34 +428,29 @@ function AIInvestigation({
   };
 
   return (
-    <div className="py-6">
-      <p className="text-sm text-gray-400 mb-1">Agent investigation</p>
-      <p className="text-xs text-gray-600 mb-4">
+    <div className="py-2">
+      <p className="text-control font-medium text-fg-secondary mb-1">Agent investigation</p>
+      <p className="text-xs text-fg-muted mb-4">
         Promotes this alert to a case and runs the agent against it. Every prompt, tool call and
         piece of cited evidence is written to that case&apos;s ledger, where the run can be replayed
         step by step. You&apos;ll be taken to the case when it starts.
       </p>
 
       {error && (
-        <div className="mb-4 rounded-lg border border-red-900/60 bg-red-950/40 px-3 py-2 text-xs text-red-300">
+        <div className="mb-4 rounded-control border border-severity-critical-ink/30 bg-severity-critical-bg px-3 py-2 text-xs text-severity-critical-ink">
           {error}
         </div>
       )}
 
-      <button
+      <Button
+        variant="secondary"
+        size="sm"
         onClick={startInvestigation}
         disabled={isRunning}
-        className="bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium px-6 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        loading={isRunning}
       >
-        {isRunning ? (
-          <span className="flex items-center gap-2">
-            <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            Starting investigation...
-          </span>
-        ) : (
-          'Start AI investigation'
-        )}
-      </button>
+        {isRunning ? 'Starting investigation...' : 'Start AI investigation'}
+      </Button>
     </div>
   );
 }
@@ -478,25 +480,25 @@ const VERDICT_OPTIONS: Array<{
     value: 'true_positive',
     label: 'True Positive',
     description: 'Real threat — the AI got it right or under-called it',
-    badge: 'bg-red-500/10 text-red-300 ring-red-500/30',
+    badge: 'bg-pill-danger-bg text-tone-danger',
   },
   {
     value: 'false_positive',
     label: 'False Positive',
     description: 'Not a threat — the AI over-called it',
-    badge: 'bg-emerald-500/10 text-emerald-300 ring-emerald-500/30',
+    badge: 'bg-pill-success-bg text-tone-success',
   },
   {
     value: 'benign',
     label: 'Benign',
     description: 'Expected behaviour — suppress for the same signature in future',
-    badge: 'bg-sky-500/10 text-sky-300 ring-sky-500/30',
+    badge: 'bg-pill-info-bg text-tone-info',
   },
   {
     value: 'escalate',
     label: 'Escalate',
     description: 'Needs human follow-up beyond what the agent can do',
-    badge: 'bg-amber-500/10 text-amber-300 ring-amber-500/30',
+    badge: 'bg-pill-warning-bg text-tone-warning',
   },
 ];
 
@@ -601,18 +603,18 @@ function AnalystOverridePanel({
     <div className="space-y-4">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-medium text-gray-300">
+          <p className="text-control-sm font-semibold text-fg-primary">
             Was the AI right?
           </p>
-          <p className="text-[11px] text-gray-500 mt-0.5">
+          <p className="text-caption text-fg-muted mt-0.5">
             Your correction is written to institutional memory and re-grades
             similar past alerts.
           </p>
         </div>
         {currentDisposition && (
-          <span className="text-[10px] uppercase tracking-wider text-gray-500 shrink-0">
+          <span className="text-eyebrow uppercase tracking-wider text-fg-muted shrink-0">
             current ·{' '}
-            <span className="text-gray-300">
+            <span className="text-fg-primary">
               {VERDICT_LABEL[currentDisposition as AnalystVerdict] ??
                 currentDisposition}
             </span>
@@ -629,19 +631,14 @@ function AnalystOverridePanel({
               type="button"
               onClick={() => setVerdict(opt.value)}
               className={clsx(
-                'text-left p-2.5 rounded-md ring-1 transition-colors',
+                'text-left p-2.5 rounded-control border transition-colors',
                 active
-                  ? `${opt.badge} ring-inset`
-                  : 'bg-gray-900/40 text-gray-300 ring-gray-800 hover:bg-gray-900/80 hover:ring-gray-700',
+                  ? 'border-accent bg-nav-active-bg text-fg-primary'
+                  : 'bg-surface-elevated border-surface-border text-fg-secondary hover:bg-surface-hover',
               )}
             >
-              <div className="text-xs font-medium">{opt.label}</div>
-              <div
-                className={clsx(
-                  'text-[10px] mt-0.5 leading-snug',
-                  active ? 'opacity-90' : 'text-gray-500',
-                )}
-              >
+              <div className="text-control-sm font-semibold">{opt.label}</div>
+              <div className="text-eyebrow mt-0.5 leading-snug text-fg-muted">
                 {opt.description}
               </div>
             </button>
@@ -650,7 +647,7 @@ function AnalystOverridePanel({
       </div>
 
       <div>
-        <label className="text-[11px] text-gray-500 block mb-1">
+        <label className="text-caption text-fg-muted block mb-1">
           Reason (optional, surfaced in institutional memory)
         </label>
         <textarea
@@ -658,56 +655,53 @@ function AnalystOverridePanel({
           onChange={(e) => setReason(e.target.value)}
           placeholder="e.g. matches our weekly vuln-scanner sweep — known benign"
           rows={2}
-          className="w-full bg-gray-900/60 border border-gray-800 rounded-md px-2.5 py-1.5 text-xs text-gray-200 placeholder-gray-600 focus:outline-none focus:border-blue-500 resize-none"
+          className="w-full bg-surface-elevated border border-surface-border rounded-control px-2.5 py-1.5 text-control-sm text-fg-primary placeholder:text-fg-subtle focus:outline-none focus:border-accent resize-none"
         />
       </div>
 
-      <button
+      <Button
         type="button"
+        variant="secondary"
+        size="sm"
         onClick={submit}
         disabled={!verdict || submitting}
-        className={clsx(
-          'w-full text-sm font-medium px-3 py-2 rounded-md transition-colors',
-          !verdict || submitting
-            ? 'bg-gray-800 text-gray-500 cursor-not-allowed'
-            : 'bg-blue-600 hover:bg-blue-500 text-white',
-        )}
+        className="w-full"
       >
         {submitting ? 'Recording…' : 'Record correction'}
-      </button>
+      </Button>
 
       {memoryKey && (
-        <p className="text-[10px] text-gray-500 font-mono break-all">
+        <p className="text-eyebrow text-fg-muted font-mono break-all">
           memory key · {memoryKey}
         </p>
       )}
 
       {candidates.length > 0 && (
-        <div className="space-y-2 pt-3 border-t border-gray-800">
+        <div className="space-y-2 pt-3 border-t border-surface-border">
           <div className="flex items-center justify-between gap-2">
             <div>
-              <p className="text-xs font-medium text-amber-300">
+              <p className="text-xs font-medium text-tone-warning">
                 {candidates.length} past alert
                 {candidates.length === 1 ? '' : 's'} match this signature
               </p>
-              <p className="text-[10px] text-gray-500 mt-0.5">
+              <p className="text-eyebrow text-fg-muted mt-0.5">
                 Apply &ldquo;{verdict ? VERDICT_LABEL[verdict] : ''}&rdquo; to
                 everything still selected.
               </p>
             </div>
-            <div className="flex items-center gap-1.5 text-[10px]">
+            <div className="flex items-center gap-1.5 text-eyebrow">
               <button
                 type="button"
                 onClick={selectAll}
-                className="text-blue-400 hover:text-blue-300"
+                className="text-accent hover:text-accent-hover"
               >
                 all
               </button>
-              <span className="text-gray-700">·</span>
+              <span className="text-fg-subtle">·</span>
               <button
                 type="button"
                 onClick={clearAll}
-                className="text-gray-400 hover:text-gray-300"
+                className="text-fg-muted hover:text-fg-primary"
               >
                 none
               </button>
@@ -721,33 +715,33 @@ function AnalystOverridePanel({
                 <label
                   key={c.alert_id}
                   className={clsx(
-                    'flex items-start gap-2 p-2 rounded-md ring-1 cursor-pointer transition-colors',
+                    'flex items-start gap-2 p-2 rounded-control border cursor-pointer transition-colors',
                     checked
-                      ? 'bg-blue-500/5 ring-blue-500/40'
-                      : 'bg-gray-900/40 ring-gray-800 hover:bg-gray-900/80',
+                      ? 'bg-nav-active-bg border-accent/40'
+                      : 'bg-surface-subtle border-surface-border hover:bg-surface-elevated',
                   )}
                 >
                   <input
                     type="checkbox"
                     checked={checked}
                     onChange={() => toggle(c.alert_id)}
-                    className="mt-0.5 accent-blue-500"
+                    className="mt-0.5 accent-accent"
                   />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
-                      <span className="text-[10px] uppercase tracking-wider text-gray-500">
+                      <span className="text-eyebrow uppercase tracking-wider text-fg-muted">
                         {c.severity}
                       </span>
-                      <span className="text-[10px] text-gray-600">·</span>
-                      <span className="text-[10px] text-gray-500" suppressHydrationWarning>
+                      <span className="text-eyebrow text-fg-subtle">·</span>
+                      <span className="text-eyebrow text-fg-muted" suppressHydrationWarning>
                         {format(new Date(c.event_time), 'MMM d, HH:mm')}
                       </span>
                       {c.current_disposition && (
                         <>
-                          <span className="text-[10px] text-gray-600">·</span>
-                          <span className="text-[10px] text-gray-500">
+                          <span className="text-eyebrow text-fg-subtle">·</span>
+                          <span className="text-eyebrow text-fg-muted">
                             was{' '}
-                            <span className="text-gray-300">
+                            <span className="text-fg-secondary">
                               {VERDICT_LABEL[
                                 c.current_disposition as AnalystVerdict
                               ] ?? c.current_disposition}
@@ -759,7 +753,7 @@ function AnalystOverridePanel({
                     <Link
                       href={`/alerts/${c.alert_id}`}
                       onClick={(e) => e.stopPropagation()}
-                      className="text-xs text-gray-200 hover:text-blue-300 line-clamp-2 leading-snug block"
+                      className="text-xs text-fg-primary hover:text-accent line-clamp-2 leading-snug block"
                     >
                       {c.title}
                     </Link>
@@ -769,23 +763,20 @@ function AnalystOverridePanel({
             })}
           </div>
 
-          <button
+          <Button
             type="button"
+            variant="secondary"
+            size="sm"
             onClick={applyAll}
             disabled={selectedIds.size === 0 || applying}
-            className={clsx(
-              'w-full text-xs font-medium px-3 py-2 rounded-md transition-colors',
-              selectedIds.size === 0 || applying
-                ? 'bg-gray-800 text-gray-500 cursor-not-allowed'
-                : 'bg-amber-500/20 text-amber-200 hover:bg-amber-500/30 ring-1 ring-amber-500/30',
-            )}
+            className="w-full"
           >
             {applying
               ? 'Applying…'
               : `Re-disposition ${selectedIds.size} alert${
                   selectedIds.size === 1 ? '' : 's'
                 }`}
-          </button>
+          </Button>
         </div>
       )}
     </div>
@@ -795,7 +786,9 @@ function AnalystOverridePanel({
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export function AlertDetailView({ alertId }: { alertId: string }) {
+  /* [HIDDEN-UI THEME-4 activeTab removed for single-scroll layout]
   const [activeTab, setActiveTab] = useState<'overview' | 'timeline' | 'raw'>('overview');
+  */
   const [status, setStatus] = useState<Alert['status']>('new');
   // Side drawer for the "Explain this alert" structured walkthrough
   // (`POST /api/v1/explain`). Kept local to the detail view because it
@@ -824,7 +817,7 @@ export function AlertDetailView({ alertId }: { alertId: string }) {
 
   if (isLoading || !alert) {
     return (
-      <div className="flex items-center justify-center h-64 text-gray-500 animate-pulse">
+      <div className="flex items-center justify-center h-64 text-fg-muted animate-pulse">
         Loading alert...
       </div>
     );
@@ -834,23 +827,25 @@ export function AlertDetailView({ alertId }: { alertId: string }) {
   const stsCfg = STATUS_CONFIG[alert.status as keyof typeof STATUS_CONFIG] || STATUS_CONFIG.new;
 
   return (
-    <div className="space-y-5 max-w-6xl">
+    <div className="space-y-5">
       {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-xs text-gray-500">
-        <Link href="/alerts" className="hover:text-gray-300">Alerts</Link>
+      <div className="flex items-center gap-2 text-caption text-fg-muted">
+        <Link href="/alerts" className="hover:text-fg-primary transition-colors">Alerts</Link>
         <span>›</span>
-        <span className="text-gray-300">{alert.id}</span>
+        <span className="font-mono text-fg-secondary">{alert.id}</span>
       </div>
 
       {/* Header */}
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-3 mb-1 flex-wrap">
-            <span className={clsx('inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded ring-1 ring-inset', sevCfg.badge)}>
-              <span className={clsx('w-2 h-2 rounded-full', sevCfg.dot)} />
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="min-w-0">
+          {/* Badge row */}
+          <div className="flex items-center gap-2 mb-2 flex-wrap">
+            <span className={clsx('inline-flex items-center gap-1.5 px-2.5 py-0.5 text-caption font-medium rounded-pill whitespace-nowrap', sevCfg.badge)}>
+              <span aria-hidden="true" className={clsx('w-1.5 h-1.5 rounded-pill', sevCfg.dot)} />
               {sevCfg.label}
             </span>
-            <span className={clsx('inline-flex px-2.5 py-1 text-xs font-medium rounded ring-1 ring-inset', stsCfg.badge)}>
+            <span className={clsx('inline-flex items-center gap-1.5 px-2.5 py-0.5 text-caption font-medium rounded-pill whitespace-nowrap', stsCfg.badge)}>
+              <span aria-hidden="true" className={clsx('w-1.5 h-1.5 rounded-pill', stsCfg.dot)} />
               {stsCfg.label}
             </span>
             {alert.confidenceLabel && (
@@ -859,222 +854,148 @@ export function AlertDetailView({ alertId }: { alertId: string }) {
                 score={alert.confidenceScore}
               />
             )}
-            {/* Omitted rather than shown as 0 when nothing scored the alert —
-                the same honesty the rail's chip already applied. */}
             {typeof alert.riskScore === 'number' && (
-              <span className="text-xs text-gray-500">Risk Score: <span className="text-white font-bold">{alert.riskScore}</span></span>
+              <Badge tone="neutral" dot={false}>
+                Risk <span className="font-mono font-bold text-fg-primary">{alert.riskScore}</span>
+              </Badge>
             )}
           </div>
-          <h1 className="text-lg font-semibold text-gray-100">{alert.title}</h1>
-          <p className="text-sm text-gray-500 mt-1" suppressHydrationWarning>{alert.source} · {format(new Date(alert.createdAt), 'MMM d, yyyy HH:mm:ss')}</p>
+          <h1 className="text-page-title font-semibold text-fg-primary">{alert.title}</h1>
+          <p className="text-body text-fg-muted mt-1" suppressHydrationWarning>
+            {alert.source} · {format(new Date(alert.createdAt), 'MMM d, yyyy HH:mm:ss')}
+          </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <select
             value={alert.status}
             onChange={(e) => handleStatusChange(e.target.value as Alert['status'])}
-            className="bg-gray-800 border border-gray-700 text-sm text-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:border-blue-500"
+            className="bg-surface-card border border-surface-border text-control text-fg-primary rounded-control px-3 py-1.5 focus:outline-none focus:border-accent"
           >
             {Object.entries(STATUS_CONFIG).map(([key, cfg]) => (
               <option key={key} value={key}>{cfg.label}</option>
             ))}
           </select>
-          {/*
-            Primary L1/L2 affordance: open the structured "What happened
-            and what should I do?" drawer. Placed in the header so it's
-            the first thing a triaging analyst sees, ahead of the heavier
-            Create Case action.
-          */}
-          <button
+          <Button
             type="button"
+            variant="primary"
+            size="md"
             onClick={() => setExplainOpen(true)}
-            className="bg-purple-600/90 hover:bg-purple-500 text-white text-sm font-medium px-4 py-1.5 rounded-lg transition-colors inline-flex items-center gap-1.5"
+            leadingIcon={
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M12 2a7 7 0 0 0-4 12.74V17a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-2.26A7 7 0 0 0 12 2z" />
+                <line x1="9" y1="22" x2="15" y2="22" />
+              </svg>
+            }
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M12 2a7 7 0 0 0-4 12.74V17a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-2.26A7 7 0 0 0 12 2z" />
-              <line x1="9" y1="22" x2="15" y2="22" />
-            </svg>
             Explain
-          </button>
+          </Button>
           {/* [HIDDEN-UI NAV-6 hide Create Case button] */}
           {/* [TODO-BACKEND: Jira link / create issue] */}
-          {/* <button
-            type="button"
-            onClick={() => setCreateCaseOpen(true)}
-            className="bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium px-4 py-1.5 rounded-lg transition-colors"
-          >
-            Create Case
-          </button> */}
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex items-center gap-1 border-b border-gray-800">
-        {(['overview', 'timeline', 'raw'] as const).map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={clsx(
-              'px-4 py-2 text-sm font-medium capitalize transition-colors border-b-2 -mb-px',
-              activeTab === tab
-                ? 'text-blue-400 border-blue-400'
-                : 'text-gray-500 border-transparent hover:text-gray-300'
-            )}
-          >
-            {tab}
-          </button>
-        ))}
-      </div>
+      {/* [HIDDEN-UI THEME-4 converted overview/timeline/raw tabs to single scroll + 340px Details rail] */}
+      <div className="grid grid-cols-1 lg:grid-cols-detail-grid gap-5 items-start">
+        {/* Left main scroll column */}
+        <div className="space-y-4 min-w-0">
+          <ContextualActions
+            page="alerts"
+            entityId={alert.id}
+            entity={{
+              title: alert.title,
+              description: alert.description,
+              severity: alert.severity,
+              status: alert.status,
+              source: alert.source,
+              source_ref: alert.sourceRef,
+              risk_score: alert.riskScore,
+              tags: alert.tags,
+              mitre_attack: alert.mitreAttack,
+              iocs: alert.iocs,
+              created_at: alert.createdAt,
+            }}
+            eyebrow="Ask ClopsSOC about this alert"
+          />
 
-      {/* Content */}
-      {activeTab === 'overview' && (
-        <div className="grid grid-cols-3 gap-4">
-          {/* Left column - 2/3 */}
-          <div className="col-span-2 space-y-4">
-            {/*
-              Ambient Copilot — quick contextual AI buttons. Backed by the
-              `services/agents` `/api/v1/contextual` endpoints. We pass a
-              compact snapshot of the alert (no rawEvent blob) so the LLM has
-              grounding without ballooning token usage.
-            */}
-            <ContextualActions
-              page="alerts"
-              entityId={alert.id}
-              entity={{
-                title: alert.title,
-                description: alert.description,
-                severity: alert.severity,
-                status: alert.status,
-                source: alert.source,
-                source_ref: alert.sourceRef,
-                risk_score: alert.riskScore,
-                tags: alert.tags,
-                mitre_attack: alert.mitreAttack,
-                iocs: alert.iocs,
-                created_at: alert.createdAt,
-              }}
-              eyebrow="Ask AiSOC about this alert"
+          <Section title="Description">
+            <p className="text-body text-fg-secondary leading-relaxed">{alert.description}</p>
+          </Section>
+
+          {alert.confidenceLabel && (
+            <ConfidenceExplainability
+              label={alert.confidenceLabel}
+              score={alert.confidenceScore}
+              rationale={alert.confidenceRationale ?? []}
+              ledgerRunId={alert.ledgerRunId}
             />
+          )}
 
-            <Section title="Description">
-              <p className="text-sm text-gray-300 leading-relaxed">{alert.description}</p>
-            </Section>
-
-            {alert.confidenceLabel && (
-              <ConfidenceExplainability
-                label={alert.confidenceLabel}
-                score={alert.confidenceScore}
-                rationale={alert.confidenceRationale ?? []}
-                ledgerRunId={alert.ledgerRunId}
-              />
-            )}
-
-            <Section title="Details">
-              <div className="space-y-3">
-                <Field label="Source" value={alert.source} />
-                <Field label="Source Ref" value={alert.sourceRef || '—'} />
-                <Field label="Tenant" value={alert.tenantId} />
-                <Field label="Assignee" value={alert.assignee || <span className="text-gray-500">Unassigned</span>} />
-                <Field label="Created" value={<span suppressHydrationWarning>{format(new Date(alert.createdAt), 'MMM d, yyyy HH:mm:ss')}</span>} />
-                {alert.resolvedAt && (
-                  <Field label="Resolved" value={<span suppressHydrationWarning>{format(new Date(alert.resolvedAt), 'MMM d, yyyy HH:mm:ss')}</span>} />
-                )}
-                {alert.tags && alert.tags.length > 0 && (
-                  <Field label="Tags" value={
-                    <div className="flex flex-wrap gap-1">
-                      {alert.tags.map((tag) => (
-                        <span key={tag} className="px-2 py-0.5 bg-gray-800 text-gray-300 text-xs rounded">{tag}</span>
-                      ))}
+          {/* MITRE ATT&CK */}
+          {alert.mitreAttack && alert.mitreAttack.length > 0 && (
+            <Section title="MITRE ATT&CK">
+              <div className="space-y-2">
+                {alert.mitreAttack.map((m, i) => (
+                  <div key={i} className="flex items-center gap-3 p-3 bg-pill-purple-bg border border-surface-border rounded-control">
+                    <span className="text-caption font-mono text-tone-purple bg-surface-card px-2 py-1 rounded-control">{m.techniqueId}</span>
+                    <div className="min-w-0">
+                      <div className="text-body font-medium text-fg-primary">{m.technique}</div>
+                      <div className="text-caption text-fg-muted">Tactic: {m.tactic}</div>
                     </div>
-                  } />
-                )}
+                  </div>
+                ))}
               </div>
             </Section>
+          )}
 
-            {/* MITRE ATT&CK */}
-            {alert.mitreAttack && alert.mitreAttack.length > 0 && (
-              <Section title="MITRE ATT&CK">
-                <div className="space-y-2">
-                  {alert.mitreAttack.map((m, i) => (
-                    <div key={i} className="flex items-center gap-3 p-3 bg-purple-500/5 border border-purple-500/20 rounded-lg">
-                      <span className="text-xs font-mono text-purple-400 bg-purple-500/10 px-2 py-1 rounded">{m.techniqueId}</span>
-                      <div>
-                        <div className="text-sm text-gray-200">{m.technique}</div>
-                        <div className="text-xs text-gray-500">Tactic: {m.tactic}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </Section>
-            )}
-
-            {/* IOCs */}
-            {alert.iocs && alert.iocs.length > 0 && (
-              <Section title="Indicators of Compromise">
-                <div className="space-y-2">
-                  {alert.iocs.map((ioc, i) => (
-                    <IOCBadge key={i} {...ioc} />
-                  ))}
-                </div>
-              </Section>
-            )}
-          </div>
-
-          {/* Right column - 1/3 */}
-          <div className="space-y-4">
-            <Section title="AI Investigation">
-              <AIInvestigation
-                alertId={alertId}
-                alertTitle={alert?.title}
-                alertSeverity={alert?.severity}
-              />
-            </Section>
-
-            <Section title="Verdict & feedback">
-              <AnalystOverridePanel alert={alert} onMutate={mutate} />
-            </Section>
-          </div>
-        </div>
-      )}
-
-      {activeTab === 'timeline' && (
-        <Section title="Event Timeline">
-          <div className="space-y-4">
-            {[
-              { time: alert.createdAt, type: 'alert_created', title: 'Alert Created', desc: `Alert ingested from ${alert.source}` },
-              { time: alert.updatedAt, type: 'status_change', title: 'Status Updated', desc: `Status changed to ${alert.status}` },
-            ].map((event, i) => (
-              <div key={i} className="flex gap-4">
-                <div className="flex flex-col items-center">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full mt-1.5 shrink-0" />
-                  {i < 1 && <div className="w-px flex-1 bg-gray-800 mt-1" />}
-                </div>
-                <div className="pb-4">
-                  <div className="text-sm font-medium text-gray-200">{event.title}</div>
-                  <div className="text-xs text-gray-500 mt-0.5">{event.desc}</div>
-                  <div className="text-xs text-gray-600 mt-1" suppressHydrationWarning>{format(new Date(event.time), 'MMM d, yyyy HH:mm:ss')}</div>
-                </div>
+          {/* IOCs */}
+          {alert.iocs && alert.iocs.length > 0 && (
+            <Section title="Indicators of Compromise">
+              <div className="space-y-2">
+                {alert.iocs.map((ioc, i) => (
+                  <IOCBadge key={i} {...ioc} />
+                ))}
               </div>
-            ))}
-          </div>
-        </Section>
-      )}
+            </Section>
+          )}
 
-      {activeTab === 'raw' && (
-        <Section title="Raw Event Data">
-          {alert.wazuhLocator && Object.keys(alert.wazuhLocator).length > 0 && (
-              <div className="mb-3 rounded-md border border-border bg-muted/40 p-3 text-xs">
-                <div className="mb-2 font-semibold text-foreground">
+          {/* Timeline (single scroll) */}
+          <Section title="Event Timeline">
+            <div className="space-y-4">
+              {[
+                { time: alert.createdAt, type: 'alert_created', title: 'Alert Created', desc: `Alert ingested from ${alert.source}` },
+                { time: alert.updatedAt, type: 'status_change', title: 'Status Updated', desc: `Status changed to ${alert.status}` },
+              ].map((event, i) => (
+                <div key={i} className="flex gap-4">
+                  <div className="flex flex-col items-center">
+                    <div className="w-2 h-2 bg-dot-info rounded-pill mt-1.5 shrink-0" />
+                    {i < 1 && <div className="w-px flex-1 bg-surface-divider mt-1" />}
+                  </div>
+                  <div className="pb-4 min-w-0">
+                    <div className="text-body font-medium text-fg-primary">{event.title}</div>
+                    <div className="text-caption text-fg-muted mt-0.5">{event.desc}</div>
+                    <div className="text-caption font-mono text-fg-subtle mt-1" suppressHydrationWarning>{format(new Date(event.time), 'MMM d, yyyy HH:mm:ss')}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Section>
+
+          {/* Raw event (single scroll) */}
+          <Section title="Raw Event Data">
+            {alert.wazuhLocator && Object.keys(alert.wazuhLocator).length > 0 && (
+              <div className="mb-3 rounded-control border border-surface-border bg-surface-elevated p-3 text-control-sm">
+                <div className="mb-2 font-semibold text-fg-primary">
                   Find this event in the source console
                 </div>
                 <dl className="grid grid-cols-[max-content_1fr] gap-x-3 gap-y-1 font-mono">
@@ -1082,26 +1003,64 @@ export function AlertDetailView({ alertId }: { alertId: string }) {
                     .filter(([k]) => k !== 'full_log')
                     .map(([k, v]) => (
                       <div key={k} className="contents">
-                        <dt className="text-muted-foreground">{k}</dt>
-                        <dd className="break-all select-all">{String(v)}</dd>
+                        <dt className="text-fg-muted">{k}</dt>
+                        <dd className="break-all select-all text-fg-primary">{String(v)}</dd>
                       </div>
                     ))}
                 </dl>
                 {typeof alert.wazuhLocator.full_log === 'string' && (
                   <details className="mt-2">
-                    <summary className="cursor-pointer text-muted-foreground">full_log</summary>
-                    <pre className="mt-1 max-h-64 overflow-auto whitespace-pre-wrap break-all rounded bg-background p-2 select-all">
+                    <summary className="cursor-pointer text-fg-muted">full_log</summary>
+                    <pre className="mt-1 max-h-64 overflow-auto whitespace-pre-wrap break-all rounded-control bg-surface-base p-2 text-fg-primary select-all">
                       {alert.wazuhLocator.full_log}
                     </pre>
                   </details>
                 )}
               </div>
             )}
-            <pre className="text-xs text-gray-400 font-mono bg-gray-950/60 rounded-lg p-4 overflow-x-auto">
-            {JSON.stringify(alert.rawEvent || { message: 'Raw event data not available for this alert.' }, null, 2)}
-          </pre>
-        </Section>
-      )}
+            <pre className="text-control-sm text-fg-secondary font-mono bg-surface-base border border-surface-border rounded-control p-4 overflow-x-auto whitespace-pre-wrap break-words">
+              {JSON.stringify(alert.rawEvent || { message: 'Raw event data not available for this alert.' }, null, 2)}
+            </pre>
+          </Section>
+        </div>
+
+        {/* Right 340px Details rail */}
+        <div className="space-y-4 min-w-0">
+          <Section title="Details">
+            <div>
+              <Field label="Source" value={alert.source} />
+              <Field label="Source Ref" value={alert.sourceRef || '—'} />
+              <Field label="Tenant" value={alert.tenantId} />
+              <Field label="Assignee" value={alert.assignee || <span className="text-fg-muted">Unassigned</span>} />
+              <Field label="Created" value={<span className="font-mono" suppressHydrationWarning>{format(new Date(alert.createdAt), 'MMM d, yyyy HH:mm:ss')}</span>} />
+              {alert.resolvedAt && (
+                <Field label="Resolved" value={<span className="font-mono" suppressHydrationWarning>{format(new Date(alert.resolvedAt), 'MMM d, yyyy HH:mm:ss')}</span>} />
+              )}
+              {alert.tags && alert.tags.length > 0 && (
+                <Field label="Tags" value={
+                  <div className="flex flex-wrap justify-end gap-1">
+                    {alert.tags.map((tag) => (
+                      <Badge key={tag} tone="neutral">{tag}</Badge>
+                    ))}
+                  </div>
+                } />
+              )}
+            </div>
+          </Section>
+
+          <Section title="AI Investigation">
+            <AIInvestigation
+              alertId={alertId}
+              alertTitle={alert?.title}
+              alertSeverity={alert?.severity}
+            />
+          </Section>
+
+          <Section title="Verdict & feedback">
+            <AnalystOverridePanel alert={alert} onMutate={mutate} />
+          </Section>
+        </div>
+      </div>
 
       {/*
         Explain drawer is mounted at the root of the detail view so it

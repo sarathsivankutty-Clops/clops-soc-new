@@ -125,47 +125,47 @@ export function TeamAnalyticsView() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-white">Team Analytics</h1>
-        <p className="mt-1 text-sm text-gray-400">Analyst performance and gamification leaderboard</p>
+        <h1 className="text-page-title font-bold tracking-tight text-fg-primary">Team Analytics</h1>
+        <p className="mt-1 text-body text-fg-muted">Analyst performance and gamification leaderboard</p>
       </div>
 
       {/* Aggregate stats */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[
-          { label: 'Cases Closed This Month', value: hasData ? totalCases.toString() : '—', accent: 'text-emerald-400' },
-          { label: 'Avg Resolution Time',     value: avgResolution === null ? '—' : `${avgResolution} min`, accent: 'text-sky-400' },
-          { label: 'Team Accuracy Rate',       value: teamAccuracy === null ? '—' : `${teamAccuracy}%`,      accent: 'text-violet-400' },
-          { label: 'Total Badges Earned',      value: hasData ? totalBadges.toString() : '—', accent: 'text-amber-400' },
+          { label: 'Cases Closed This Month', value: hasData ? totalCases.toString() : '—', accent: 'text-tone-success' },
+          { label: 'Avg Resolution Time',     value: avgResolution === null ? '—' : `${avgResolution} min`, accent: 'text-tone-info' },
+          { label: 'Team Accuracy Rate',       value: teamAccuracy === null ? '—' : `${teamAccuracy}%`,      accent: 'text-tone-purple' },
+          { label: 'Total Badges Earned',      value: hasData ? totalBadges.toString() : '—', accent: 'text-tone-warning' },
         ].map((stat) => (
-          <div key={stat.label} className="rounded-xl border border-gray-800/60 bg-gray-900/40 p-5 space-y-4">
-            <p className="text-xs font-medium uppercase tracking-wider text-gray-400">{stat.label}</p>
-            <p className={clsx('text-3xl font-bold', stat.accent)}>{stat.value}</p>
+          <div key={stat.label} className="rounded-container border border-surface-border bg-surface-card p-5 space-y-4">
+            <p className="text-caption font-medium uppercase tracking-wider text-fg-muted">{stat.label}</p>
+            <p className={clsx('text-kpi font-bold font-mono tabular-nums', stat.accent)}>{stat.value}</p>
           </div>
         ))}
       </div>
 
       {/* Leaderboard */}
-      <div className="rounded-xl border border-gray-800/60 bg-gray-900/40 p-5 space-y-4">
+      <div className="rounded-container border border-surface-border bg-surface-card p-5 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-lg font-semibold text-white">Analyst Leaderboard</h2>
+          <h2 className="text-card-title font-semibold text-fg-primary">Analyst Leaderboard</h2>
           <div className="flex items-center gap-3">
             <input
               type="search"
               placeholder="Search analyst…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="rounded-lg border border-gray-700/60 bg-gray-900 px-3 py-1.5 text-xs text-gray-200 placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-indigo-500/60 w-44"
+              className="rounded-control border border-surface-border bg-surface-elevated px-3 py-1.5 text-xs text-fg-primary placeholder:text-fg-subtle focus:outline-none focus:ring-1 focus:ring-accent w-44"
             />
-            <span className="text-xs font-medium uppercase tracking-wider text-gray-500">Sort</span>
+            <span className="text-caption font-medium uppercase tracking-wider text-fg-muted">Sort</span>
             {SORT_OPTIONS.map((opt) => (
               <button
                 key={opt.key}
                 onClick={() => setSortBy(opt.key)}
                 className={clsx(
-                  'rounded-md px-2.5 py-1 text-xs font-medium transition',
+                  'rounded-control px-2.5 py-1 text-xs font-medium transition',
                   sortBy === opt.key
-                    ? 'bg-white/10 text-white'
-                    : 'text-gray-500 hover:text-gray-300',
+                    ? 'bg-nav-active-bg text-fg-primary'
+                    : 'text-fg-muted hover:text-fg-primary',
                 )}
               >
                 {opt.label}
@@ -178,7 +178,7 @@ export function TeamAnalyticsView() {
           <EmptyState
             icon={EmptyStateIcons.search}
             title="No analyst performance data"
-            description="AiSOC does not yet measure per-analyst cases closed, resolution time or accuracy, so there is nothing to rank. This view is a placeholder for that measurement rather than a report of it."
+            description="ClopsSOC does not yet measure per-analyst cases closed, resolution time or accuracy, so there is nothing to rank. This view is a placeholder for that measurement rather than a report of it."
           />
         ) : sorted.length === 0 ? (
           <EmptyState
@@ -189,7 +189,7 @@ export function TeamAnalyticsView() {
               <button
                 type="button"
                 onClick={() => setSearch('')}
-                className="rounded-lg bg-gray-800 px-4 py-2 text-sm text-gray-200 hover:bg-gray-700 transition-colors"
+                className="rounded-control border border-surface-border bg-surface-elevated px-4 py-2 text-control text-fg-primary hover:bg-surface-hover transition-colors"
               >
                 Clear search
               </button>
@@ -197,9 +197,9 @@ export function TeamAnalyticsView() {
           />
         ) : (
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
+          <table className="w-full text-left text-body">
             <thead>
-              <tr className="border-b border-gray-800/60 text-xs uppercase tracking-wider text-gray-500">
+              <tr className="border-b border-surface-border text-caption uppercase tracking-wider text-fg-muted">
                 <th className="pb-3 pr-3 font-medium w-12">Rank</th>
                 <th className="pb-3 pr-3 font-medium">Analyst</th>
                 <th className="pb-3 pr-3 font-medium text-right">Cases</th>
@@ -209,14 +209,14 @@ export function TeamAnalyticsView() {
                 <th className="pb-3 font-medium">Badges</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-800/40">
+            <tbody className="divide-y divide-surface-border">
               {sorted.map((analyst, i) => {
                 const rank = i + 1;
                 const accent = RANK_ACCENTS[rank];
                 return (
-                  <tr key={analyst.id} className="group transition hover:bg-white/[0.02]">
+                  <tr key={analyst.id} className="group transition hover:bg-surface-hover">
                     <td className="py-3 pr-3">
-                      <span className={clsx('text-sm font-bold', accent?.text ?? 'text-gray-500')}>
+                      <span className={clsx('text-sm font-bold', accent?.text ?? 'text-fg-muted')}>
                         {accent?.label ?? `#${rank}`}
                       </span>
                     </td>
@@ -224,39 +224,39 @@ export function TeamAnalyticsView() {
                       <div className="flex items-center gap-3">
                         <div
                           className={clsx(
-                            'flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-white',
+                            'flex h-8 w-8 items-center justify-center rounded-pill text-xs font-bold text-white',
                             analyst.avatarColor,
                             accent?.ring,
                           )}
                         >
                           {analyst.initials}
                         </div>
-                        <span className="font-medium text-white">{analyst.name}</span>
+                        <span className="font-medium text-fg-primary">{analyst.name}</span>
                       </div>
                     </td>
-                    <td className="py-3 pr-3 text-right tabular-nums text-gray-300">
+                    <td className="py-3 pr-3 text-right tabular-nums text-fg-secondary">
                       {analyst.casesClosed}
                     </td>
-                    <td className="py-3 pr-3 text-right tabular-nums text-gray-300">
+                    <td className="py-3 pr-3 text-right tabular-nums text-fg-secondary">
                       {analyst.avgResolutionMin} min
                     </td>
-                    <td className="py-3 pr-3 text-right tabular-nums text-gray-300">
+                    <td className="py-3 pr-3 text-right tabular-nums text-fg-secondary">
                       {analyst.accuracy.toFixed(1)}%
                     </td>
                     <td className="py-3 pr-3 text-right">
-                      <span className={clsx('tabular-nums font-bold', accent?.text ?? 'text-white')}>
+                      <span className={clsx('tabular-nums font-bold', accent?.text ?? 'text-fg-primary')}>
                         {analyst.score}
                       </span>
                     </td>
                     <td className="py-3">
                       <div className="flex flex-wrap gap-1.5">
                         {analyst.badges.map((badge) => {
-                          const bc = BADGE_COLORS[badge] ?? { bg: 'bg-gray-500/15', text: 'text-gray-300', border: 'border-gray-500/30' };
+                          const bc = BADGE_COLORS[badge] ?? { bg: 'bg-pill-neutral-bg', text: 'text-tone-neutral', border: 'border-transparent' };
                           return (
                             <span
                               key={badge}
                               className={clsx(
-                                'inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold',
+                                'inline-flex items-center rounded-pill border px-2 py-0.5 text-eyebrow font-semibold',
                                 bc.bg, bc.text, bc.border,
                               )}
                             >
@@ -276,18 +276,18 @@ export function TeamAnalyticsView() {
       </div>
 
       {/* Team Highlights */}
-      <div className="rounded-xl border border-gray-800/60 bg-gray-900/40 p-5 space-y-4">
-        <h2 className="text-lg font-semibold text-white">Team Highlights</h2>
+      <div className="rounded-container border border-surface-border bg-surface-card p-5 space-y-4">
+        <h2 className="text-card-title font-semibold text-fg-primary">Team Highlights</h2>
         {achievements.length === 0 ? (
-          <p className="text-sm text-gray-500">No team milestones are recorded yet.</p>
+          <p className="text-body text-fg-muted">No team milestones are recorded yet.</p>
         ) : (
         <div className="space-y-3">
           {achievements.map((ach, i) => (
             <div
               key={i}
-              className="flex items-start gap-3 rounded-lg border border-gray-800/40 bg-black/20 p-3.5"
+              className="flex items-start gap-3 rounded-control border border-surface-border bg-surface-elevated p-3.5"
             >
-              <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/5">
+              <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-pill bg-surface-subtle">
                 {achievementIcon(ach.icon)}
               </div>
               <div className="flex-1 min-w-0">

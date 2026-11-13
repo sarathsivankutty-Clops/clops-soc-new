@@ -27,12 +27,20 @@
 
 :root,
 [data-theme="dark"] {
-  /* Surfaces — page bg up through hovered card */
+  /* Surfaces — console canvas/card/elevated tokens */
+  /* [HIDDEN-UI THEME-1 replaced with previous dark palette]
   --surface-base: #0a0d14;
   --surface-raised: #11151f;
   --surface-card: #141926;
   --surface-hover: #1a2030;
   --surface-subtle: #0d1119;
+  */
+  --surface-base: #0B1220;
+  --surface-raised: #111B2E;
+  --surface-card: #111B2E;
+  --surface-elevated: #172442;
+  --surface-hover: #172442;
+  --surface-subtle: #1C2840;
 
   /* Landing-only gradient stops (T6.5). Mirrors
      `docs/design/landing-page-design-tokens.md` §2.4. Hex stops match the
@@ -42,17 +50,79 @@
   --landing-grad-pillars: linear-gradient(to right, #3b82f6 0%, #8b5cf6 100%);
   --landing-grad-cta: linear-gradient(to bottom right, #3b82f6 0%, #1d4ed8 100%);
 
-  /* Borders / dividers — slate-400 with low alpha so they tint the surface
-     instead of cutting hard lines. */
+  /* Borders / dividers — console hairline tokens */
+  /* [HIDDEN-UI THEME-1 replaced with previous dark borders]
   --surface-border: rgba(148, 163, 184, 0.12);
   --surface-divider: rgba(148, 163, 184, 0.08);
+  */
+  --surface-border: #2A3A55;
+  --surface-border-strong: #36496A;
+  --surface-divider: #223150;
 
-  /* Foregrounds — high → muted */
-  --fg-primary: #e2e8f0;     /* slate-200,  body text default */
-  --fg-secondary: #cbd5e1;   /* slate-300,  paragraph copy */
-  --fg-muted: #9ca3af;       /* gray-400,   captions, labels */
-  --fg-subtle: #6b7280;      /* gray-500,   timestamps, helper text */
-  --fg-inverse: #0f172a;     /* slate-900,  text on light buttons */
+  /* Foregrounds — high → muted dark text tokens */
+  /* [HIDDEN-UI THEME-1 replaced with previous dark foregrounds]
+  --fg-primary: #e2e8f0;
+  --fg-secondary: #cbd5e1;
+  --fg-muted: #9ca3af;
+  --fg-subtle: #6b7280;
+  */
+  --fg-primary: #F1F5F9;
+  --fg-secondary: #94A3B8;
+  --fg-muted: #94A3B8;
+  /* [HIDDEN-UI THEME-7 raised subtle-text contrast; old value: #64748B]
+  --fg-subtle: #64748B;
+  */
+  --fg-subtle: #94A3B8;
+  --fg-inverse: #0F172A;
+
+  /* Accent, navigation highlight, CTA gradient, radii, flat cards */
+  --accent: #3B82F6;
+  --accent-hover: #60A5FA;
+  --accent-subtle: rgba(59, 130, 246, 0.15);
+  --nav-active-bg: rgba(59, 130, 246, 0.12);
+  --nav-active-bar: #52B788;
+  --btn-grad: linear-gradient(135deg, #2563EB, #22C55E);
+  --radius-container: 1.25rem;
+  --radius-control: 0.75rem;
+  --radius-pill: 9999px;
+  --card-border-width: 1px;
+  --card-shadow: none;
+  --shadow-overlay: 0 10px 15px rgba(0, 0, 0, 0.4), 0 4px 6px rgba(0, 0, 0, 0.3);
+
+  /* Semantic tones, soft pill backgrounds (no border), and status dots */
+  --tone-success: #52B788;
+  --tone-warning: #FBBF24;
+  --tone-danger: #FB7185;
+  --tone-purple: #A78BFA;
+  --pill-success-bg: rgba(82, 183, 136, 0.12);
+  --pill-warning-bg: rgba(251, 191, 36, 0.12);
+  --pill-danger-bg: rgba(251, 113, 133, 0.12);
+  --pill-info-bg: rgba(59, 130, 246, 0.12);
+  --pill-purple-bg: rgba(167, 139, 250, 0.12);
+  --pill-neutral-bg: rgba(148, 163, 184, 0.12);
+  --dot-success: #74C69D;
+  --dot-warning: #FBBF24;
+  --dot-danger: #FB7185;
+  --dot-info: #60A5FA;
+  --dot-purple: #A78BFA;
+  --dot-neutral: #94A3B8;
+
+  /* 5-tier severity badges (dot + soft tint, no border; all 5 kept distinct) */
+  --severity-critical-ink: #FB7185;
+  --severity-critical-bg: rgba(239, 68, 68, 0.14);
+  --severity-critical-dot: #EF4444;
+  --severity-high-ink: #FB923C;
+  --severity-high-bg: rgba(249, 115, 22, 0.14);
+  --severity-high-dot: #F97316;
+  --severity-medium-ink: #FBBF24;
+  --severity-medium-bg: rgba(234, 179, 8, 0.14);
+  --severity-medium-dot: #EAB308;
+  --severity-low-ink: #60A5FA;
+  --severity-low-bg: rgba(59, 130, 246, 0.14);
+  --severity-low-dot: #3B82F6;
+  --severity-info-ink: #52B788;
+  --severity-info-bg: rgba(34, 197, 94, 0.14);
+  --severity-info-dot: #22C55E;
 
   /* Compatibility: legacy --background / --foreground used by `body`. */
   --background: var(--surface-base);
@@ -62,39 +132,103 @@
   --selection-bg: rgba(59, 130, 246, 0.35);
   --selection-fg: #ffffff;
 
-  /* Scrollbar — semi-transparent so the same rule works in both themes. */
+  /* Scrollbar */
+  /* [HIDDEN-UI THEME-1 replaced with console scrollbar tokens]
   --scrollbar-thumb: rgba(255, 255, 255, 0.1);
   --scrollbar-thumb-hover: rgba(255, 255, 255, 0.2);
+  */
+  --scrollbar-thumb: var(--surface-border-strong);
+  --scrollbar-thumb-hover: var(--fg-subtle);
 }
 
 [data-theme="light"] {
-  /* Surfaces — paper-white base, slightly tinted raised/card so cards have
-     definition without a hard shadow. */
-  --surface-base: #f8fafc;       /* slate-50,  page bg */
-  --surface-raised: #ffffff;     /* card containers */
-  --surface-card: #ffffff;       /* same as raised, kept distinct so we
-                                    can introduce a subtle tint later
-                                    without touching consumers */
-  --surface-hover: #eef2f7;      /* slate-100/200, hovered rows */
-  --surface-subtle: #f1f5f9;     /* slate-100, deeper tint */
-
+  /* Surfaces — console light palette (1px border, no card shadow) */
+  --surface-base: #F8FAFC;
+  --surface-raised: #FFFFFF;
+  --surface-card: #FFFFFF;
+  --surface-elevated: #F8FAFC;
+  /* [HIDDEN-UI THEME-1 replaced with console light tokens]
+  --surface-hover: #eef2f7;
+  --surface-subtle: #f1f5f9;
   --surface-border: rgba(15, 23, 42, 0.12);
   --surface-divider: rgba(15, 23, 42, 0.06);
+  --fg-secondary: #334155;
+  */
+  --surface-hover: #F8FAFC;
+  --surface-subtle: #F1F5F9;
 
-  --fg-primary: #0f172a;         /* slate-900 */
-  --fg-secondary: #334155;       /* slate-700 */
-  --fg-muted: #64748b;           /* slate-500 */
-  --fg-subtle: #94a3b8;          /* slate-400 */
-  --fg-inverse: #f8fafc;
+  --surface-border: #E2E8F0;
+  --surface-border-strong: #CBD5E1;
+  --surface-divider: #EEF2F7;
+
+  --fg-primary: #0F172A;
+  --fg-secondary: #475569;
+  --fg-muted: #64748B;
+  /* [HIDDEN-UI THEME-7 raised subtle-text contrast; old value: #94A3B8]
+  --fg-subtle: #94A3B8;
+  */
+  --fg-subtle: #64748B;
+  --fg-inverse: #F8FAFC;
+
+  --accent: #2563EB;
+  --accent-hover: #1D4ED8;
+  --accent-subtle: #EFF6FF;
+  --nav-active-bg: #EFF6FF;
+  --nav-active-bar: #10B981;
+  --btn-grad: linear-gradient(135deg, #2563EB, #22C55E);
+  --card-border-width: 1px;
+  --card-shadow: none;
+  --shadow-overlay: 0 10px 15px -3px rgba(0, 0, 0, 0.07), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+
+  --tone-success: #059669;
+  --tone-warning: #D97706;
+  --tone-danger: #E11D48;
+  --tone-purple: #7C3AED;
+  --pill-success-bg: #ECFDF5;
+  --pill-warning-bg: #FFFBEB;
+  --pill-danger-bg: #FFF1F2;
+  --pill-info-bg: #EFF6FF;
+  --pill-purple-bg: #F5F3FF;
+  --pill-neutral-bg: #F8FAFC;
+  --dot-success: #10B981;
+  --dot-warning: #FBBF24;
+  --dot-danger: #FB7185;
+  --dot-info: #60A5FA;
+  --dot-purple: #7C3AED;
+  --dot-neutral: #94A3B8;
+
+  /* 5-tier severity badges for light mode (derived inks/tints for AA contrast) */
+  /* [HIDDEN-UI THEME-7 raised critical badge contrast; old value: #E11D48]
+  --severity-critical-ink: #E11D48;
+  */
+  --severity-critical-ink: #BE123C;
+  --severity-critical-bg: #FFF1F2;
+  --severity-critical-dot: #EF4444;
+  --severity-high-ink: #C2410C;
+  --severity-high-bg: #FFF7ED;
+  --severity-high-dot: #F97316;
+  --severity-medium-ink: #B45309;
+  --severity-medium-bg: #FFFBEB;
+  --severity-medium-dot: #EAB308;
+  --severity-low-ink: #1D4ED8;
+  --severity-low-bg: #EFF6FF;
+  --severity-low-dot: #3B82F6;
+  --severity-info-ink: #047857;
+  --severity-info-bg: #ECFDF5;
+  --severity-info-dot: #22C55E;
 
   --background: var(--surface-base);
   --foreground: var(--fg-primary);
 
   --selection-bg: rgba(37, 99, 235, 0.18);
-  --selection-fg: #0f172a;
+  --selection-fg: #0F172A;
 
+  /* [HIDDEN-UI THEME-1 replaced with console scrollbar tokens]
   --scrollbar-thumb: rgba(15, 23, 42, 0.18);
   --scrollbar-thumb-hover: rgba(15, 23, 42, 0.32);
+  */
+  --scrollbar-thumb: var(--surface-border-strong);
+  --scrollbar-thumb-hover: var(--fg-subtle);
 }
 
 * {

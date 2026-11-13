@@ -39,6 +39,7 @@ import {
 } from '@/lib/api';
 import { EmptyState, EmptyStateIcons } from '@/components/ui/EmptyState';
 import { ErrorState } from '@/components/ui/ErrorState';
+import { PageHead } from '@/components/ui/PageHead';
 import { Skeleton } from '@/components/ui/Skeleton';
 
 // ─── Config ───────────────────────────────────────────────────────────────────
@@ -47,17 +48,18 @@ const SEVERITY_CONFIG: Record<
   AlertSeverity,
   { label: string; dot: string; text: string; bg: string }
 > = {
-  critical: { label: 'CRIT', dot: 'bg-red-500', text: 'text-red-400', bg: 'bg-red-500/10 border-red-500/20' },
-  high: { label: 'HIGH', dot: 'bg-orange-500', text: 'text-orange-400', bg: 'bg-orange-500/10 border-orange-500/20' },
-  medium: { label: 'MED', dot: 'bg-yellow-500', text: 'text-yellow-400', bg: 'bg-yellow-500/10 border-yellow-500/20' },
-  low: { label: 'LOW', dot: 'bg-blue-500', text: 'text-blue-400', bg: 'bg-blue-500/10 border-blue-500/20' },
-  info: { label: 'INFO', dot: 'bg-gray-500', text: 'text-gray-400', bg: 'bg-gray-500/10 border-gray-500/20' },
+  /* [HIDDEN-UI THEME-4 kept all 5 severity tiers distinct with dot + soft tint, no border] */
+  critical: { label: 'CRIT', dot: 'bg-severity-dot-critical', text: 'text-severity-ink-critical', bg: 'bg-severity-bg-critical' },
+  high: { label: 'HIGH', dot: 'bg-severity-dot-high', text: 'text-severity-ink-high', bg: 'bg-severity-bg-high' },
+  medium: { label: 'MED', dot: 'bg-severity-dot-medium', text: 'text-severity-ink-medium', bg: 'bg-severity-bg-medium' },
+  low: { label: 'LOW', dot: 'bg-severity-dot-low', text: 'text-severity-ink-low', bg: 'bg-severity-bg-low' },
+  info: { label: 'INFO', dot: 'bg-severity-dot-info', text: 'text-severity-ink-info', bg: 'bg-severity-bg-info' },
 };
 
 const RISK_CONFIG = {
-  high: { dot: 'bg-red-500', text: 'text-red-400' },
-  medium: { dot: 'bg-yellow-500', text: 'text-yellow-400' },
-  low: { dot: 'bg-blue-500', text: 'text-blue-400' },
+  high: { dot: 'bg-dot-danger', text: 'text-tone-danger' },
+  medium: { dot: 'bg-dot-warning', text: 'text-tone-warning' },
+  low: { dot: 'bg-dot-info', text: 'text-accent' },
 } as const;
 
 const OWNER_OPTIONS: { value: QueueOwner; label: string }[] = [
@@ -152,8 +154,8 @@ function slaState(remainingSec: number): 'ok' | 'warn' | 'breached' {
 function SeverityBadge({ severity }: { severity: AlertSeverity }) {
   const cfg = SEVERITY_CONFIG[severity] ?? SEVERITY_CONFIG.info;
   return (
-    <span className={clsx('inline-flex items-center gap-1 text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded border', cfg.text, cfg.bg)}>
-      <span className={clsx('w-1.5 h-1.5 rounded-full', cfg.dot)} />
+    <span className={clsx('inline-flex items-center gap-1.5 text-caption font-mono font-medium px-2.5 py-0.5 rounded-pill whitespace-nowrap', cfg.text, cfg.bg)}>
+      <span aria-hidden="true" className={clsx('w-1.5 h-1.5 rounded-pill', cfg.dot)} />
       {cfg.label}
     </span>
   );
@@ -172,7 +174,7 @@ function OwnerToggle({
     <div
       role="tablist"
       aria-label="Queue owner filter"
-      className="inline-flex items-center bg-gray-900/60 border border-gray-800/60 rounded-lg p-0.5"
+      className="inline-flex items-center bg-surface-card border border-surface-border rounded-control p-1 gap-0.5"
     >
       {OWNER_OPTIONS.map((opt) => {
         const active = value === opt.value;
@@ -192,8 +194,8 @@ function OwnerToggle({
             aria-selected={active}
             onClick={() => onChange(opt.value)}
             className={clsx(
-              'text-xs px-3 py-1.5 rounded-md transition-colors flex items-center gap-1.5',
-              active ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-gray-200',
+              'text-control-sm font-medium px-3 py-1 rounded-control transition-colors flex items-center gap-1.5',
+              active ? 'bg-surface-subtle text-fg-primary font-semibold' : 'text-fg-muted hover:text-fg-primary',
             )}
           >
             {opt.label}
@@ -201,8 +203,8 @@ function OwnerToggle({
               <span
                 aria-live="polite"
                 className={clsx(
-                  'text-[10px] font-mono px-1.5 py-px rounded-full',
-                  active ? 'bg-white/15 text-white' : 'bg-gray-800 text-gray-400',
+                  'text-eyebrow font-mono px-1.5 py-px rounded-pill',
+                  active ? 'bg-surface-card text-accent' : 'bg-surface-elevated text-fg-muted',
                 )}
               >
                 {count > 99 ? '99+' : count}
@@ -223,7 +225,7 @@ function PeriodFilter({
   onChange: (next: QueuePeriod) => void;
 }) {
   return (
-    <div className="inline-flex items-center bg-gray-900/40 border border-gray-800/60 rounded-lg p-0.5">
+    <div className="inline-flex items-center bg-surface-card border border-surface-border rounded-control p-1 gap-0.5">
       {PERIOD_OPTIONS.map((opt) => (
         <button
           key={opt.value}
@@ -231,10 +233,10 @@ function PeriodFilter({
           onClick={() => onChange(opt.value)}
           aria-pressed={value === opt.value}
           className={clsx(
-            'text-xs px-2.5 py-1 rounded-md transition-colors',
+            'text-control-sm font-medium px-2.5 py-1 rounded-control transition-colors',
             value === opt.value
-              ? 'bg-gray-700 text-gray-100'
-              : 'text-gray-500 hover:text-gray-300',
+              ? 'bg-surface-subtle text-fg-primary font-semibold'
+              : 'text-fg-muted hover:text-fg-primary',
           )}
         >
           {opt.label}
@@ -251,28 +253,25 @@ function SlaCountdown({
   item: QueueItem;
   generatedAt: string;
 }) {
-  // Re-evaluate on every render — the parent ticks once per second via
-  // `useSecondTick`, so this picks up wall-clock drift automatically.
   const remaining = computeRemainingSeconds(item, generatedAt);
   const state = slaState(remaining);
   const cls =
     state === 'breached'
-      ? 'text-red-400 bg-red-500/10 border-red-500/30'
+      ? 'text-tone-danger bg-pill-danger-bg'
       : state === 'warn'
-        ? 'text-amber-400 bg-amber-500/10 border-amber-500/30'
-        : 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30';
+        ? 'text-tone-warning bg-pill-warning-bg'
+        : 'text-tone-success bg-pill-success-bg';
   return (
     <span
       className={clsx(
-        'inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded border',
+        'inline-flex items-center gap-1.5 text-caption font-mono px-2.5 py-0.5 rounded-pill whitespace-nowrap',
         cls,
       )}
       title={`SLA due ${new Date(item.sla_due_at).toLocaleString()}`}
-      // Help screen readers read this as a live timer.
       aria-live="off"
     >
       {state === 'breached' && (
-        <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" aria-hidden />
+        <span className="w-1.5 h-1.5 rounded-pill bg-dot-danger animate-pulse" aria-hidden />
       )}
       SLA {formatRemaining(remaining)}
     </span>
@@ -284,11 +283,11 @@ function SuggestedActionBadge({ item }: { item: QueueItem }) {
   const cfg = RISK_CONFIG[item.suggested_action.risk];
   return (
     <span
-      className="inline-flex items-center gap-1 text-[10px] text-gray-400 bg-gray-800/60 border border-gray-700/60 px-1.5 py-0.5 rounded"
+      className="inline-flex items-center gap-1.5 text-eyebrow text-fg-muted bg-pill-neutral-bg px-2 py-0.5 rounded-pill"
       title={`Suggested next action (risk: ${item.suggested_action.risk})`}
     >
-      <span className={clsx('w-1.5 h-1.5 rounded-full', cfg.dot)} aria-hidden />
-      <span className="truncate max-w-[14rem]">→ {item.suggested_action.action}</span>
+      <span className={clsx('w-1.5 h-1.5 rounded-pill', cfg.dot)} aria-hidden />
+      <span className="truncate max-w-56">→ {item.suggested_action.action}</span>
     </span>
   );
 }
@@ -296,13 +295,14 @@ function SuggestedActionBadge({ item }: { item: QueueItem }) {
 function BucketBadge({ bucket }: { bucket: 'mine' | 'unassigned' }) {
   if (bucket === 'mine') {
     return (
-      <span className="text-[10px] font-medium text-blue-300 bg-blue-500/10 border border-blue-500/20 px-1.5 py-0.5 rounded">
+      <span className="inline-flex items-center gap-1.5 text-caption font-medium text-accent bg-pill-info-bg px-2.5 py-0.5 rounded-pill">
+        <span aria-hidden="true" className="w-1.5 h-1.5 rounded-pill bg-dot-info" />
         Mine
       </span>
     );
   }
   return (
-    <span className="text-[10px] font-medium text-gray-400 bg-gray-700/40 border border-gray-700/60 px-1.5 py-0.5 rounded">
+    <span className="inline-flex items-center gap-1.5 text-caption font-medium text-fg-muted bg-pill-neutral-bg px-2.5 py-0.5 rounded-pill">
       Unassigned
     </span>
   );
@@ -345,7 +345,7 @@ function QueueRowActions({
             onClaim(item.id);
           }}
           disabled={busyAction === 'claim'}
-          className="text-[11px] font-medium px-2 py-1 rounded border border-blue-500/40 bg-blue-500/10 text-blue-300 hover:bg-blue-500/20 hover:border-blue-500/60 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="text-caption font-semibold px-2.5 py-1 rounded-control border border-accent/30 bg-pill-info-bg text-accent hover:bg-nav-active-bg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {busyAction === 'claim' ? 'Claiming…' : 'Claim'}
         </button>
@@ -360,7 +360,7 @@ function QueueRowActions({
             onRelease(item.id);
           }}
           disabled={busyAction === 'release'}
-          className="text-[11px] font-medium px-2 py-1 rounded border border-gray-700/60 text-gray-300 hover:bg-gray-800/60 hover:border-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="text-caption font-medium px-2.5 py-1 rounded-control border border-surface-border bg-surface-card text-fg-secondary hover:bg-surface-hover hover:text-fg-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {busyAction === 'release' ? 'Releasing…' : 'Release'}
         </button>
@@ -369,25 +369,22 @@ function QueueRowActions({
       <details ref={detailsRef} className="relative">
         <summary
           onClick={(e) => {
-            // Suppress the parent <Link> navigation. We can't use
-            // preventDefault on summary directly (it cancels the toggle), so
-            // we stop propagation only and let the native disclosure run.
             e.stopPropagation();
           }}
-          className="list-none cursor-pointer text-[11px] font-medium px-2 py-1 rounded border border-gray-700/60 text-gray-300 hover:bg-gray-800/60 hover:border-gray-600 transition-colors select-none"
+          className="list-none cursor-pointer text-caption font-medium px-2.5 py-1 rounded-control border border-surface-border bg-surface-card text-fg-secondary hover:bg-surface-hover hover:text-fg-primary transition-colors select-none"
           aria-label="Snooze options"
         >
           {busyAction === 'snooze' ? 'Snoozing…' : 'Snooze'}
         </summary>
         <div
           role="menu"
-          className="absolute right-0 top-full mt-1 z-20 flex flex-col bg-gray-900 border border-gray-800 rounded-lg shadow-xl p-1 min-w-[8rem]"
+          className="absolute right-0 top-full mt-1 z-20 flex flex-col bg-surface-card border border-surface-border-strong rounded-control shadow-overlay p-1 min-w-32"
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
           }}
         >
-          <span className="text-[10px] uppercase tracking-wider text-gray-500 px-2 py-1">
+          <span className="text-eyebrow uppercase tracking-wider text-fg-muted px-2 py-1">
             Snooze for
           </span>
           {SNOOZE_PRESETS.map((preset) => (
@@ -399,7 +396,7 @@ function QueueRowActions({
                 onSnooze(item.id, preset.minutes);
                 closeSnoozeMenu();
               }}
-              className="text-left text-xs px-2 py-1 rounded text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
+              className="text-left text-control-sm px-2 py-1 rounded-control text-fg-secondary hover:bg-surface-hover hover:text-fg-primary transition-colors"
             >
               {preset.label}
             </button>
@@ -428,10 +425,10 @@ function QueueRow({ item, generatedAt, isMine, busyAction, onClaim, onRelease, o
     <Link
       href={`/alerts/${item.id}`}
       className={clsx(
-        'group flex items-start gap-3 px-4 py-3 border-b border-gray-800/40 last:border-0 transition-colors',
+        'group flex items-start gap-3 px-4 py-3.5 transition-colors',
         breached
-          ? 'bg-red-950/20 hover:bg-red-950/30 border-l-2 border-l-red-500/60'
-          : 'hover:bg-gray-800/30',
+          ? 'bg-pill-danger-bg hover:bg-surface-hover border-l-2 border-l-dot-danger'
+          : 'hover:bg-surface-elevated',
       )}
       aria-label={`Investigate ${item.title}`}
     >
@@ -442,7 +439,7 @@ function QueueRow({ item, generatedAt, isMine, busyAction, onClaim, onRelease, o
           <SlaCountdown item={item} generatedAt={generatedAt} />
           {item.case_id && (
             <span
-              className="text-[10px] text-violet-300 bg-violet-500/10 border border-violet-500/20 px-1.5 py-0.5 rounded"
+              className="text-eyebrow text-tone-purple bg-pill-purple-bg px-2 py-0.5 rounded-pill"
               title="Already linked to a case"
             >
               In case
@@ -450,33 +447,33 @@ function QueueRow({ item, generatedAt, isMine, busyAction, onClaim, onRelease, o
           )}
         </div>
 
-        <p className="text-sm text-gray-200 mt-1 truncate group-hover:text-white">
+        <p className="text-body font-medium text-fg-primary mt-1.5 truncate">
           {item.title}
         </p>
 
-        <div className="flex items-center gap-2 mt-1 text-[11px] text-gray-500 flex-wrap">
+        <div className="flex items-center gap-2 mt-1 text-caption text-fg-muted flex-wrap">
           {item.asset && (
-            <span className="font-mono text-gray-400" title={item.asset.kind}>
+            <span className="font-mono text-fg-secondary" title={item.asset.kind}>
               {item.asset.label ?? item.asset.value}
             </span>
           )}
           {item.connector_type && (
             <>
-              <span className="text-gray-700">·</span>
+              <span className="text-fg-subtle">·</span>
               <span>{item.connector_type}</span>
             </>
           )}
           {item.category && (
             <>
-              <span className="text-gray-700">·</span>
+              <span className="text-fg-subtle">·</span>
               <span>{item.category}</span>
             </>
           )}
-          <span className="text-gray-700">·</span>
+          <span className="text-fg-subtle">·</span>
           <span>{formatRemaining(item.age_seconds)} old</span>
           {item.suggested_action && (
             <>
-              <span className="text-gray-700">·</span>
+              <span className="text-fg-subtle">·</span>
               <SuggestedActionBadge item={item} />
             </>
           )}
@@ -688,7 +685,7 @@ export function QueueView() {
       )}
 
       {!error && items.length > 0 && (
-        <div className="border border-gray-800/60 rounded-xl divide-y divide-gray-800/40 overflow-hidden bg-gray-950/40">
+        <div className="border border-surface-border rounded-container divide-y divide-surface-divider overflow-hidden bg-surface-card">
           {items.map((item) => (
             <QueueRow
               key={item.id}
@@ -733,18 +730,17 @@ function Header({
   onPeriodChange: (next: QueuePeriod) => void;
 }) {
   return (
-    <div className="flex items-end justify-between flex-wrap gap-3">
-      <div>
-        <h1 className="text-xl font-semibold text-gray-100">Investigation Queue</h1>
-        <p className="text-sm text-gray-500 mt-0.5">
-          Ranked by SLA pressure and severity — your next move, top of the list.
-        </p>
-      </div>
-      <div className="flex items-center gap-2 flex-wrap">
-        <OwnerToggle value={owner} counts={counts} onChange={onOwnerChange} />
-        <PeriodFilter value={period} onChange={onPeriodChange} />
-      </div>
-    </div>
+    <PageHead
+      className="mb-0"
+      title="Investigation Queue"
+      description="Ranked by SLA pressure and severity — your next move, top of the list."
+      actions={
+        <div className="flex items-center gap-2 flex-wrap">
+          <OwnerToggle value={owner} counts={counts} onChange={onOwnerChange} />
+          <PeriodFilter value={period} onChange={onPeriodChange} />
+        </div>
+      }
+    />
   );
 }
 
@@ -764,7 +760,7 @@ function Pagination({
   const start = (page - 1) * pageSize + 1;
   const end = Math.min(page * pageSize, total);
   return (
-    <div className="flex items-center justify-between text-xs text-gray-500 px-1">
+    <div className="flex items-center justify-between text-caption text-fg-muted px-1">
       <span>
         Showing {start}–{end} of {total}
       </span>
@@ -773,18 +769,18 @@ function Pagination({
           type="button"
           onClick={() => onChange(Math.max(1, page - 1))}
           disabled={page <= 1}
-          className="px-2 py-1 rounded border border-gray-800 text-gray-400 hover:bg-gray-800/60 hover:text-gray-200 disabled:opacity-40 disabled:cursor-not-allowed"
+          className="px-2.5 py-1 rounded-control border border-surface-border bg-surface-card text-fg-secondary hover:bg-surface-hover hover:text-fg-primary disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
         >
           ← Prev
         </button>
-        <span className="px-2 text-gray-500">
+        <span className="px-2 font-mono text-fg-muted">
           Page {page} / {totalPages}
         </span>
         <button
           type="button"
           onClick={() => onChange(Math.min(totalPages, page + 1))}
           disabled={page >= totalPages}
-          className="px-2 py-1 rounded border border-gray-800 text-gray-400 hover:bg-gray-800/60 hover:text-gray-200 disabled:opacity-40 disabled:cursor-not-allowed"
+          className="px-2.5 py-1 rounded-control border border-surface-border bg-surface-card text-fg-secondary hover:bg-surface-hover hover:text-fg-primary disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
         >
           Next →
         </button>

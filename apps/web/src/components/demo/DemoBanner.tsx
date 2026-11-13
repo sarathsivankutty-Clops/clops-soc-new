@@ -19,40 +19,36 @@ interface DemoBannerProps {
   /**
    * The deployment's answer, resolved server-side in `app/(app)/layout.tsx`
    * so it reflects the running container rather than the build. Falls back to
-   * the compiled value when the banner is mounted outside that layout, as the
+   * the compiled value when the banner mounted outside that layout, as the
    * stories and tests do.
    */
   demoMode?: boolean;
+  sidebarCollapsed?: boolean;
 }
 
-export function DemoBanner({ demoMode }: DemoBannerProps = {}) {
+export function DemoBanner({ demoMode, sidebarCollapsed = false }: DemoBannerProps = {}) {
   if (!(demoMode ?? isDemoMode())) return null;
 
   return (
     <div
       role="status"
       aria-live="polite"
-      className="
-        fixed top-0 left-60 right-0 z-50
-        flex items-center justify-center gap-3
-        h-9 px-4
-        text-xs font-medium
-        bg-amber-500/15
-        text-amber-200
-        border-b border-amber-500/30
-      "
+      className={`fixed top-0 left-0 right-0 z-50 flex items-center justify-center gap-3 h-9 px-4 text-control-sm font-medium bg-pill-warning-bg text-tone-warning border-b border-surface-border transition-[left] duration-200 ${
+        sidebarCollapsed ? 'md:left-0' : 'md:left-64'
+      }`}
     >
       <span>{demoBannerMessage()}</span>
-      <span aria-hidden="true" className="text-amber-500/60">
+      <span aria-hidden="true" className="text-fg-subtle">
         |
       </span>
       <a
         href={docs('quickstart')}
         target="_blank"
         rel="noopener noreferrer"
-        className="underline underline-offset-2 hover:text-amber-100 transition-colors"
+        className="underline underline-offset-2 hover:text-fg-primary transition-colors"
       >
-        Self-host AiSOC
+        {/* [HIDDEN-UI THEME-2 visible product name changed to ClopsSOC] Self-host AiSOC */}
+        Self-host ClopsSOC
       </a>
     </div>
   );

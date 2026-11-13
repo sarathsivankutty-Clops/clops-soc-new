@@ -53,19 +53,20 @@ export function FailureBanner({ title, message, onRetry, className }: FailureBan
     <div
       role="status"
       className={clsx(
-        'flex flex-wrap items-center gap-x-3 gap-y-2 rounded-md border border-amber-500/30 bg-amber-500/5 px-4 py-2 text-xs text-amber-200',
+        /* [HIDDEN-UI THEME-3 restyled FailureBanner to warning/surface tokens] */
+        'flex flex-wrap items-center gap-x-3 gap-y-2 rounded-control border border-tone-warning/30 bg-pill-warning-bg px-4 py-2.5 text-control-sm text-fg-primary',
         className,
       )}
     >
-      <span className="flex-1 min-w-[16rem]">
-        <span className="font-semibold">{title}:</span> {message}
+      <span className="flex-1 min-w-64">
+        <span className="font-semibold text-tone-warning">{title}:</span> {message}
       </span>
       {onRetry && (
         <button
           type="button"
           onClick={() => void handleRetry()}
           disabled={retrying}
-          className="shrink-0 rounded border border-amber-400/40 px-2 py-1 font-medium text-amber-100 transition-colors hover:bg-amber-400/10 disabled:opacity-60"
+          className="shrink-0 rounded-control border border-surface-border bg-surface-card px-2.5 py-1 font-medium text-fg-primary transition-colors hover:bg-surface-hover disabled:opacity-60"
         >
           {retrying ? 'Retrying…' : 'Retry'}
         </button>

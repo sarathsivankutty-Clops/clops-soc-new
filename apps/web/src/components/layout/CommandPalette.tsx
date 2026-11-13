@@ -150,7 +150,8 @@ export function CommandPalette() {
       items: [
         {
           id: 'action:copilot',
-          label: 'Ask AiSOC Copilot',
+          /* [HIDDEN-UI THEME-2 visible product name changed to ClopsSOC] label: 'Ask AiSOC Copilot', */
+          label: 'Ask ClopsSOC Copilot',
           hint: 'Open the floating Copilot dock',
           shortcut: ['⌘', 'J'],
           keywords: ['ai', 'copilot', 'assistant', 'investigate'],
@@ -244,16 +245,16 @@ export function CommandPalette() {
             animate={{ y: 0, opacity: 1, scale: 1 }}
             exit={{ y: -8, opacity: 0, scale: 0.98 }}
             transition={{ duration: 0.14, ease: 'easeOut' }}
-            className="relative w-full max-w-xl rounded-xl border border-gray-700/70 bg-[#0d121b] shadow-2xl shadow-black/50 overflow-hidden"
+            className="relative w-full max-w-xl rounded-container border border-surface-border-strong bg-surface-card shadow-overlay overflow-hidden"
           >
             <Command
-              label="AiSOC command palette"
+              label="ClopsSOC command palette"
               loop
               className="flex flex-col"
             >
-              <div className="flex items-center gap-2 border-b border-gray-800/80 px-4 py-3">
+              <div className="flex items-center gap-2 border-b border-surface-border px-4 py-3">
                 <svg
-                  className="w-4 h-4 text-gray-500 shrink-0"
+                  className="w-4 h-4 text-fg-subtle shrink-0"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -268,15 +269,15 @@ export function CommandPalette() {
                 <Command.Input
                   autoFocus
                   placeholder="Type a command, search a page, or ask the Copilot…"
-                  className="flex-1 bg-transparent text-sm text-gray-200 placeholder-gray-500 outline-none"
+                  className="flex-1 bg-transparent text-body text-fg-primary placeholder:text-fg-subtle outline-none"
                 />
-                <kbd className="rounded border border-gray-700 bg-gray-900/70 px-1.5 py-0.5 text-[10px] font-mono text-gray-500">
+                <kbd className="rounded-control border border-surface-border bg-surface-elevated px-1.5 py-0.5 text-eyebrow font-mono text-fg-muted">
                   ESC
                 </kbd>
               </div>
 
-              <Command.List className="max-h-[60vh] overflow-y-auto py-2">
-                <Command.Empty className="px-4 py-6 text-center text-xs text-gray-500">
+              <Command.List className="max-h-96 overflow-y-auto py-2">
+                <Command.Empty className="px-4 py-6 text-center text-control-sm text-fg-muted">
                   No matches. Try “alerts”, “hunt”, or “copilot”.
                 </Command.Empty>
 
@@ -284,7 +285,7 @@ export function CommandPalette() {
                   <Command.Group
                     key={group.id}
                     heading={group.heading}
-                    className="px-2 pb-2 text-[11px] font-semibold uppercase tracking-wider text-gray-500"
+                    className="px-2 pb-2 text-eyebrow font-semibold uppercase tracking-wider text-fg-subtle"
                   >
                     {group.items.map((item) => (
                       <Command.Item
@@ -293,11 +294,11 @@ export function CommandPalette() {
                         onSelect={() => {
                           void item.perform();
                         }}
-                        className="group flex items-center gap-3 rounded-md px-3 py-2 text-sm text-gray-300 cursor-pointer aria-selected:bg-blue-600/15 aria-selected:text-blue-200"
+                        className="group flex items-center gap-3 rounded-control px-3 py-2 text-body text-fg-secondary cursor-pointer aria-selected:bg-nav-active-bg aria-selected:text-accent"
                       >
                         <span className="flex-1 truncate">{item.label}</span>
                         {item.hint && (
-                          <span className="text-[11px] text-gray-600 group-aria-selected:text-blue-300/80 truncate max-w-[40%] text-right">
+                          <span className="text-caption text-fg-subtle group-aria-selected:text-accent truncate max-w-xs text-right">
                             {item.hint}
                           </span>
                         )}
@@ -306,8 +307,9 @@ export function CommandPalette() {
                             {item.shortcut.map((key) => (
                               <kbd
                                 key={key}
-                                className="rounded border border-gray-700 bg-gray-900/60 px-1 py-0.5 text-[10px] font-mono text-gray-400"
+                                className="rounded-control border border-surface-border bg-surface-elevated px-1 py-0.5 text-eyebrow font-mono text-fg-muted"
                               >
+                                {/* [HIDDEN-UI THEME-7 prior keycap class: rounded] */}
                                 {key}
                               </kbd>
                             ))}
@@ -319,19 +321,26 @@ export function CommandPalette() {
                 ))}
               </Command.List>
 
-              <div className="flex items-center justify-between border-t border-gray-800/80 px-4 py-2 text-[11px] text-gray-600">
+              <div className="flex items-center justify-between border-t border-surface-border px-4 py-2 text-caption text-fg-subtle">
                 <div className="flex items-center gap-3">
                   <span className="flex items-center gap-1">
-                    <kbd className="rounded border border-gray-700 bg-gray-900/70 px-1 py-0.5 font-mono text-gray-500">↑</kbd>
-                    <kbd className="rounded border border-gray-700 bg-gray-900/70 px-1 py-0.5 font-mono text-gray-500">↓</kbd>
+                    {/* [HIDDEN-UI THEME-7 use control radius for keycaps]
+                    <kbd className="rounded border border-surface-border bg-surface-elevated px-1 py-0.5 font-mono text-fg-muted">↑</kbd>
+                    <kbd className="rounded border border-surface-border bg-surface-elevated px-1 py-0.5 font-mono text-fg-muted">↓</kbd>
+                    */}
+                    <kbd className="rounded-control border border-surface-border bg-surface-elevated px-1 py-0.5 font-mono text-fg-muted">↑</kbd>
+                    <kbd className="rounded-control border border-surface-border bg-surface-elevated px-1 py-0.5 font-mono text-fg-muted">↓</kbd>
                     navigate
                   </span>
                   <span className="flex items-center gap-1">
-                    <kbd className="rounded border border-gray-700 bg-gray-900/70 px-1 py-0.5 font-mono text-gray-500">↵</kbd>
+                    {/* [HIDDEN-UI THEME-7 use control radius for keycaps]
+                    <kbd className="rounded border border-surface-border bg-surface-elevated px-1 py-0.5 font-mono text-fg-muted">↵</kbd>
+                    */}
+                    <kbd className="rounded-control border border-surface-border bg-surface-elevated px-1 py-0.5 font-mono text-fg-muted">↵</kbd>
                     select
                   </span>
                 </div>
-                <span className="hidden sm:inline">AiSOC · ⌘K to toggle</span>
+                <span className="hidden sm:inline">ClopsSOC · ⌘K to toggle</span>
               </div>
             </Command>
           </motion.div>

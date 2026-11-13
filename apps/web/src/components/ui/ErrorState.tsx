@@ -48,12 +48,13 @@ export function ErrorState({
   return (
     <div
       className={clsx(
-        'rounded-xl border border-red-500/30 bg-red-500/5 px-6 py-8 text-center',
+        /* [HIDDEN-UI THEME-3 restyled ErrorState to semantic surface + danger tokens] */
+        'rounded-container border border-tone-danger/30 bg-pill-danger-bg px-6 py-8 text-center',
         className,
       )}
       role="alert"
     >
-      <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-500/15 text-red-400">
+      <div className="mx-auto mb-4 flex h-11 w-11 items-center justify-center rounded-control bg-surface-card text-tone-danger border border-tone-danger/30">
         <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path
             strokeLinecap="round"
@@ -63,10 +64,10 @@ export function ErrorState({
           />
         </svg>
       </div>
-      <h3 className="text-base font-semibold text-red-200">{title}</h3>
-      <p className="mx-auto mt-1 max-w-md text-sm text-red-300/70">{description}</p>
+      <h3 className="text-card-title font-semibold text-fg-primary">{title}</h3>
+      <p className="mx-auto mt-1 max-w-md text-body text-fg-secondary">{description}</p>
       {detail && (
-        <pre className="mx-auto mt-4 max-w-xl overflow-x-auto rounded-md bg-black/30 px-3 py-2 text-left font-mono text-xs text-red-300/80">
+        <pre className="mx-auto mt-4 max-w-xl overflow-x-auto rounded-control border border-surface-border bg-surface-card px-3 py-2 text-left font-mono text-control-sm text-tone-danger">
           {detail}
         </pre>
       )}
@@ -74,7 +75,7 @@ export function ErrorState({
         {onRetry && (
           <button
             onClick={onRetry}
-            className="rounded-md border border-red-500/40 bg-red-500/10 px-4 py-2 text-sm font-medium text-red-200 transition-colors hover:bg-red-500/20"
+            className="rounded-control border border-surface-border bg-surface-card px-4 py-2 text-control font-semibold text-tone-danger transition-colors hover:bg-surface-hover"
           >
             {t('common.retry')}
           </button>

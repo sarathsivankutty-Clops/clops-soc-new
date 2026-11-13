@@ -429,7 +429,7 @@ export function ConnectorInstanceList({
         // `h3` skips a level and fails the axe-core heading-order gate.
         headingLevel="h2"
         title="No connectors yet"
-        description="Connect your first security tool to start ingesting alerts. Credentials are encrypted at rest with the AiSOC vault."
+        description={/* [HIDDEN-UI THEME-7 prior label: AiSOC vault] */ "Connect your first security tool to start ingesting alerts. Credentials are encrypted at rest with the ClopsSOC vault."}
         action={
           <button
             type="button"

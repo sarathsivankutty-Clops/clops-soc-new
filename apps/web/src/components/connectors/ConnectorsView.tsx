@@ -201,15 +201,15 @@ export function ConnectorsView() {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-gray-100">Connectors</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
+          <h1 className="text-page-title font-semibold text-fg-primary">Connectors</h1>
+          <p className="text-body text-fg-muted mt-0.5">
             Security tool integrations and data source management
           </p>
         </div>
         <button
           type="button"
           onClick={() => setModalOpen(true)}
-          className="bg-blue-600 hover:bg-blue-500 text-white text-sm px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+          className="bg-btn-grad hover:brightness-105 text-white text-control font-semibold px-4 py-2 rounded-control transition-all flex items-center gap-2"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -234,21 +234,21 @@ export function ConnectorsView() {
           {
             label: 'Total Connectors',
             value: healthSummary?.total ?? connectors.length,
-            color: 'text-blue-400',
+            color: 'text-accent',
             show: true,
           },
-          { label: 'Active', value: stats.active, color: 'text-green-400', show: true },
-          { label: 'Errors', value: stats.errored, color: 'text-red-400', show: true },
+          { label: 'Active', value: stats.active, color: 'text-tone-success', show: true },
+          { label: 'Errors', value: stats.errored, color: 'text-tone-danger', show: true },
           {
             label: 'Events Ingested',
             value: stats.totalEvents.toLocaleString(),
-            color: 'text-purple-400',
+            color: 'text-tone-purple',
             show: true,
           },
           {
             label: 'Schema Drift (24h)',
             value: stats.driftedRecently,
-            color: 'text-amber-400',
+            color: 'text-tone-warning',
             show: stats.driftedRecently > 0,
             tooltip:
               healthSummary?.lastDriftAt
@@ -258,7 +258,7 @@ export function ConnectorsView() {
           {
             label: 'Events Dropped',
             value: stats.totalDropped.toLocaleString(),
-            color: 'text-cyan-400',
+            color: 'text-tone-info',
             show: stats.totalDropped > 0,
             tooltip: 'Filtered out by pre-ingest pipeline rules',
           },
@@ -268,18 +268,18 @@ export function ConnectorsView() {
             <div
               key={stat.label}
               title={stat.tooltip}
-              className="bg-gray-900/60 border border-gray-800/60 rounded-xl p-4"
+              className="bg-surface-card border border-surface-border rounded-container p-4"
             >
               <p
                 className={clsx(
-                  'text-2xl font-bold mb-1',
-                  countsUnknown ? 'text-gray-600' : stat.color,
+                  'text-kpi font-bold font-mono tabular-nums mb-1',
+                  countsUnknown ? 'text-fg-subtle' : stat.color,
                 )}
               >
                 {countsUnknown ? '—' : stat.value}
               </p>
-              <p className="text-xs text-gray-500">{stat.label}</p>
-              {countsUnknown && <p className="text-[10px] text-gray-600 mt-0.5">not measured</p>}
+              <p className="text-xs text-fg-muted">{stat.label}</p>
+              {countsUnknown && <p className="text-eyebrow text-fg-subtle mt-0.5">not measured</p>}
             </div>
           ))}
       </div>

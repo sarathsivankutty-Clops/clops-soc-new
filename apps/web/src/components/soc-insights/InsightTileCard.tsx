@@ -28,23 +28,23 @@ export function InsightTileCard({ tile, sparkline }: InsightTileCardProps) {
 
   return (
     <div
-      className="flex flex-col justify-between rounded-lg border border-border bg-card p-4"
+      className="flex flex-col justify-between rounded-container border border-surface-border bg-surface-card p-5 shadow-card"
       // The `aria-label` rolls the value + delta into one string so a
       // screen reader announces the change without us shipping a
       // table-with-headers.
       aria-label={`${tile.label}: ${formatValue(tile)}, ${deltaTitle}`}
     >
       <div className="flex items-start justify-between gap-2">
-        <span className="text-xs uppercase tracking-wide text-muted-foreground">
+        <span className="text-caption font-medium uppercase tracking-wide text-fg-muted">
           {tile.label}
         </span>
         <span
           className={
             direction === 'up'
-              ? 'rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:text-emerald-300'
+              ? 'rounded-pill bg-pill-success-bg px-2.5 py-0.5 text-caption font-medium text-tone-success'
               : direction === 'down'
-                ? 'rounded-full bg-rose-500/10 px-2 py-0.5 text-xs font-medium text-rose-700 dark:text-rose-300'
-                : 'rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground'
+                ? 'rounded-pill bg-pill-danger-bg px-2.5 py-0.5 text-caption font-medium text-tone-danger'
+                : 'rounded-pill bg-pill-neutral-bg px-2.5 py-0.5 text-caption font-medium text-fg-muted'
           }
           title={deltaTitle}
         >
@@ -52,9 +52,9 @@ export function InsightTileCard({ tile, sparkline }: InsightTileCardProps) {
         </span>
       </div>
 
-      <div className="mt-2 flex items-end justify-between gap-2">
-        <span className="text-2xl font-semibold tabular-nums">{formatValue(tile)}</span>
-        <div className="text-muted-foreground">{sparkline}</div>
+      <div className="mt-3 flex items-end justify-between gap-2">
+        <span className="text-page-title font-bold font-mono tabular-nums text-fg-primary">{formatValue(tile)}</span>
+        <div className="text-accent">{sparkline}</div>
       </div>
     </div>
   );

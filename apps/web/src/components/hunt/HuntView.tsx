@@ -43,6 +43,9 @@ import {
 import { Skeleton } from '@/components/ui/Skeleton';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { Button } from '@/components/ui/Button';
+import { PageHead } from '@/components/ui/PageHead';
+import { useOptionalTheme } from '@/components/theme/ThemeProvider';
 import { useLocale } from '@/components/i18n/LocaleProvider';
 import { demoFallback } from '@/lib/demoFallback';
 
@@ -208,15 +211,15 @@ const DEMO_SAVED: SavedSearch[] = [
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const SEVERITY_BADGE: Record<AlertSeverity, string> = {
-  critical: 'bg-red-500/15 text-red-300 ring-red-500/30',
-  high: 'bg-orange-500/15 text-orange-300 ring-orange-500/30',
-  medium: 'bg-yellow-500/15 text-yellow-300 ring-yellow-500/30',
-  low: 'bg-blue-500/15 text-blue-300 ring-blue-500/30',
-  info: 'bg-slate-500/15 text-slate-300 ring-slate-500/30',
+  critical: 'bg-severity-critical-bg text-severity-critical-ink',
+  high: 'bg-severity-high-bg text-severity-high-ink',
+  medium: 'bg-severity-medium-bg text-severity-medium-ink',
+  low: 'bg-severity-low-bg text-severity-low-ink',
+  info: 'bg-severity-info-bg text-severity-info-ink',
 };
 
 function severityClass(s?: AlertSeverity) {
-  return s ? SEVERITY_BADGE[s] : 'bg-slate-500/15 text-slate-300 ring-slate-500/30';
+  return s ? SEVERITY_BADGE[s] : 'bg-pill-neutral-bg text-tone-neutral';
 }
 
 function copyToClipboard(text: string) {
@@ -251,17 +254,17 @@ function NLHero({ value, onChange, onSubmit, pending }: NLHeroProps) {
   const trimmed = value.trim();
 
   return (
-    <div className="overflow-hidden rounded-xl border border-emerald-500/20 bg-gradient-to-br from-emerald-950/40 via-slate-900/40 to-slate-900/40 p-6 shadow-[0_0_60px_-30px_rgba(16,185,129,0.4)]">
-      <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-emerald-400">
+    <div className="overflow-hidden rounded-container border border-surface-border bg-surface-card p-6">
+      <div className="flex items-center gap-2 text-eyebrow font-semibold uppercase tracking-wider text-tone-success">
         <svg className="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 20 20" aria-hidden>
           <path d="M10 3.5a.75.75 0 01.75.75v.578l4.97 1.243a.75.75 0 01.531.97l-1.5 5.25a.75.75 0 01-.5.51l-3.501 1.167V16h2.5a.75.75 0 010 1.5h-6.5a.75.75 0 010-1.5h2.5v-2.032l-3.5-1.166a.75.75 0 01-.5-.51l-1.5-5.25a.75.75 0 01.53-.971l4.97-1.243V4.25A.75.75 0 0110 3.5z" />
         </svg>
-        AiSOC Hunt
+        ClopsSOC Hunt
       </div>
-      <h1 className="mt-2 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+      <h1 className="mt-2 text-page-title font-semibold tracking-tight text-fg-primary">
         Hunt at the speed of thought.
       </h1>
-      <p className="mt-1.5 max-w-2xl text-sm text-slate-300">
+      <p className="mt-1.5 max-w-2xl text-body text-fg-muted">
         Ask in plain English and we&apos;ll translate it to ES|QL, KQL, and SPL.
         Save the questions that matter, schedule the ones that should run themselves.
       </p>
@@ -278,7 +281,7 @@ function NLHero({ value, onChange, onSubmit, pending }: NLHeroProps) {
         </label>
         <div className="relative flex-1">
           <svg
-            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500"
+            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-fg-subtle"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -295,32 +298,22 @@ function NLHero({ value, onChange, onSubmit, pending }: NLHeroProps) {
             autoComplete="off"
             spellCheck={false}
             disabled={pending}
-            className="w-full rounded-lg border border-slate-700/70 bg-slate-950/60 py-2.5 pl-9 pr-3 text-sm text-slate-100 placeholder:text-slate-500 focus:border-emerald-500/60 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 disabled:opacity-60"
+            className="w-full rounded-control border border-surface-border bg-surface-elevated py-2.5 pl-9 pr-3 text-body text-fg-primary placeholder:text-fg-subtle focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25 disabled:opacity-60"
           />
         </div>
-        <button
+        <Button
           type="submit"
+          variant="primary"
+          size="md"
           disabled={pending || !trimmed}
-          className={clsx(
-            'flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-colors',
-            pending || !trimmed
-              ? 'cursor-not-allowed bg-slate-800 text-slate-500'
-              : 'bg-emerald-500 text-emerald-950 hover:bg-emerald-400',
-          )}
+          loading={pending}
         >
-          {pending ? (
-            <>
-              <span className="h-3 w-3 animate-spin rounded-full border-2 border-emerald-950 border-t-transparent" />
-              Translating…
-            </>
-          ) : (
-            <>Translate &amp; run →</>
-          )}
-        </button>
+          {pending ? 'Translating…' : <>Translate &amp; run →</>}
+        </Button>
       </form>
 
       <div className="mt-5">
-        <div className="text-[11px] uppercase tracking-wider text-slate-500">
+        <div className="text-caption uppercase tracking-wider text-fg-muted">
           Try one of these
         </div>
         <div className="mt-2 flex flex-wrap gap-2">
@@ -331,14 +324,14 @@ function NLHero({ value, onChange, onSubmit, pending }: NLHeroProps) {
               onClick={() => onSubmit(pill.label)}
               disabled={pending}
               className={clsx(
-                'group inline-flex items-center gap-2 rounded-full border border-slate-700/80 bg-slate-900/70 px-3 py-1.5 text-xs text-slate-200 transition-colors',
+                'group inline-flex items-center gap-2 rounded-pill border border-surface-border bg-surface-elevated px-3 py-1.5 text-control-sm text-fg-secondary transition-colors',
                 pending
                   ? 'cursor-not-allowed opacity-60'
-                  : 'hover:border-emerald-500/50 hover:bg-emerald-500/10 hover:text-emerald-200',
+                  : 'hover:border-accent hover:bg-nav-active-bg hover:text-fg-primary',
               )}
             >
               <span
-                className="h-1.5 w-1.5 rounded-full bg-emerald-400/70 group-hover:bg-emerald-400"
+                className="h-1.5 w-1.5 rounded-full bg-dot-success"
                 aria-hidden
               />
               {pill.label}
@@ -372,7 +365,7 @@ function SavedHuntsPanel({
   onDelete,
   onRetry,
 }: SavedHuntsPanelProps) {
-  if (isLoading) return <Skeleton className="h-32 w-full rounded-lg" />;
+  if (isLoading) return <Skeleton className="h-32 w-full rounded-control" />;
   if (error)
     return (
       <ErrorState
@@ -390,25 +383,25 @@ function SavedHuntsPanel({
     );
 
   return (
-    <ul className="divide-y divide-slate-800/60">
+    <ul className="divide-y divide-surface-border">
       {items.map((h) => (
         <li
           key={h.id}
           className={clsx(
             'group flex items-start gap-2 px-3 py-2.5 transition-colors',
             selectedId === h.id
-              ? 'bg-emerald-500/5 border-l-2 border-l-emerald-500'
-              : 'hover:bg-slate-800/30',
+              ? 'bg-nav-active-bg border-l-2 border-l-nav-active-bar'
+              : 'hover:bg-surface-hover',
           )}
         >
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <span className="rounded border border-slate-700/70 bg-slate-800/50 px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-slate-300">
+              <span className="rounded-pill bg-pill-neutral-bg px-1.5 py-0.5 text-eyebrow uppercase tracking-wide text-fg-secondary">
                 NL · {h.language}
               </span>
               {h.schedule && (
                 <span
-                  className="inline-flex items-center gap-1 rounded border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 text-[10px] text-amber-300"
+                  className="inline-flex items-center gap-1 rounded-pill bg-pill-warning-bg px-1.5 py-0.5 text-eyebrow text-tone-warning"
                   title={`Scheduled: ${h.schedule}`}
                 >
                   <svg className="h-2.5 w-2.5" fill="currentColor" viewBox="0 0 20 20" aria-hidden>
@@ -418,13 +411,13 @@ function SavedHuntsPanel({
                 </span>
               )}
             </div>
-            <p className="mt-1 truncate text-sm font-medium text-slate-100" title={h.name}>
+            <p className="mt-1 truncate text-body font-medium text-fg-primary" title={h.name}>
               {h.name}
             </p>
-            <p className="mt-0.5 line-clamp-2 text-[11px] text-slate-400" title={h.nl_query}>
+            <p className="mt-0.5 line-clamp-2 text-caption text-fg-muted" title={h.nl_query}>
               {h.nl_query}
             </p>
-            <p className="mt-1 text-[11px] text-slate-500" suppressHydrationWarning>
+            <p className="mt-1 text-caption text-fg-subtle" suppressHydrationWarning>
               {h.last_run_at
                 ? `Last run ${formatDistanceToNow(new Date(h.last_run_at), { addSuffix: true })}`
                 : `Saved ${formatDistanceToNow(new Date(h.created_at), { addSuffix: true })}`}
@@ -433,14 +426,14 @@ function SavedHuntsPanel({
           <div className="flex shrink-0 flex-col gap-1">
             <button
               onClick={() => onRun(h)}
-              className="inline-flex items-center gap-1 rounded-md border border-emerald-500/30 bg-emerald-500/10 px-2 py-1 text-[11px] font-medium text-emerald-300 transition-colors hover:border-emerald-500/60 hover:bg-emerald-500/20"
+              className="inline-flex items-center gap-1 rounded-control bg-pill-success-bg px-2 py-1 text-caption font-medium text-tone-success transition-colors hover:brightness-110"
               title="Re-run this hunt"
             >
               ▶ Run
             </button>
             <button
               onClick={() => onDelete(h)}
-              className="rounded-md p-1 text-slate-600 opacity-0 transition-all hover:bg-red-500/10 hover:text-red-400 group-hover:opacity-100"
+              className="rounded-control p-1 text-fg-subtle opacity-0 transition-all hover:bg-pill-danger-bg hover:text-tone-danger group-hover:opacity-100"
               title="Delete"
               aria-label={`Delete saved hunt ${h.name}`}
             >
@@ -476,7 +469,7 @@ function SavedList({
   onDelete,
   onRetry,
 }: SavedListProps) {
-  if (isLoading) return <Skeleton className="h-32 w-full rounded-lg" />;
+  if (isLoading) return <Skeleton className="h-32 w-full rounded-control" />;
   if (error)
     return (
       <ErrorState
@@ -494,15 +487,15 @@ function SavedList({
     );
 
   return (
-    <ul className="divide-y divide-slate-800/60">
+    <ul className="divide-y divide-surface-border">
       {items.map((s) => (
         <li
           key={s.id}
           className={clsx(
             'group flex items-start gap-2 px-3 py-2.5 transition-colors',
             selectedId === s.id
-              ? 'bg-emerald-500/5 border-l-2 border-l-emerald-500'
-              : 'hover:bg-slate-800/30',
+              ? 'bg-nav-active-bg border-l-2 border-l-nav-active-bar'
+              : 'hover:bg-surface-hover',
           )}
         >
           <button
@@ -510,21 +503,21 @@ function SavedList({
             className="flex-1 text-left"
           >
             <div className="flex items-center gap-2">
-              <span className="rounded border border-slate-700/70 bg-slate-800/50 px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-slate-300">
+              <span className="rounded-pill bg-pill-neutral-bg px-1.5 py-0.5 text-eyebrow uppercase tracking-wide text-fg-secondary">
                 {s.language}
               </span>
               {s.pinned && (
-                <span className="text-[10px] text-amber-300">pinned</span>
+                <span className="text-eyebrow text-tone-warning">pinned</span>
               )}
             </div>
-            <p className="mt-1 truncate text-sm text-slate-200">{s.name}</p>
-            <p className="mt-0.5 text-[11px] text-slate-500" suppressHydrationWarning>
+            <p className="mt-1 truncate text-body text-fg-primary">{s.name}</p>
+            <p className="mt-0.5 text-caption text-fg-subtle" suppressHydrationWarning>
               {formatDistanceToNow(new Date(s.createdAt), { addSuffix: true })}
             </p>
           </button>
           <button
             onClick={() => onDelete(s.id)}
-            className="rounded-md p-1 text-slate-600 opacity-0 transition-all hover:bg-red-500/10 hover:text-red-400 group-hover:opacity-100"
+            className="rounded-control p-1 text-fg-subtle opacity-0 transition-all hover:bg-pill-danger-bg hover:text-tone-danger group-hover:opacity-100"
             title="Delete"
             aria-label="Delete saved search"
           >
@@ -552,39 +545,39 @@ function ResultRow({ result }: { result: HuntResult }) {
     .filter(([, v]) => v != null && v !== '');
 
   return (
-    <li className="border-b border-slate-800/60 last:border-b-0">
+    <li className="border-b border-surface-border last:border-b-0">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-slate-800/30"
+        className="flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-surface-hover"
       >
         <span
           className={clsx(
-            'mt-0.5 inline-flex flex-none items-center rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase ring-1',
+            'mt-0.5 inline-flex flex-none items-center rounded-pill px-2 py-0.5 text-eyebrow font-semibold uppercase',
             severityClass(result.severity),
           )}
         >
           {result.severity ?? 'event'}
         </span>
         <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-slate-400">
-            <span className="font-mono text-slate-300" suppressHydrationWarning>
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-fg-muted">
+            <span className="font-mono text-fg-secondary" suppressHydrationWarning>
               {format(new Date(result.timestamp), 'MMM dd HH:mm:ss')}
             </span>
-            <span className="text-slate-600">·</span>
-            <span className="rounded bg-slate-800/60 px-1.5 py-0.5 text-[10px] text-slate-400">
+            <span className="text-fg-subtle">·</span>
+            <span className="rounded-pill bg-pill-neutral-bg px-1.5 py-0.5 text-eyebrow text-fg-secondary">
               {result.source}
             </span>
             {summary.map(([k, v]) => (
-              <span key={k} className="truncate text-slate-400">
-                <span className="text-emerald-400">{k}=</span>
-                <span className="text-slate-300">{String(v)}</span>
+              <span key={k} className="truncate text-fg-muted">
+                <span className="text-tone-success">{k}=</span>
+                <span className="text-fg-secondary">{String(v)}</span>
               </span>
             ))}
           </div>
         </div>
         <svg
           className={clsx(
-            'h-4 w-4 flex-none text-slate-500 transition-transform',
+            'h-4 w-4 flex-none text-fg-muted transition-transform',
             open && 'rotate-180',
           )}
           fill="none"
@@ -595,12 +588,12 @@ function ResultRow({ result }: { result: HuntResult }) {
         </svg>
       </button>
       {open && (
-        <div className="border-t border-slate-800/40 bg-slate-950/40 px-4 py-3">
+        <div className="border-t border-surface-border bg-surface-elevated px-4 py-3">
           <div className="grid grid-cols-1 gap-1 sm:grid-cols-2">
             {fieldEntries.map(([k, v]) => (
               <div key={k} className="flex min-w-0 gap-2 text-xs">
-                <span className="flex-none text-emerald-400 font-mono">{k}</span>
-                <span className="truncate font-mono text-slate-300">
+                <span className="flex-none text-tone-success font-mono">{k}</span>
+                <span className="truncate font-mono text-fg-secondary">
                   {typeof v === 'object' ? JSON.stringify(v) : String(v)}
                 </span>
               </div>
@@ -609,7 +602,7 @@ function ResultRow({ result }: { result: HuntResult }) {
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <button
               onClick={() => copyToClipboard(JSON.stringify(result.fields, null, 2))}
-              className="rounded border border-slate-700/70 bg-slate-800/40 px-2 py-1 text-[11px] text-slate-300 transition-colors hover:border-slate-600 hover:bg-slate-700/40"
+              className="rounded-control border border-surface-border bg-surface-card px-2 py-1 text-caption text-fg-secondary transition-colors hover:bg-surface-hover"
             >
               Copy JSON
             </button>
@@ -619,7 +612,7 @@ function ResultRow({ result }: { result: HuntResult }) {
                 const url = host ? `/graph?entity=${encodeURIComponent(String(host))}` : '/graph';
                 window.location.href = url;
               }}
-              className="rounded border border-slate-700/70 bg-slate-800/40 px-2 py-1 text-[11px] text-slate-300 transition-colors hover:border-slate-600 hover:bg-slate-700/40"
+              className="rounded-control border border-surface-border bg-surface-card px-2 py-1 text-caption text-fg-secondary transition-colors hover:bg-surface-hover"
             >
               Pivot to graph →
             </button>
@@ -634,6 +627,8 @@ function ResultRow({ result }: { result: HuntResult }) {
 
 export function HuntView() {
   const { t } = useLocale();
+  const themeCtx = useOptionalTheme();
+  const isLightTheme = themeCtx?.resolved === 'light';
   const [language, setLanguage] = useState<Lang>('kql');
   const [query, setQuery] = useState<string>(STARTERS.kql);
   const [preset, setPreset] = useState<string>('24h');
@@ -994,68 +989,61 @@ export function HuntView() {
           pending={nlPending}
         />
       ) : (
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div className="min-w-0">
-            <h1 className="text-xl font-semibold text-white">{t('hunt.title')}</h1>
-            {nlSubmittedQuery ? (
-              <p
-                className="mt-1 max-w-3xl truncate text-sm text-slate-400"
-                title={nlSubmittedQuery}
+        <PageHead
+          title={t('hunt.title')}
+          description={
+            nlSubmittedQuery
+              ? `Asking: ${nlSubmittedQuery}`
+              : 'Pivot across logs, alerts, processes, and assets in any language.'
+          }
+          actions={
+            <div className="flex flex-wrap items-center gap-2 text-xs">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => setHeroDismissed(false)}
               >
-                <span className="text-emerald-400">Asking:</span>{' '}
-                {nlSubmittedQuery}
-              </p>
-            ) : (
-              <p className="mt-1 text-sm text-slate-400">
-                Pivot across logs, alerts, processes, and assets in any language.
-              </p>
-            )}
-          </div>
-          <div className="flex items-center gap-2 text-xs">
-            <button
-              onClick={() => setHeroDismissed(false)}
-              className="rounded-md border border-slate-700/70 bg-slate-800/50 px-2.5 py-1 text-xs text-slate-200 transition-colors hover:border-emerald-500/40 hover:text-emerald-300"
-            >
-              ✦ Ask another question
-            </button>
-            <span
-              className={clsx(
-                'inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 ring-1',
-                resultSource === 'live'
-                  ? 'bg-emerald-500/10 text-emerald-300 ring-emerald-500/30'
-                  : 'bg-amber-500/10 text-amber-300 ring-amber-500/30',
-              )}
-            >
+                ✦ Ask another question
+              </Button>
               <span
                 className={clsx(
-                  'h-1.5 w-1.5 rounded-full',
-                  resultSource === 'live' ? 'bg-emerald-400 animate-ping-slow' : 'bg-amber-400',
+                  'inline-flex items-center gap-1.5 rounded-pill px-2.5 py-1 text-caption font-medium',
+                  resultSource === 'live'
+                    ? 'bg-pill-success-bg text-tone-success'
+                    : 'bg-pill-warning-bg text-tone-warning',
                 )}
-              />
-              {resultSource === 'live'
-                ? 'Live backend'
-                : resultSource === 'sample'
-                  ? 'Sample data'
-                  : 'No query ran'}
-            </span>
-            {sampleNotice && (
-              <p className="mt-1 text-[11px] leading-snug text-amber-300/80">{sampleNotice}</p>
-            )}
-          </div>
-        </div>
+              >
+                <span
+                  className={clsx(
+                    'h-1.5 w-1.5 rounded-full',
+                    resultSource === 'live' ? 'bg-dot-success animate-ping-slow' : 'bg-dot-warning',
+                  )}
+                />
+                {resultSource === 'live'
+                  ? 'Live backend'
+                  : resultSource === 'sample'
+                    ? 'Sample data'
+                    : 'No query ran'}
+              </span>
+              {sampleNotice && (
+                <p className="text-caption leading-snug text-tone-warning">{sampleNotice}</p>
+              )}
+            </div>
+          }
+        />
       )}
 
       <div className="grid grid-cols-12 gap-5">
         {/* Sidebar: saved hunts (NL) + saved searches (raw). */}
         <aside className="col-span-12 space-y-4 lg:col-span-3">
-          <div className="overflow-hidden rounded-xl border border-emerald-500/20 bg-slate-900/40">
-            <div className="flex items-center justify-between border-b border-emerald-500/10 bg-emerald-500/5 px-3 py-2.5">
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-emerald-300">
+          <div className="overflow-hidden rounded-container border border-surface-border bg-surface-card">
+            <div className="flex items-center justify-between border-b border-surface-border bg-surface-elevated px-3 py-2.5">
+              <h3 className="text-caption font-semibold uppercase tracking-wide text-tone-success">
                 Saved hunts
               </h3>
               <button
                 onClick={() => setHeroDismissed(false)}
-                className="text-xs text-emerald-400 hover:text-emerald-300"
+                className="text-xs font-medium text-accent hover:text-accent-hover"
                 title="Open the NL hero block to ask a new question"
               >
                 + Ask
@@ -1072,9 +1060,9 @@ export function HuntView() {
             />
           </div>
 
-          <div className="overflow-hidden rounded-xl border border-slate-800/80 bg-slate-900/40">
-            <div className="flex items-center justify-between border-b border-slate-800/80 px-3 py-2.5">
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-300">
+          <div className="overflow-hidden rounded-container border border-surface-border bg-surface-card">
+            <div className="flex items-center justify-between border-b border-surface-border bg-surface-elevated px-3 py-2.5">
+              <h3 className="text-caption font-semibold uppercase tracking-wide text-fg-secondary">
                 Saved searches
               </h3>
               <button
@@ -1085,7 +1073,7 @@ export function HuntView() {
                   setQuery(STARTERS[language]);
                   lastStarter.current = STARTERS[language];
                 }}
-                className="text-xs text-slate-400 hover:text-slate-200"
+                className="text-xs text-fg-muted hover:text-fg-primary"
               >
                 + New
               </button>
@@ -1105,8 +1093,8 @@ export function HuntView() {
         {/* Main: editor + results */}
         <section className="col-span-12 space-y-4 lg:col-span-9">
           {nlExplanation && (
-            <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 px-4 py-2.5 text-xs text-emerald-200">
-              <span className="font-semibold uppercase tracking-wider text-emerald-400">
+            <div className="rounded-control border border-surface-border bg-pill-success-bg px-4 py-2.5 text-xs text-fg-primary">
+              <span className="font-semibold uppercase tracking-wider text-tone-success">
                 Translator:
               </span>{' '}
               {nlExplanation}
@@ -1114,19 +1102,19 @@ export function HuntView() {
           )}
 
           {/* Editor */}
-          <div className="overflow-hidden rounded-xl border border-slate-800/80 bg-slate-900/40">
-            <div className="flex flex-wrap items-center gap-2 border-b border-slate-800/80 px-3 py-2">
+          <div className="overflow-hidden rounded-container border border-surface-border bg-surface-card">
+            <div className="flex flex-wrap items-center gap-2 border-b border-surface-border bg-surface-elevated px-3 py-2">
               {/* Language tabs */}
-              <div className="flex rounded-lg border border-slate-800/80 bg-slate-950/40 p-0.5">
+              <div className="flex rounded-control border border-surface-border bg-surface-subtle p-0.5">
                 {LANGS.map((l) => (
                   <button
                     key={l.id}
                     onClick={() => setLanguage(l.id)}
                     className={clsx(
-                      'rounded-md px-2.5 py-1 text-xs font-medium transition-colors',
+                      'rounded-control px-2.5 py-1 text-xs font-medium transition-colors',
                       language === l.id
-                        ? 'bg-slate-800 text-white shadow-sm'
-                        : 'text-slate-400 hover:text-slate-200',
+                        ? 'bg-surface-card text-fg-primary'
+                        : 'text-fg-muted hover:text-fg-primary',
                     )}
                   >
                     {l.label}
@@ -1135,14 +1123,14 @@ export function HuntView() {
               </div>
 
               {/* Time range */}
-              <div className="ml-2 flex items-center gap-1.5 text-xs text-slate-400">
+              <div className="ml-2 flex items-center gap-1.5 text-xs text-fg-muted">
                 <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <select
                   value={preset}
                   onChange={(e) => setPreset(e.target.value)}
-                  className="rounded-md border border-slate-700/70 bg-slate-950/40 px-2 py-1 text-xs text-slate-200 focus:border-emerald-500/40 focus:outline-none"
+                  className="rounded-control border border-surface-border bg-surface-card px-2 py-1 text-xs text-fg-primary focus:border-accent focus:outline-none"
                 >
                   {TIME_PRESETS.map((p) => (
                     <option key={p.id} value={p.id}>
@@ -1153,41 +1141,27 @@ export function HuntView() {
               </div>
 
               <div className="ml-auto flex items-center gap-2">
-                <button
+                <Button
+                  variant="secondary"
+                  size="sm"
                   onClick={handleSaveNLHunt}
-                  className={clsx(
-                    'rounded-md border px-3 py-1.5 text-xs font-medium transition-colors',
-                    nlSubmittedQuery
-                      ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-200 hover:border-emerald-500/70 hover:bg-emerald-500/20'
-                      : 'border-slate-700/70 bg-slate-800/50 text-slate-200 hover:border-slate-600 hover:bg-slate-700/40',
-                  )}
                   title={nlSubmittedQuery ? 'Save this NL hunt' : 'Save this raw query'}
                 >
                   {nlSubmittedQuery ? 'Save hunt' : t('common.save')}
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant={heroDismissed ? 'primary' : 'secondary'}
+                  size="sm"
                   onClick={handleRun}
                   disabled={running || !query.trim()}
-                  className={clsx(
-                    'flex items-center gap-2 rounded-md px-3.5 py-1.5 text-xs font-semibold transition-colors',
-                    running || !query.trim()
-                      ? 'cursor-not-allowed bg-slate-800 text-slate-500'
-                      : 'bg-emerald-500 text-emerald-950 hover:bg-emerald-400',
-                  )}
+                  loading={running}
                 >
-                  {running ? (
-                    <>
-                      <span className="h-3 w-3 animate-spin rounded-full border-2 border-emerald-950 border-t-transparent" />
-                      Running…
-                    </>
-                  ) : (
-                    <>▶ {t('hunt.run')}</>
-                  )}
-                </button>
+                  {running ? 'Running…' : <>▶ {t('hunt.run')}</>}
+                </Button>
               </div>
             </div>
 
-            <div className="bg-[#0d1117]">
+            <div className="bg-surface-card">
               <MonacoEditor
                 height="280px"
                 language={LANGS.find((l) => l.id === language)?.monaco ?? 'plaintext'}
@@ -1196,7 +1170,7 @@ export function HuntView() {
                 onMount={(editor) => {
                   editorRef.current = editor;
                 }}
-                theme="vs-dark"
+                theme={isLightTheme ? 'light' : 'vs-dark'}
                 options={{
                   minimap: { enabled: false },
                   fontSize: 13,
@@ -1214,12 +1188,12 @@ export function HuntView() {
           </div>
 
           {/* Results */}
-          <div className="overflow-hidden rounded-xl border border-slate-800/80 bg-slate-900/40">
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800/80 px-4 py-2.5">
-              <h3 className="text-sm font-semibold text-slate-200">
+          <div className="overflow-hidden rounded-container border border-surface-border bg-surface-card">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-surface-border bg-surface-elevated px-4 py-2.5">
+              <h3 className="text-body font-semibold text-fg-primary">
                 Hunt results
                 {results && (
-                  <span className="ml-2 text-xs font-normal text-slate-400">
+                  <span className="ml-2 text-xs font-normal text-fg-muted">
                     {results.total.toLocaleString()} hits ·{' '}
                     {results.tookMs === null
                       ? 'latency not measured'
@@ -1232,7 +1206,7 @@ export function HuntView() {
                   onClick={() =>
                     copyToClipboard(JSON.stringify(results.hits, null, 2))
                   }
-                  className="text-xs text-slate-400 transition-colors hover:text-slate-200"
+                  className="text-xs text-fg-muted transition-colors hover:text-fg-primary"
                 >
                   Copy all as JSON
                 </button>
@@ -1245,16 +1219,16 @@ export function HuntView() {
                 all, which is the one path the search endpoint always takes
                 today. The marker belongs with the results it describes. */}
             {results && sampleNotice && (
-              <p className="border-b border-amber-500/20 bg-amber-500/5 px-4 py-2 text-[11px] leading-snug text-amber-300/90">
+              <p className="border-b border-surface-border bg-pill-warning-bg px-4 py-2 text-caption leading-snug text-tone-warning">
                 {sampleNotice}
               </p>
             )}
 
             {running ? (
               <div className="space-y-2 p-4">
-                <Skeleton className="h-12 w-full rounded-lg" />
-                <Skeleton className="h-12 w-full rounded-lg" />
-                <Skeleton className="h-12 w-full rounded-lg" />
+                <Skeleton className="h-12 w-full rounded-control" />
+                <Skeleton className="h-12 w-full rounded-control" />
+                <Skeleton className="h-12 w-full rounded-control" />
               </div>
             ) : runError && !results ? (
               // A hunt that did not run has no result, empty or otherwise.
@@ -1273,17 +1247,17 @@ export function HuntView() {
               />
             ) : results.hits.length === 0 ? (
               <div className="flex flex-col items-center justify-center px-6 py-10">
-                <p className="text-sm font-medium text-emerald-300">
+                <p className="text-body font-medium text-tone-success">
                   No matches in the selected window
                 </p>
-                <p className="mt-1 text-xs text-slate-500">
+                <p className="mt-1 text-xs text-fg-muted">
                   {nlSubmittedQuery
                     ? 'The translator parsed your question (see editor) but found no events. Try a wider time range.'
                     : 'Either the data is clean, or the query is too tight.'}
                 </p>
               </div>
             ) : (
-              <ul className="divide-y divide-slate-800/60">
+              <ul className="divide-y divide-surface-border">
                 {results.hits.map((r) => (
                   <ResultRow key={r.id} result={r} />
                 ))}

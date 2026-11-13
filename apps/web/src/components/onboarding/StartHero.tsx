@@ -93,7 +93,8 @@ export function StartHero() {
           </h1>
 
           <p className="mt-6 max-w-xl text-lg leading-relaxed text-gray-300 md:text-xl">
-            AiSOC ships four named agents — Detect, Triage, Hunt, and
+            {/* [HIDDEN-UI THEME-7 prior product name: AiSOC] */}
+            ClopsSOC ships four named agents — Detect, Triage, Hunt, and
             Respond — wired to a 200-incident eval harness, a pre-seeded
             LockBit 3.0 investigation, and 26 click-and-connect security
             sources. Pick how you want to start: every option lands you in a
@@ -105,7 +106,7 @@ export function StartHero() {
               identity, cloud, insider) are capabilities of Triage, never
               first-class names here. */}
           <ul
-            aria-label="The four AiSOC agents"
+            aria-label={/* [HIDDEN-UI THEME-7 prior label: AiSOC agents] */ 'The four ClopsSOC agents'}
             className="mt-8 grid grid-cols-2 gap-2 sm:grid-cols-4"
           >
             {[
@@ -246,7 +247,7 @@ export function StartHero() {
 function DemoScreencast() {
   return (
     <aside
-      aria-label="AiSOC deployment walkthrough"
+      aria-label={/* [HIDDEN-UI THEME-7 prior label: AiSOC deployment walkthrough] */ 'ClopsSOC deployment walkthrough'}
       className="mt-8 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03]"
     >
       <a
@@ -343,7 +344,8 @@ function HeroVisual() {
       >
         <div className="mb-2 flex items-center gap-2 text-xs font-semibold text-gray-400">
           <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-brand-500 text-[11px] font-bold text-white">A</span>
-          AiSOC Agent
+          {/* [HIDDEN-UI THEME-7 prior product name: AiSOC Agent] */}
+          ClopsSOC Agent
           <span className="ml-auto text-[10px] font-medium uppercase tracking-wider text-emerald-300">streaming</span>
         </div>
         <p className="text-sm leading-relaxed text-gray-200">

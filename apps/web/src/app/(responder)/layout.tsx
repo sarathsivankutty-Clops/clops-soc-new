@@ -3,11 +3,16 @@ import { ResponderShell } from '@/components/responder/ResponderShell';
 
 export const metadata: Metadata = {
   title: {
-    default: 'Responder | AiSOC',
-    template: '%s | AiSOC Responder',
+    /* [HIDDEN-UI THEME-7 prior titles used AiSOC] */
+    default: 'Responder | ClopsSOC',
+    template: '%s | ClopsSOC Responder',
   },
+  /* [HIDDEN-UI THEME-7 prior description named AiSOC]
   description:
     'Mobile-first AiSOC responder. Triage alerts, approve agent actions, page on-call — all from your phone.',
+  */
+  description:
+    'Mobile-first ClopsSOC responder. Triage alerts, approve agent actions, page on-call — all from your phone.',
 };
 
 export const viewport: Viewport = {

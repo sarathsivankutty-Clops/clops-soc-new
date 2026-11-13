@@ -16,9 +16,10 @@ import type { HTMLAttributes, ReactNode } from 'react';
 export type CardElevation = 'flat' | 'raised' | 'inset';
 
 const ELEVATION_CLASSES: Record<CardElevation, string> = {
-  flat: 'bg-gray-900/40 border border-gray-800/60',
-  raised: 'bg-gray-900/70 border border-gray-800 shadow-md shadow-black/30',
-  inset: 'bg-gray-950/60 border border-gray-800/40 shadow-inner shadow-black/30',
+  /* [HIDDEN-UI THEME-3 cards enforce 1px border + zero drop shadow via semantic tokens] */
+  flat: 'bg-surface-card border border-surface-border shadow-card',
+  raised: 'bg-surface-card border border-surface-border shadow-card',
+  inset: 'bg-surface-elevated border border-surface-border shadow-card',
 };
 
 export interface CardProps extends HTMLAttributes<HTMLDivElement> {
@@ -37,7 +38,7 @@ export function Card({
   return (
     <div
       className={clsx(
-        'rounded-xl',
+        'rounded-container overflow-hidden',
         ELEVATION_CLASSES[elevation],
         !flush && 'p-5',
         className,
@@ -68,12 +69,12 @@ export function CardHeader({
   ...rest
 }: CardHeaderProps) {
   return (
-    <div className={clsx('flex items-start justify-between gap-3 mb-3', className)} {...rest}>
+    <div className={clsx('flex items-start justify-between gap-3 mb-3.5', className)} {...rest}>
       {children ?? (
         <div className="min-w-0">
-          {title && <h3 className="text-sm font-semibold text-gray-100">{title}</h3>}
+          {title && <h3 className="text-card-title font-semibold text-fg-primary">{title}</h3>}
           {description && (
-            <p className="mt-0.5 text-xs text-gray-500">{description}</p>
+            <p className="mt-0.5 text-caption text-fg-muted">{description}</p>
           )}
         </div>
       )}
@@ -83,14 +84,14 @@ export function CardHeader({
 }
 
 export function CardBody({ className, ...rest }: HTMLAttributes<HTMLDivElement>) {
-  return <div className={clsx('text-sm text-gray-300', className)} {...rest} />;
+  return <div className={clsx('text-body text-fg-secondary', className)} {...rest} />;
 }
 
 export function CardFooter({ className, ...rest }: HTMLAttributes<HTMLDivElement>) {
   return (
     <div
       className={clsx(
-        'mt-4 flex items-center justify-end gap-2 border-t border-gray-800/60 pt-3',
+        'mt-4 flex items-center justify-end gap-2 border-t border-surface-divider pt-3',
         className,
       )}
       {...rest}

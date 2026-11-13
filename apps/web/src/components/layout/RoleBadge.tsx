@@ -11,37 +11,38 @@ import { clsx } from 'clsx';
  * iteration could add bespoke colours, but we'd rather render *something*
  * informative than a confident-but-wrong label.
  */
-const ROLE_STYLES: Record<string, { label: string; classes: string }> = {
+const ROLE_STYLES: Record<string, { label: string; classes: string; dot: string }> = {
   admin: {
     label: 'Admin',
-    classes:
-      'bg-rose-500/10 text-rose-200 border-rose-500/30 dark:bg-rose-500/15',
+    classes: 'bg-pill-danger-bg text-tone-danger',
+    dot: 'bg-dot-danger',
   },
   responder: {
     label: 'Responder',
-    classes:
-      'bg-amber-500/10 text-amber-200 border-amber-500/30 dark:bg-amber-500/15',
+    classes: 'bg-pill-warning-bg text-tone-warning',
+    dot: 'bg-dot-warning',
   },
   analyst: {
     label: 'Analyst',
-    classes:
-      'bg-brand-500/10 text-brand-200 border-brand-500/30 dark:bg-brand-500/15',
+    classes: 'bg-pill-info-bg text-accent',
+    dot: 'bg-dot-info',
   },
   viewer: {
     label: 'Viewer',
-    classes:
-      'bg-slate-500/10 text-slate-200 border-slate-500/30 dark:bg-slate-500/15',
+    classes: 'bg-pill-neutral-bg text-fg-muted',
+    dot: 'bg-dot-neutral',
   },
   auditor: {
     label: 'Auditor',
-    classes:
-      'bg-emerald-500/10 text-emerald-200 border-emerald-500/30 dark:bg-emerald-500/15',
+    classes: 'bg-pill-success-bg text-tone-success',
+    dot: 'bg-dot-success',
   },
 };
 
 const FALLBACK = {
   label: 'User',
-  classes: 'bg-slate-500/10 text-slate-300 border-slate-500/30',
+  classes: 'bg-pill-neutral-bg text-fg-muted',
+  dot: 'bg-dot-neutral',
 };
 
 interface RoleBadgeProps {
@@ -68,14 +69,14 @@ export function RoleBadge({ role, label, className, tooltip }: RoleBadgeProps) {
     <span
       title={tooltip}
       className={clsx(
-        'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide',
+        'inline-flex items-center gap-1.5 rounded-pill px-2.5 py-0.5 text-caption font-medium',
         style.classes,
         className,
       )}
     >
       <span
         aria-hidden
-        className="h-1.5 w-1.5 rounded-full bg-current opacity-80"
+        className={clsx('h-1.5 w-1.5 rounded-pill', style.dot)}
       />
       {displayLabel}
     </span>
