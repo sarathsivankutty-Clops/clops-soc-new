@@ -30,7 +30,7 @@ export type ButtonVariant =
 export type ButtonSize = 'xs' | 'sm' | 'md' | 'lg';
 
 const VARIANT_CLASSES: Record<ButtonVariant, string> = {
-  /* [HIDDEN-UI THEME-3 restyled Button variants to SREOps --btn-grad + flat semantic surface tokens] */
+  /* [HIDDEN-UI THEME-3 restyled Button variants to console button and semantic surface tokens] */
   primary:
     'bg-btn-grad text-white hover:brightness-105 active:translate-y-px disabled:opacity-45',
   secondary:

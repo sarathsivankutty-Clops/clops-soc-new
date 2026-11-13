@@ -27,8 +27,8 @@
 
 :root,
 [data-theme="dark"] {
-  /* Surfaces — SREOps canvas/card/elevated dark tokens */
-  /* [HIDDEN-UI THEME-1 replaced with SREOps dark palette]
+  /* Surfaces — console canvas/card/elevated tokens */
+  /* [HIDDEN-UI THEME-1 replaced with previous dark palette]
   --surface-base: #0a0d14;
   --surface-raised: #11151f;
   --surface-card: #141926;
@@ -50,8 +50,8 @@
   --landing-grad-pillars: linear-gradient(to right, #3b82f6 0%, #8b5cf6 100%);
   --landing-grad-cta: linear-gradient(to bottom right, #3b82f6 0%, #1d4ed8 100%);
 
-  /* Borders / dividers — SREOps hairline tokens */
-  /* [HIDDEN-UI THEME-1 replaced with SREOps dark borders]
+  /* Borders / dividers — console hairline tokens */
+  /* [HIDDEN-UI THEME-1 replaced with previous dark borders]
   --surface-border: rgba(148, 163, 184, 0.12);
   --surface-divider: rgba(148, 163, 184, 0.08);
   */
@@ -59,8 +59,8 @@
   --surface-border-strong: #36496A;
   --surface-divider: #223150;
 
-  /* Foregrounds — high → muted (SREOps dark text tokens) */
-  /* [HIDDEN-UI THEME-1 replaced with SREOps dark foregrounds]
+  /* Foregrounds — high → muted dark text tokens */
+  /* [HIDDEN-UI THEME-1 replaced with previous dark foregrounds]
   --fg-primary: #e2e8f0;
   --fg-secondary: #cbd5e1;
   --fg-muted: #9ca3af;
@@ -69,7 +69,10 @@
   --fg-primary: #F1F5F9;
   --fg-secondary: #94A3B8;
   --fg-muted: #94A3B8;
+  /* [HIDDEN-UI THEME-7 raised subtle-text contrast; old value: #64748B]
   --fg-subtle: #64748B;
+  */
+  --fg-subtle: #94A3B8;
   --fg-inverse: #0F172A;
 
   /* Accent, navigation highlight, CTA gradient, radii, flat cards */
@@ -130,7 +133,7 @@
   --selection-fg: #ffffff;
 
   /* Scrollbar */
-  /* [HIDDEN-UI THEME-1 replaced with SREOps scrollbar tokens]
+  /* [HIDDEN-UI THEME-1 replaced with console scrollbar tokens]
   --scrollbar-thumb: rgba(255, 255, 255, 0.1);
   --scrollbar-thumb-hover: rgba(255, 255, 255, 0.2);
   */
@@ -139,12 +142,12 @@
 }
 
 [data-theme="light"] {
-  /* Surfaces — SREOps light palette (1px border, no card shadow) */
+  /* Surfaces — console light palette (1px border, no card shadow) */
   --surface-base: #F8FAFC;
   --surface-raised: #FFFFFF;
   --surface-card: #FFFFFF;
   --surface-elevated: #F8FAFC;
-  /* [HIDDEN-UI THEME-1 replaced with SREOps light tokens]
+  /* [HIDDEN-UI THEME-1 replaced with console light tokens]
   --surface-hover: #eef2f7;
   --surface-subtle: #f1f5f9;
   --surface-border: rgba(15, 23, 42, 0.12);
@@ -161,7 +164,10 @@
   --fg-primary: #0F172A;
   --fg-secondary: #475569;
   --fg-muted: #64748B;
+  /* [HIDDEN-UI THEME-7 raised subtle-text contrast; old value: #94A3B8]
   --fg-subtle: #94A3B8;
+  */
+  --fg-subtle: #64748B;
   --fg-inverse: #F8FAFC;
 
   --accent: #2563EB;
@@ -192,7 +198,10 @@
   --dot-neutral: #94A3B8;
 
   /* 5-tier severity badges for light mode (derived inks/tints for AA contrast) */
+  /* [HIDDEN-UI THEME-7 raised critical badge contrast; old value: #E11D48]
   --severity-critical-ink: #E11D48;
+  */
+  --severity-critical-ink: #BE123C;
   --severity-critical-bg: #FFF1F2;
   --severity-critical-dot: #EF4444;
   --severity-high-ink: #C2410C;
@@ -214,7 +223,7 @@
   --selection-bg: rgba(37, 99, 235, 0.18);
   --selection-fg: #0F172A;
 
-  /* [HIDDEN-UI THEME-1 replaced with SREOps scrollbar tokens]
+  /* [HIDDEN-UI THEME-1 replaced with console scrollbar tokens]
   --scrollbar-thumb: rgba(15, 23, 42, 0.18);
   --scrollbar-thumb-hover: rgba(15, 23, 42, 0.32);
   */

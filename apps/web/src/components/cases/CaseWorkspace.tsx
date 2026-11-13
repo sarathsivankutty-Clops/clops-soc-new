@@ -1003,7 +1003,7 @@ export function CaseWorkspace({ caseId }: { caseId: string }) {
               updated_at: caseRecord.updatedAt,
               due_at: caseRecord.dueAt,
             }}
-            eyebrow="Ask AiSOC about this case"
+            eyebrow={/* [HIDDEN-UI THEME-7 prior label: Ask AiSOC about this case] */ 'Ask ClopsSOC about this case'}
           />
 
           {/* Depth 9.4 — one action opens a Slack or Teams channel for this case

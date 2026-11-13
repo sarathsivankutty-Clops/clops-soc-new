@@ -202,7 +202,8 @@ function eventFromMessage(msg: RealtimeAlertMessage, fallbackId: number): LiveEv
     inner.source_system ??
     (payload as { source?: string }).source ??
     (payload as { source_system?: string }).source_system ??
-    'AiSOC';
+    /* [HIDDEN-UI THEME-7 visible platform label updated] 'AiSOC' */
+    'ClopsSOC';
 
   const tsRaw = msg.timestamp ? Date.parse(msg.timestamp) : Date.now();
   const receivedAt = Number.isFinite(tsRaw) ? tsRaw : Date.now();
@@ -264,7 +265,9 @@ export function LiveFeedPanel() {
   return (
     <div className="bg-surface-card border border-surface-border rounded-container p-4">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-medium text-fg-primary flex items-center gap-2">
+        {/* [HIDDEN-UI THEME-7 use the approved 16px card-title scale]
+            <h3 className="text-sm font-medium text-fg-primary flex items-center gap-2"> */}
+        <h3 className="text-card-title font-medium text-fg-primary flex items-center gap-2">
           <span
             className={clsx(
               'w-2 h-2 rounded-full',

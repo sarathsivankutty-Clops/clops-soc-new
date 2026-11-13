@@ -305,9 +305,18 @@ export function CommandPalette() {
                         {item.shortcut && (
                           <span className="flex items-center gap-0.5">
                             {item.shortcut.map((key) => (
+                              {/*
+                                [HIDDEN-UI THEME-7 use control radius for keycaps]
+                                <kbd
+                                  key={key}
+                                  className="rounded border border-surface-border bg-surface-elevated px-1 py-0.5 text-eyebrow font-mono text-fg-muted"
+                                >
+                                  {key}
+                                </kbd>
+                              */}
                               <kbd
                                 key={key}
-                                className="rounded border border-surface-border bg-surface-elevated px-1 py-0.5 text-eyebrow font-mono text-fg-muted"
+                                className="rounded-control border border-surface-border bg-surface-elevated px-1 py-0.5 text-eyebrow font-mono text-fg-muted"
                               >
                                 {key}
                               </kbd>
@@ -323,12 +332,19 @@ export function CommandPalette() {
               <div className="flex items-center justify-between border-t border-surface-border px-4 py-2 text-caption text-fg-subtle">
                 <div className="flex items-center gap-3">
                   <span className="flex items-center gap-1">
+                    {/* [HIDDEN-UI THEME-7 use control radius for keycaps]
                     <kbd className="rounded border border-surface-border bg-surface-elevated px-1 py-0.5 font-mono text-fg-muted">↑</kbd>
                     <kbd className="rounded border border-surface-border bg-surface-elevated px-1 py-0.5 font-mono text-fg-muted">↓</kbd>
+                    */}
+                    <kbd className="rounded-control border border-surface-border bg-surface-elevated px-1 py-0.5 font-mono text-fg-muted">↑</kbd>
+                    <kbd className="rounded-control border border-surface-border bg-surface-elevated px-1 py-0.5 font-mono text-fg-muted">↓</kbd>
                     navigate
                   </span>
                   <span className="flex items-center gap-1">
+                    {/* [HIDDEN-UI THEME-7 use control radius for keycaps]
                     <kbd className="rounded border border-surface-border bg-surface-elevated px-1 py-0.5 font-mono text-fg-muted">↵</kbd>
+                    */}
+                    <kbd className="rounded-control border border-surface-border bg-surface-elevated px-1 py-0.5 font-mono text-fg-muted">↵</kbd>
                     select
                   </span>
                 </div>

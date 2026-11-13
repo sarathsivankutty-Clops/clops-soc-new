@@ -179,7 +179,8 @@ function StartPanel({
     <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-5">
       <h2 className="text-sm font-semibold text-slate-200">Run an evaluation</h2>
       <p className="mt-1 max-w-3xl text-sm text-slate-400">
-        AiSOC reads the findings your analysts closed in this window, replays them through the
+        {/* [HIDDEN-UI THEME-7 prior product label: AiSOC reads the findings] */}
+        ClopsSOC reads the findings your analysts closed in this window, replays them through the
         same triage path production runs, and grades the result against the labels they chose.
         Nothing is written back to your SIEM and no alert, memory or action is created.
       </p>
@@ -475,7 +476,8 @@ export function ReplayEvaluationView() {
       <header>
         <h1 className="text-xl font-semibold text-slate-100">Evaluate on your history</h1>
         <p className="mt-1 max-w-3xl text-sm text-slate-400">
-          Measure AiSOC triage against your own analysts&apos; past decisions, on your own data,
+          {/* [HIDDEN-UI THEME-7 prior product label: AiSOC triage] */}
+          Measure ClopsSOC triage against your own analysts&apos; past decisions, on your own data,
           before trusting it. Every rate below travels with the number of cases it was computed
           over.
         </p>

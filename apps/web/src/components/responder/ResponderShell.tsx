@@ -231,7 +231,8 @@ export function ResponderShell({ children }: { children: React.ReactNode }) {
               </svg>
             </div>
             <div className="leading-tight">
-              <div className="text-sm font-semibold">AiSOC Responder</div>
+              {/* [HIDDEN-UI THEME-7 previous product name: AiSOC Responder] */}
+              <div className="text-sm font-semibold">ClopsSOC Responder</div>
               {profileName ? (
                 <div className="text-[10px] uppercase tracking-wider text-zinc-500 truncate max-w-[140px]">
                   {profileName}

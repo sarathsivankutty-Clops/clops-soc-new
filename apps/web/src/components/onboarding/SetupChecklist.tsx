@@ -108,7 +108,7 @@ export function SetupChecklist({ compact = false }: { compact?: boolean }) {
           <p className="mt-1 text-sm text-slate-400">
             {remaining === 0
               ? 'A source is connected and alerts are arriving from it.'
-              : `${remaining} step${remaining === 1 ? '' : 's'} left before AiSOC is working on your own data.`}
+              : /* [HIDDEN-UI THEME-7 prior text named AiSOC] */ `${remaining} step${remaining === 1 ? '' : 's'} left before ClopsSOC is working on your own data.`}
           </p>
         </div>
       </div>
@@ -194,7 +194,8 @@ export function SetupChecklist({ compact = false }: { compact?: boolean }) {
 
       {data.sample_data_loaded && (
         <p className="mt-4 text-xs text-slate-500">
-          Sample alerts are attributed to &quot;AiSOC&quot; in the source column, so you can tell
+          {/* [HIDDEN-UI THEME-7 prior source label: AiSOC] */}
+          Sample alerts are attributed to &quot;ClopsSOC&quot; in the source column, so you can tell
           them from real telemetry anywhere in the console. Connecting a real source is still
           the next step.
         </p>

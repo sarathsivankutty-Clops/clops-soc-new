@@ -224,7 +224,7 @@ export function BrandingPanel() {
                   value={draft.product_name}
                   onChange={(e) => set('product_name', e.target.value)}
                   aria-label="Product name"
-                  placeholder="AiSOC"
+                  placeholder={/* [HIDDEN-UI THEME-7 previous default: AiSOC] */ 'ClopsSOC'}
                 />
               </label>
               <label className="text-sm">

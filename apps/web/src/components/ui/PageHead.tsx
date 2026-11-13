@@ -11,7 +11,7 @@ export interface PageHeadProps {
 }
 
 /**
- * Shared SREOps-adapted page header strip with eyebrow, 22px title, optional
+ * Shared console page header with eyebrow, 22px title, optional
  * count pill, muted description, and right-aligned action controls.
  */
 export function PageHead({

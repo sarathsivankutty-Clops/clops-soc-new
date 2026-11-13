@@ -360,7 +360,8 @@ const TABS: { id: TabId; label: string; description: string }[] = [
   {
     id: 'notifications',
     label: 'Notifications',
-    description: 'How and when AiSOC should ping you.',
+    /* [HIDDEN-UI THEME-7 prior notification copy named AiSOC] */
+    description: 'How and when ClopsSOC should ping you.',
   },
   {
     id: 'appearance',
@@ -371,7 +372,8 @@ const TABS: { id: TabId; label: string; description: string }[] = [
     id: 'deployment',
     label: 'Deployment & AI',
     description:
-      'Live air-gap policy and LLM provider snapshot for this AiSOC pod.',
+      /* [HIDDEN-UI THEME-7 prior deployment copy named AiSOC] */
+      'Live air-gap policy and LLM provider snapshot for this ClopsSOC pod.',
   },
   {
     id: 'audit',
@@ -1622,7 +1624,7 @@ function DeploymentAIPanel() {
     <div>
       <PanelHeader
         title="Deployment & AI"
-        description="Air-gap policy, LLM provider snapshot, and per-tenant BYOK overrides for this AiSOC pod."
+        description={/* [HIDDEN-UI THEME-7 prior deployment copy named AiSOC] */ 'Air-gap policy, LLM provider snapshot, and per-tenant BYOK overrides for this ClopsSOC pod.'}
       />
       <div className="space-y-5 px-6 py-5">
         {isLoading && !airgap.data && !llm.data ? (
@@ -2202,7 +2204,8 @@ function BYOKCard({
               )}
             </div>
             <p className="mt-1 text-xs text-gray-500">
-              Per-tenant override for this AiSOC workspace. The platform
+              {/* [HIDDEN-UI THEME-7 prior workspace copy named AiSOC] */}
+              Per-tenant override for this ClopsSOC workspace. The platform
               uses these settings instead of the pod-level defaults.
             </p>
           </div>

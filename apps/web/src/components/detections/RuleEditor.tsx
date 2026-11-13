@@ -67,7 +67,8 @@ tags:
   yara: `rule MySuspiciousBinary
 {
     meta:
-        author = "AiSOC"
+        /* [HIDDEN-UI THEME-7 update visible default author] author = "AiSOC" */
+        author = "ClopsSOC"
         description = "Detects an embedded marker"
     strings:
         $a = "evil_marker"
@@ -686,7 +687,7 @@ export function RuleEditor({ mode, ruleId }: RuleEditorProps) {
             hit_count: data.hitCount,
             last_triggered_at: data.lastTriggeredAt,
           }}
-          eyebrow="Ask AiSOC about this rule"
+          eyebrow={/* [HIDDEN-UI THEME-7 prior label: Ask AiSOC about this rule] */ 'Ask ClopsSOC about this rule'}
         />
       ) : null}
 

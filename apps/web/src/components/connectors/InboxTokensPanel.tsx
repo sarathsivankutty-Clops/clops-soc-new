@@ -132,7 +132,8 @@ function SecretDisclosureModal({
                 Copy this URL — it won&apos;t be shown again
               </h3>
               <p className="text-xs text-gray-400 mt-1">
-                Paste the URL into your vendor&apos;s webhook configuration. AiSOC
+                {/* [HIDDEN-UI THEME-7 prior product label: AiSOC] */}
+                Paste the URL into your vendor&apos;s webhook configuration. ClopsSOC
                 stores only a fingerprint after this dialog closes; if you
                 lose it, rotate the token to mint a new one.
               </p>

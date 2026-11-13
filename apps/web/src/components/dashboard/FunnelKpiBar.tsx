@@ -214,7 +214,9 @@ export function FunnelKpiBar({
           </div>
           <span className="text-xs text-fg-muted">Last {period}</span>
         </div>
-        <div className="rounded-container border border-severity-critical-ink/30 bg-severity-critical-bg px-4 py-3 text-sm text-severity-critical-ink">
+        {/* [HIDDEN-UI THEME-7 use the approved 13px body scale]
+            <div className="rounded-container border border-severity-critical-ink/30 bg-severity-critical-bg px-4 py-3 text-sm text-severity-critical-ink"> */}
+        <div className="rounded-container border border-severity-critical-ink/30 bg-severity-critical-bg px-4 py-3 text-body text-severity-critical-ink">
           <p className="font-semibold">Funnel metrics unavailable</p>
           <p className="mt-1 text-xs opacity-90">{errorMessage}</p>
           <p className="mt-1 text-xs opacity-75">

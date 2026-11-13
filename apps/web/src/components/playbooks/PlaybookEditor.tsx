@@ -96,7 +96,8 @@ const EMPTY_PLAYBOOK: Playbook = {
   tags: [],
   trigger: { on: 'manual' },
   steps: [],
-  author: 'AiSOC',
+  /* [HIDDEN-UI THEME-7 update visible default author] author: 'AiSOC', */
+  author: 'ClopsSOC',
   enabled: true,
   created_at: '',
   updated_at: '',
@@ -425,7 +426,7 @@ export function PlaybookEditor({ playbookId }: PlaybookEditorProps) {
                 name: s.name,
               })),
             }}
-            eyebrow="Ask AiSOC about this runbook"
+            eyebrow={/* [HIDDEN-UI THEME-7 prior label: Ask AiSOC about this runbook] */ 'Ask ClopsSOC about this runbook'}
           />
         </div>
       ) : null}

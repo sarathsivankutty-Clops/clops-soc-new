@@ -705,7 +705,8 @@ function OAuthPanel({
           </p>
           <p className="text-xs text-gray-400 mt-1 leading-relaxed">
             Recommended. We&apos;ll redirect you to {entry.connector_name} to grant access, then
-            store the rotated tokens in the AiSOC vault. No long-lived secrets to paste.
+            {/* [HIDDEN-UI THEME-7 prior product label: AiSOC vault] */}
+            store the rotated tokens in the ClopsSOC vault. No long-lived secrets to paste.
           </p>
         </div>
         {appView && !showRegisterForm && (
@@ -1206,7 +1207,8 @@ function VerifyStep({
             <p className="text-xs text-gray-400 mt-1 leading-relaxed">
               {arrived ? (
                 <>
-                  AiSOC received the first event from{' '}
+                  {/* [HIDDEN-UI THEME-7 prior product label: AiSOC received] */}
+                  ClopsSOC received the first event from{' '}
                   <span className="text-gray-200">{connector.name}</span>. The connector is
                   healthy and on its normal poll cadence.
                 </>
@@ -1219,7 +1221,8 @@ function VerifyStep({
                 </>
               ) : (
                 <>
-                  AiSOC is polling <span className="text-gray-200">{connector.name}</span> on
+                  {/* [HIDDEN-UI THEME-7 prior product label: AiSOC is polling] */}
+                  ClopsSOC is polling <span className="text-gray-200">{connector.name}</span> on
                   its configured cadence. The first batch usually lands within a minute or two.
                 </>
               )}
@@ -1531,7 +1534,7 @@ export function AddConnectorModal({
                   </h2>
                   <p className="text-xs text-gray-500 mt-0.5">
                     {step === 'pick'
-                      ? 'Pick a security tool to connect. Credentials are encrypted with the AiSOC vault.'
+                      ? /* [HIDDEN-UI THEME-7 prior text: AiSOC vault] */ 'Pick a security tool to connect. Credentials are encrypted with the ClopsSOC vault.'
                       : step === 'configure'
                         ? 'Credentials are tested against the upstream API and only saved on success.'
                         : 'Watching for the first event to land. This is normally seconds for high-volume sources.'}

@@ -203,7 +203,7 @@ const config: Config = {
         kpi: ['1.75rem', { lineHeight: '1.1' }],            // 28px
       },
       backgroundImage: {
-        // Primary CTA & floating AI launcher gradient (SREOps --btn-grad).
+        // Primary CTA & floating AI launcher gradient (console button token).
         'btn-grad': 'var(--btn-grad)',
         // Three brand-tinted gradients used by the landing page only. Resolve
         // to CSS variables defined in `globals.css` so a future light-mode

@@ -40,7 +40,7 @@ const VARIANT_STYLES: Record<EmptyStateVariant, {
   badge: string;
   badgeLabel: string;
 }> = {
-  /* [HIDDEN-UI THEME-3 restyled EmptyState to SREOps tokens] */
+  /* [HIDDEN-UI THEME-3 restyled EmptyState to console tokens] */
   default: {
     container:
       'border-surface-border-strong bg-surface-card',

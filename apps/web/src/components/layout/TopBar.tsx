@@ -2,12 +2,16 @@
 
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
-import { useOptionalTheme } from '@/components/theme/ThemeProvider';
-import { useBrandLogo, useBranding } from '@/hooks/useBranding';
+import { useBranding } from '@/hooks/useBranding';
 import { TimeWindowSelector } from './TimeWindowSelector';
 import { TenantSwitcher } from './TenantSwitcher';
 import { RoleBadge } from './RoleBadge';
 import { useTenant } from './TenantProvider';
+import { BrandLogo } from './BrandLogo';
+/* [HIDDEN-UI THEME-7 retained imports for the commented legacy controls]
+import { ThemeToggle } from '@/components/theme/ThemeToggle';
+import Link from 'next/link';
+*/
 
 // Order matters: longer/more specific paths first so startsWith() picks
 // the right label for nested routes (e.g. /detection/catalog before /detection).
@@ -66,16 +70,17 @@ export function TopBar({
   onToggleSidebar,
 }: TopBarProps) {
   const pathname = usePathname();
-  /* [HIDDEN-UI THEME-2 clock consolidated out of TopBar chrome]
+  /* [HIDDEN-UI THEME-7 clock state and timer retained for the legacy TopBar chrome]
   const [now, setNow] = useState<Date | null>(null);
+  useEffect(() => {
+    setNow(new Date());
+    const id = window.setInterval(() => setNow(new Date()), 1000);
+    return () => window.clearInterval(id);
+  }, []);
   */
   const [shortcut, setShortcut] = useState<'⌘K' | 'Ctrl K'>('⌘K');
   const { userRole } = useTenant();
-  const themeCtx = useOptionalTheme();
-  const isDark = themeCtx?.resolved !== 'light';
   const { branding } = useBranding();
-  const logoSrc = useBrandLogo(branding.logo_url);
-  const fallbackLogo = isDark ? '/brand/logo-dark.png' : '/brand/logo-light.png';
 
   // Show the right OS-specific shortcut hint without breaking SSR.
   useEffect(() => {
@@ -119,7 +124,24 @@ export function TopBar({
     window.dispatchEvent(event);
   };
 
-  /* [HIDDEN-UI THEME-2 TopBar clock formatting removed] */
+  /* [HIDDEN-UI THEME-7 legacy clock formatting retained with its hidden JSX]
+  const timeStr = now
+    ? now.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false,
+      })
+    : '—';
+  const dateStr = now
+    ? now.toLocaleDateString('en-US', {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      })
+    : '';
+  */
 
   return (
     <header
@@ -201,13 +223,42 @@ export function TopBar({
           <RoleBadge role={userRole} />
         </div>
         <div className="hidden sm:block h-6 w-px bg-surface-border" aria-hidden />
-        {/* [HIDDEN-UI THEME-2 TopBar clock, bell, ThemeToggle, and static SO avatar consolidated to Sidebar footer] */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={logoSrc ?? fallbackLogo}
-          alt={branding.product_name}
-          className="h-9 w-auto max-w-40 object-contain shrink-0"
-        />
+        {/*
+          [HIDDEN-UI THEME-7 legacy TopBar controls retained; theme and user controls are in the Sidebar footer]
+          <div className="text-right hidden lg:block">
+            <p className="text-sm font-mono text-fg-secondary" suppressHydrationWarning>{timeStr}</p>
+            <p className="text-xs text-fg-subtle" suppressHydrationWarning>{dateStr}</p>
+          </div>
+          <ThemeToggle />
+          <Link
+            href="/alerts"
+            aria-label="Open notifications"
+            className="relative p-1.5 text-fg-muted hover:text-fg-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50 rounded"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+            </svg>
+            <span aria-hidden className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full ring-2 ring-surface-raised" />
+          </Link>
+          <div className="flex items-center gap-2 cursor-pointer group">
+            <div className="w-8 h-8 rounded-full bg-brand-600 flex items-center justify-center text-xs font-bold text-white">
+              SO
+            </div>
+            <div className="hidden lg:block">
+              <p className="text-xs font-medium text-fg-secondary">SOC Analyst</p>
+              <p className="text-xs text-fg-subtle">Admin</p>
+            </div>
+          </div>
+        */}
+        {/*
+          [HIDDEN-UI THEME-7 direct TopBar image replaced by shared tenant-first brand rendering]
+          <img
+            src={logoSrc ?? fallbackLogo}
+            alt={branding.product_name}
+            className="h-9 w-auto max-w-40 object-contain shrink-0"
+          />
+        */}
+        <BrandLogo branding={branding} className="h-9 w-auto max-w-40 object-contain shrink-0" />
       </div>
     </header>
   );

@@ -7,9 +7,10 @@ import { clsx } from 'clsx';
 import { LiveQueueBadge } from './LiveQueueBadge';
 import { RoleBadge } from './RoleBadge';
 import { useOptionalTheme } from '@/components/theme/ThemeProvider';
-import { useBrandLogo, useBranding } from '@/hooks/useBranding';
+import { useBranding } from '@/hooks/useBranding';
 import { useConsoleVersion } from '@/hooks/useConsoleVersion';
 import { authApi } from '@/lib/api';
+import { BrandLogo } from './BrandLogo';
 
 interface NavItem {
   label: string;
@@ -33,11 +34,13 @@ interface NavSection {
   items: NavItem[];
 }
 
+/* [HIDDEN-UI THEME-7 CloudifyOps tenant-first logo replaces the shield fallback]
 const ShieldIcon = () => (
   <svg className="w-5 h-5" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
   </svg>
 );
+*/
 
 const BellIcon = () => (
   <svg className="w-5 h-5" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -241,7 +244,6 @@ export function Sidebar({ collapsed = false }: SidebarProps = {}) {
   // unbranded deployment gets the platform defaults from the same call, so
   // there is one code path rather than two that drift.
   const { branding } = useBranding();
-  const logoSrc = useBrandLogo(branding.logo_url);
   const themeCtx = useOptionalTheme();
   const isDark = themeCtx?.resolved !== 'light';
   // Was `packageJson.version`, compiled into the bundle, while Settings →
@@ -321,15 +323,15 @@ export function Sidebar({ collapsed = false }: SidebarProps = {}) {
           className="flex-shrink-0 w-8 h-8 rounded-control bg-btn-grad flex items-center justify-center overflow-hidden text-white"
           style={brandFrameStyle}
         >
-          {logoSrc ? (
-            // An object URL over bytes this deployment served. The raw path
-            // cannot go here: the asset route authenticates a bearer token
-            // and an `<img>` can only carry a cookie.
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={logoSrc} alt="" className="w-full h-full object-contain" />
-          ) : (
-            <ShieldIcon />
-          )}
+          {/*
+            [HIDDEN-UI THEME-7 tenant logo logic consolidated in BrandLogo]
+            {logoSrc ? (
+              <img src={logoSrc} alt="" className="w-full h-full object-contain" />
+            ) : (
+              <ShieldIcon />
+            )}
+          */}
+          <BrandLogo branding={branding} alt="" className="w-full h-full object-contain" />
         </div>
         <div className="min-w-0">
           {branding.is_white_labelled ? (

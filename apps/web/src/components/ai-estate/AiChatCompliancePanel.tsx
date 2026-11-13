@@ -142,7 +142,8 @@ export function AiChatCompliancePanel() {
         <h2 className="font-semibold">Enterprise AI chat compliance</h2>
         <p className="mt-1 text-sm text-neutral-400">
           Reads your AI provider&apos;s compliance API for the directory, projects and activity feed. Off
-          until you add a key here. AiSOC stores classification labels and one 280-character masked
+          {/* [HIDDEN-UI THEME-7 visible product label updated: AiSOC stores classification labels] */}
+          until you add a key here. ClopsSOC stores classification labels and one 280-character masked
           snippet per conversation, never the conversation.
         </p>
       </header>

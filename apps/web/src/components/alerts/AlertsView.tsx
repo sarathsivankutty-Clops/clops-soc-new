@@ -13,7 +13,7 @@ import { EmptyState, EmptyStateIcons } from '@/components/ui/EmptyState';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { KpiStrip } from '@/components/ui/KpiStrip';
 import { PageHead } from '@/components/ui/PageHead';
-import { Badge } from '@/components/ui/Badge';
+import { Badge, type BadgeTone } from '@/components/ui/Badge';
 import { SavedViewsBar } from '@/components/saved-views/SavedViewsBar';
 import { useLocale } from '@/components/i18n/LocaleProvider';
 import { demoFallback } from '@/lib/demoFallback';
@@ -124,14 +124,20 @@ function demoFacets(rows: Alert[]): AlertFacets {
 // Wave 1 — Detection confidence chip rendered inline in the alert grid so an
 // analyst can spot low-confidence alerts at a glance without clicking through.
 // Click-through still goes to AlertDetailView for the full evidence chain.
-const CONFIDENCE_ROW_CONFIG: Record<ConfidenceLabel, { label: string; cls: string }> = {
+const CONFIDENCE_ROW_CONFIG: Record<ConfidenceLabel, { label: string; tone: BadgeTone }> = {
+  /* [HIDDEN-UI THEME-7 use shared semantic tones instead of raw palette styles]
   high: { label: 'HIGH', cls: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' },
   medium: { label: 'MED', cls: 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20' },
   low: { label: 'LOW', cls: 'text-gray-400 bg-gray-500/10 border-gray-500/20' },
+  */
+  high: { label: 'HIGH', tone: 'success' },
+  medium: { label: 'MED', tone: 'warning' },
+  low: { label: 'LOW', tone: 'neutral' },
 };
 
 function ConfidencePill({ label }: { label: ConfidenceLabel }) {
   const cfg = CONFIDENCE_ROW_CONFIG[label];
+  /* [HIDDEN-UI THEME-7 shared Badge now provides the dot and token tint]
   return (
     <span
       className={clsx('text-[10px] font-mono font-medium px-1.5 py-0.5 rounded border shrink-0', cfg.cls)}
@@ -139,8 +145,17 @@ function ConfidencePill({ label }: { label: ConfidenceLabel }) {
     >
       {cfg.label}
     </span>
-  );
+  ); */
+  return <Badge tone={cfg.tone} title={`Detection confidence: ${cfg.label}`}>{cfg.label}</Badge>;
 }
+
+const SEVERITY_BADGE_TONES: Record<string, BadgeTone> = {
+  critical: 'severity-critical',
+  high: 'severity-high',
+  medium: 'severity-medium',
+  low: 'severity-low',
+  info: 'severity-info',
+};
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
@@ -181,11 +196,17 @@ function SeverityDot({ severity }: { severity: string }) {
 function SeverityBadge({ severity }: { severity: string }) {
   const { t } = useLocale();
   const cfg = SEVERITY_CONFIG[severity as keyof typeof SEVERITY_CONFIG] || SEVERITY_CONFIG.info;
+  /* [HIDDEN-UI THEME-7 use the shared semantic severity Badge]
   return (
     <span className={clsx('inline-flex items-center gap-1.5 text-caption font-medium px-2.5 py-0.5 rounded-pill whitespace-nowrap', cfg.text, cfg.bg)}>
       <span aria-hidden="true" className={clsx('w-1.5 h-1.5 rounded-pill shrink-0', cfg.dot)} />
       {severityLabel(severity, t) ?? cfg.label}
     </span>
+  ); */
+  return (
+    <Badge tone={SEVERITY_BADGE_TONES[severity] ?? 'severity-info'}>
+      {severityLabel(severity, t) ?? cfg.label}
+    </Badge>
   );
 }
 

@@ -225,7 +225,9 @@ function ConfidenceFactorBar({ factor }: { factor: ConfidenceFactor }) {
   return (
     <div>
       <div className="flex items-baseline justify-between gap-3 mb-1">
-        <span className="text-sm text-fg-primary">{factor.label}</span>
+        {/* [HIDDEN-UI THEME-7 use the approved 13px body scale]
+            <span className="text-sm text-fg-primary">{factor.label}</span> */}
+        <span className="text-body text-fg-primary">{factor.label}</span>
         <span className="text-xs font-mono text-fg-muted shrink-0">
           {`${signedContribution(factor.contribution)} / ${factor.weight.toFixed(2)}`}
         </span>
@@ -265,7 +267,9 @@ function ConfidenceExplainability({
           <span className={clsx('w-2.5 h-2.5 rounded-full mt-1.5 shrink-0', cfg.dot)} />
           <div className="flex-1">
             <div className="flex items-baseline gap-3">
-              <span className="text-sm font-semibold text-fg-primary">{cfg.label}</span>
+              {/* [HIDDEN-UI THEME-7 use the approved 13px body scale]
+                  <span className="text-sm font-semibold text-fg-primary">{cfg.label}</span> */}
+              <span className="text-body font-semibold text-fg-primary">{cfg.label}</span>
               {typeof score === 'number' && (
                 <span className="text-xs font-mono text-fg-muted">
                   {`score ${Math.round(score)}/100`}

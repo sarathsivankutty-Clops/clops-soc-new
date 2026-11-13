@@ -5,7 +5,8 @@ import { redirect } from 'next/navigation';
 export const metadata = {
   title: 'Evaluate on your history',
   description:
-    "Measure AiSOC triage against your own analysts' past decisions, on your own closed findings.",
+    /* [HIDDEN-UI THEME-7 prior description named AiSOC] */
+    "Measure ClopsSOC triage against your own analysts' past decisions, on your own closed findings.",
 };
 
 export const dynamic = 'force-dynamic';

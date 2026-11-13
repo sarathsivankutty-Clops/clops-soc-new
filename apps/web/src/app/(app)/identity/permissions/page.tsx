@@ -11,7 +11,7 @@
 import EffectivePermissionsClient from './EffectivePermissionsClient';
 
 export const metadata = {
-  title: 'Effective Permissions | AiSOC',
+  title: /* [HIDDEN-UI THEME-7 prior title used AiSOC] */ 'Effective Permissions | ClopsSOC',
 };
 
 export default function EffectivePermissionsPage() {
