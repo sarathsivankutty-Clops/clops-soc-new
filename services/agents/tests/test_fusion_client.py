@@ -166,10 +166,52 @@ async def test_process_alert_no_token_omits_authorization_header(
     assert "authorization" not in {k.lower() for k in route.calls.last.request.headers}
 
 
+async def test_process_alert_asserts_the_alerts_tenant(
+    raw_alert: dict[str, Any],
+    fused_alert: dict[str, Any],
+    fusion_url: str,
+) -> None:
+    """A service-token call MUST declare the tenant on ``X-AiSOC-Tenant-ID``.
+
+    Fusion resolves a service token to the scope the caller *declares* and
+    treats an absent declaration as an empty scope, so every call through this
+    client answered 403 ``service_token_without_tenant`` before the header was
+    sent. The value comes from the alert being processed, not from the caller.
+    """
+    from app.tools.fusion import process_alert
+
+    async with respx.mock(base_url=fusion_url, assert_all_called=True) as router:
+        route = router.post("/process").mock(
+            return_value=httpx.Response(200, json=fused_alert),
+        )
+
+        await process_alert(raw_alert, api_token="tok-123")
+
+    assert route.calls.last.request.headers["x-aisoc-tenant-id"] == raw_alert["tenant_id"]
+
+
+async def test_process_alert_omits_tenant_header_without_a_tenant(
+    fusion_url: str,
+) -> None:
+    """An alert with no tenant asserts nothing rather than a placeholder.
+
+    A blank or invented tenant would be a scope claim this call cannot back.
+    """
+    from app.tools.fusion import process_alert
+
+    async with respx.mock(base_url=fusion_url, assert_all_called=True) as router:
+        route = router.post("/process").mock(
+            return_value=httpx.Response(200, json={}),
+        )
+
+        await process_alert({"source": "edr", "title": "no tenant"})
+
+    assert "x-aisoc-tenant-id" not in {k.lower() for k in route.calls.last.request.headers}
+
+
 # ---------------------------------------------------------------------------
 # Error handling — fusion failures MUST propagate
 # ---------------------------------------------------------------------------
-
 
 async def test_process_alert_raises_on_503_when_worker_not_ready(
     raw_alert: dict[str, Any],

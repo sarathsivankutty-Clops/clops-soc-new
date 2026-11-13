@@ -208,6 +208,13 @@ services:
       # set deliberately here.
       METRICS_TOKEN: ${METRICS_TOKEN:?set METRICS_TOKEN — guards /metrics outside development; `openssl rand -hex 32`}
       JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET — signs SAML/OIDC sessions; the same value ingest-worker takes below}
+      # The RBA gateway's upstream. This is the same pair the base file sets;
+      # declared here so a production overlay cannot silently reintroduce the
+      # 503/stub behaviour the base file was fixed for. Not `:?` — the base
+      # file already defaults it to the compose service name, and a deployment
+      # that does not run fusion keeps the graceful "unavailable" answer.
+      FUSION_SERVICE_URL: ${FUSION_SERVICE_URL:-http://fusion:8003}
+      FUSION_URL: ${FUSION_URL:-http://fusion:8003}
 
   ingest-worker:
     depends_on:
@@ -254,6 +261,7 @@ services:
       # The same value the api service declares above. Eight modules here
       # present it; the API verifies it without falling back.
       AISOC_AGENTS_SERVICE_TOKEN: ${AISOC_AGENTS_SERVICE_TOKEN:?set AISOC_AGENTS_SERVICE_TOKEN}
+      AISOC_CREDENTIAL_KEY: ${AISOC_CREDENTIAL_KEY:?set AISOC_CREDENTIAL_KEY}
       NEO4J_PASSWORD: ${NEO4J_PASSWORD:?set NEO4J_PASSWORD}
 
   actions:
@@ -354,6 +362,11 @@ services:
     environment:
       NODE_ENV: production
       AISOC_DEMO_MODE: "false"
+      # Mirrors the base file. Inert until the image is built with the
+      # FUSION_URL build arg (the rewrite source is otherwise absent from
+      # routes-manifest.json); harmless, and required for the direct
+      # console→fusion path on a rebuilt image.
+      FUSION_URL: ${FUSION_URL:-http://fusion:8003}
 
   # ---------------------------------------------------------------------------
   # `full`-profile stores. They do not run in a CORE deployment, but the base

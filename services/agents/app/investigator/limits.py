@@ -18,32 +18,32 @@ it is a 41,000-token bill per degenerate call and an investigation that never
 returns, and the reply is unusable either way: the four agents parse JSON, and
 a reply that ran past the schema was never going to parse.
 
-The bound is deliberately well clear of what the agents legitimately produce.
-Measured over the pipeline's calls on the eval corpus, the largest legitimate
-completion was 876 tokens (the report writer, which writes the longest
-output); recon, forensic and responder sit between 200 and 400. 2048 leaves
-more than double the headroom over the longest real reply, so it truncates
-nothing the agents actually emit and stops a runaway inside a few seconds.
+The default is 1000 to fit Groq's on-demand output-token request limit. That
+still clears the longest measured reply; operators on a higher-capacity
+provider or tier can raise it with ``AISOC_INVESTIGATOR_MAX_COMPLETION_TOKENS``.
 
-Override with ``AISOC_INVESTIGATOR_MAX_COMPLETION_TOKENS`` for a deployment
-running a model whose replies are genuinely longer. Zero or negative removes
-the bound, which is the pre-existing behaviour and has to stay reachable —
-but it is now a decision somebody makes rather than the default.
+LLM requests also have an explicit timeout so a slow provider call cannot
+consume the full investigation budget. Override it with
+``AISOC_INVESTIGATOR_LLM_TIMEOUT_SECONDS``.
 """
 
 from __future__ import annotations
 
+import math
 import os
 
-#: Headroom over the longest legitimate reply measured on the eval corpus.
-DEFAULT_MAX_COMPLETION_TOKENS = 2048
+#: Groq's on-demand request cap is 1000 output tokens; this also exceeds the
+#: longest legitimate investigator completion measured on the eval corpus.
+DEFAULT_MAX_COMPLETION_TOKENS = 1000
+DEFAULT_LLM_TIMEOUT_SECONDS = 120
 
-_ENV_VAR = "AISOC_INVESTIGATOR_MAX_COMPLETION_TOKENS"
+_MAX_COMPLETION_TOKENS_ENV = "AISOC_INVESTIGATOR_MAX_COMPLETION_TOKENS"
+_LLM_TIMEOUT_SECONDS_ENV = "AISOC_INVESTIGATOR_LLM_TIMEOUT_SECONDS"
 
 
 def max_completion_tokens() -> int | None:
     """The completion bound, or ``None`` when an operator has removed it."""
-    raw = os.getenv(_ENV_VAR)
+    raw = os.getenv(_MAX_COMPLETION_TOKENS_ENV)
     if raw is None or not raw.strip():
         return DEFAULT_MAX_COMPLETION_TOKENS
     try:
@@ -53,3 +53,15 @@ def max_completion_tokens() -> int | None:
         # module exists to end, so it falls back to the bound, not past it.
         return DEFAULT_MAX_COMPLETION_TOKENS
     return value if value > 0 else None
+
+
+def llm_timeout_seconds() -> float:
+    """Return a positive per-request timeout, defaulting safely on bad input."""
+    raw = os.getenv(_LLM_TIMEOUT_SECONDS_ENV)
+    if raw is None or not raw.strip():
+        return DEFAULT_LLM_TIMEOUT_SECONDS
+    try:
+        value = float(raw)
+    except ValueError:
+        return DEFAULT_LLM_TIMEOUT_SECONDS
+    return value if value > 0 and math.isfinite(value) else DEFAULT_LLM_TIMEOUT_SECONDS

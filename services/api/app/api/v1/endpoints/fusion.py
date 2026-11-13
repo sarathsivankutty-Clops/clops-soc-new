@@ -156,8 +156,16 @@ async def fusion_metrics(user: AuthUser) -> dict[str, Any]:
 
 
 @router.get("/ml/status", summary="Fusion ML model status")
-async def ml_status() -> dict[str, Any]:
-    upstream = await _proxy_get("/ml/status")
+async def ml_status(user: AuthUser, tenant_id: UUID | None = None) -> dict[str, Any]:
+    # Fusion gates /ml/status on the caller's principal — unlike /health and
+    # /metrics, which are public — so this route has to resolve its own scope
+    # and present both halves of the credential it holds. It did neither: the
+    # proxy call carried no Authorization and no tenant assertion, so once
+    # FUSION_URL was configured this route answered 401 `missing bearer
+    # credential` on every call while fusion itself was healthy. Same shape as
+    # the entity-risk routes below, which is the shape fusion expects.
+    scoped = scoped_tenant_or_403(user, tenant_id)
+    upstream = await _proxy_get("/ml/status", headers=_upstream_headers(scoped))
     if upstream is not None:
         return upstream
     return {

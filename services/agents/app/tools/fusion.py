@@ -32,6 +32,11 @@ logger = structlog.get_logger()
 _DEFAULT_FUSION_URL = "http://fusion:8003"
 _DEFAULT_TIMEOUT = "15.0"
 
+#: The tenant assertion fusion's ``require_console_or_service_auth`` requires on
+#: a service-token call. Must match ``TENANT_HEADER`` in
+#: ``services/fusion/app/security/tenant_scope.py``.
+_TENANT_HEADER = "X-AiSOC-Tenant-ID"
+
 
 def _fusion_url() -> str:
     # Read at call time so tests (and dynamic redeploys) can override
@@ -43,8 +48,30 @@ def _timeout() -> float:
     return float(os.getenv("AGENTS_FUSION_TIMEOUT", _DEFAULT_TIMEOUT))
 
 
-def _headers(api_token: str | None) -> dict[str, str]:
-    return {"Authorization": f"Bearer {api_token}"} if api_token else {}
+def _headers(api_token: str | None, tenant_id: str | None) -> dict[str, str]:
+    headers: dict[str, str] = {}
+    if api_token:
+        headers["Authorization"] = f"Bearer {api_token}"
+    if tenant_id:
+        headers[_TENANT_HEADER] = tenant_id
+    return headers
+
+
+def _tenant_of(raw_alert: dict[str, Any]) -> str | None:
+    """The tenant the alert itself belongs to.
+
+    Fusion resolves a service token to the scope that caller *declares* on
+    ``X-AiSOC-Tenant-ID`` — an absent declaration is an empty scope, not every
+    scope, and it answers 403 ``service token must declare the tenant``. The
+    declaration therefore has to come from the alert being processed: reading
+    it from an inbound request header would let a caller drive one tenant's
+    event into another tenant's dedup, correlation and RBA state.
+    """
+    tenant = raw_alert.get("tenant_id")
+    if tenant is None:
+        return None
+    value = str(tenant).strip()
+    return value or None
 
 
 async def process_alert(
@@ -79,7 +106,7 @@ async def process_alert(
             resp = await client.post(
                 url,
                 json=raw_alert,
-                headers=_headers(api_token),
+                headers=_headers(api_token, _tenant_of(raw_alert)),
             )
             resp.raise_for_status()
             return resp.json()

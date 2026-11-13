@@ -15,7 +15,12 @@ import ast
 from pathlib import Path
 
 import pytest
-from app.investigator.limits import DEFAULT_MAX_COMPLETION_TOKENS, max_completion_tokens
+from app.investigator.limits import (
+    DEFAULT_LLM_TIMEOUT_SECONDS,
+    DEFAULT_MAX_COMPLETION_TOKENS,
+    llm_timeout_seconds,
+    max_completion_tokens,
+)
 from app.llm.factory import make_chat_model
 
 INVESTIGATOR = Path(__file__).resolve().parents[1] / "app" / "investigator"
@@ -48,14 +53,35 @@ def test_every_investigator_llm_call_bounds_its_completion(module_and_call):
     )
 
 
+@pytest.mark.parametrize("module_and_call", _make_chat_model_calls(), ids=lambda mc: f"{mc[0]}:{mc[1].lineno}")
+def test_every_investigator_llm_call_has_a_timeout(module_and_call):
+    module, call = module_and_call
+    passed = {kw.arg for kw in call.keywords}
+    assert "timeout" in passed, f"{module}:{call.lineno} places an LLM call with no explicit timeout"
+
+
 def test_the_bound_clears_the_longest_reply_the_agents_actually_write():
-    """A bound that truncates real output would be a quality regression."""
-    assert DEFAULT_MAX_COMPLETION_TOKENS > LONGEST_LEGITIMATE_COMPLETION * 2
+    """Keep enough room for reports without exceeding Groq's on-demand cap."""
+    assert DEFAULT_MAX_COMPLETION_TOKENS >= LONGEST_LEGITIMATE_COMPLETION
+    assert DEFAULT_MAX_COMPLETION_TOKENS <= 1000
 
 
 def test_the_default_applies_with_no_configuration(monkeypatch):
     monkeypatch.delenv("AISOC_INVESTIGATOR_MAX_COMPLETION_TOKENS", raising=False)
     assert max_completion_tokens() == DEFAULT_MAX_COMPLETION_TOKENS
+
+
+def test_llm_timeout_defaults_and_can_be_configured(monkeypatch):
+    monkeypatch.delenv("AISOC_INVESTIGATOR_LLM_TIMEOUT_SECONDS", raising=False)
+    assert llm_timeout_seconds() == DEFAULT_LLM_TIMEOUT_SECONDS
+    monkeypatch.setenv("AISOC_INVESTIGATOR_LLM_TIMEOUT_SECONDS", "180")
+    assert llm_timeout_seconds() == 180
+
+
+@pytest.mark.parametrize("value", ["invalid", "0", "-1", "inf", "nan"])
+def test_invalid_llm_timeout_uses_safe_default(monkeypatch, value):
+    monkeypatch.setenv("AISOC_INVESTIGATOR_LLM_TIMEOUT_SECONDS", value)
+    assert llm_timeout_seconds() == DEFAULT_LLM_TIMEOUT_SECONDS
 
 
 def test_an_operator_can_raise_it(monkeypatch):

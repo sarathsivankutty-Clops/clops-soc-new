@@ -25,7 +25,7 @@ from app.llm.prompt_registry import prompt_text
 from app.prompt_serialization import summarize_structure_for_llm
 
 from .bundle_prompt import format_bundle_prompt_append
-from .limits import max_completion_tokens
+from .limits import llm_timeout_seconds, max_completion_tokens
 from .prompt_sanitizer import (
     sanitize_iterable_of_strings,
     sanitize_text,
@@ -38,7 +38,12 @@ logger = structlog.get_logger()
 
 async def _llm_forensic(state: InvestigatorState) -> dict[str, Any]:
     model = resolve_model_alias("investigation")
-    llm = make_chat_model("investigation", temperature=0, max_tokens=max_completion_tokens())
+    llm = make_chat_model(
+        "investigation",
+        temperature=0,
+        max_tokens=max_completion_tokens(),
+        timeout=llm_timeout_seconds(),
+    )
 
     # Defence-in-depth: alert_summary, recon.summary, and the enrichment cache
     # can all carry attacker-controlled strings (banners, dark-web excerpts,

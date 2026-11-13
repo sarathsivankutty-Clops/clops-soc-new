@@ -44,7 +44,7 @@ class InvestigationBudget:
 
 def default_budget() -> InvestigationBudget:
     return InvestigationBudget(
-        max_seconds=float(os.getenv("AISOC_INVESTIGATION_MAX_SECONDS", "120")),
+        max_seconds=float(os.getenv("AISOC_INVESTIGATION_MAX_SECONDS", "600")),
         max_tokens=int(os.getenv("AISOC_MAX_TOKENS_PER_ALERT", "20000")),
         max_tool_calls=int(os.getenv("AISOC_INVESTIGATION_MAX_TOOL_CALLS", "8")),
     )

@@ -28,7 +28,9 @@ from pydantic import BaseModel
 
 from app.graph.runner import default_budget
 from app.investigator import InvestigatorOrchestrator, ledger
+from app.llm.factory import llm_override
 from app.orchestrator.router import RouterOrchestrator
+from app.security.llm_resolver import resolve_llm_config
 from app.security.tenant_scope import (
     TENANT_HEADER,
     TenantPrincipal,
@@ -220,6 +222,24 @@ async def _emit_event(run_id: str, tenant_id: str, event: dict[str, Any]) -> Non
 _TERMINAL_STATUSES = frozenset({"completed", "failed"})
 
 
+async def _resolve_tenant_llm_override(tenant_ref: str | None) -> dict[str, str | None]:
+    """Resolve per-tenant BYOK credentials for investigation, matching auto-triage semantics."""
+    try:
+        cfg = await resolve_llm_config(tenant_ref)
+    except Exception as exc:  # noqa: BLE001 — resolver failure falls back to default gateway/pin
+        logger.debug("investigate.llm_resolve_failed", error=str(exc))
+        return {}
+
+    if not (cfg and cfg.allowed and cfg.api_key):
+        return {}
+
+    return {
+        "api_key": cfg.api_key if getattr(cfg, "api_key_from_tenant", False) else None,
+        "base_url": cfg.base_url if getattr(cfg, "base_url_from_tenant", False) else None,
+        "model": cfg.model if getattr(cfg, "model_from_tenant", False) else None,
+    }
+
+
 async def _fail_run(run_id: str, run_uuid: UUID, tenant_ref: str, reason: str) -> None:
     """Close a run as ``failed`` in **both** places a consumer reads it.
 
@@ -277,64 +297,66 @@ async def _run_and_store(run_id: str, case_id: str, req: InvestigateRequest) -> 
     # `running` for the life of the process (issue #1242).
     max_seconds = default_budget().max_seconds
     deadline = asyncio.timeout(max_seconds)
+    byok = await _resolve_tenant_llm_override(req.tenant_id)
     try:
         async with deadline:
-            # Use the streaming orchestrator so we can emit events progressively.
-            # ``_investigate_stream`` picks investigator vs. router at call time
-            # based on ``AISOC_INVESTIGATE_USE_ROUTER``.
-            async for event in _investigate_stream(
-                case_id=case_id,
-                alert_summary=req.alert_summary,
-                raw_alert=req.raw_alert,
-                tenant_id=req.tenant_id,
-                run_id=run_uuid,
-            ):
-                if event.get("type") == "step":
-                    audit_log.append(event)
-                    # Update the in-memory run so pollers see progress
-                    _runs[run_id]["audit_log"] = audit_log
-                    # Broadcast to realtime → WebSocket clients
-                    await _emit_event(run_id, req.tenant_id, event)
+            with llm_override(**byok):
+                # Use the streaming orchestrator so we can emit events progressively.
+                # ``_investigate_stream`` picks investigator vs. router at call time
+                # based on ``AISOC_INVESTIGATE_USE_ROUTER``.
+                async for event in _investigate_stream(
+                    case_id=case_id,
+                    alert_summary=req.alert_summary,
+                    raw_alert=req.raw_alert,
+                    tenant_id=req.tenant_id,
+                    run_id=run_uuid,
+                ):
+                    if event.get("type") == "step":
+                        audit_log.append(event)
+                        # Update the in-memory run so pollers see progress
+                        _runs[run_id]["audit_log"] = audit_log
+                        # Broadcast to realtime → WebSocket clients
+                        await _emit_event(run_id, req.tenant_id, event)
 
-                elif event.get("type") == "done":
-                    state_data = event.get("state", {})
-                    _runs[run_id].update(
-                        {
-                            "status": "completed",
-                            "report_md": state_data.get("report_md", ""),
-                            "report_html": state_data.get("report_html", ""),
-                            "audit_log": audit_log,
-                            "recon": state_data.get("recon", {}),
-                            "forensic": state_data.get("forensic", {}),
-                            "responder": state_data.get("responder", {}),
-                            "completed_at": datetime.utcnow().isoformat(),
-                            "error": None,
-                        }
-                    )
-                    await _emit_event(
-                        run_id,
-                        req.tenant_id,
-                        {
-                            "kind": "completed",
-                            "agent": "orchestrator",
-                            "summary": "Investigation completed",
-                            "data": {"status": "completed"},
-                        },
-                    )
+                    elif event.get("type") == "done":
+                        state_data = event.get("state", {})
+                        _runs[run_id].update(
+                            {
+                                "status": "completed",
+                                "report_md": state_data.get("report_md", ""),
+                                "report_html": state_data.get("report_html", ""),
+                                "audit_log": audit_log,
+                                "recon": state_data.get("recon", {}),
+                                "forensic": state_data.get("forensic", {}),
+                                "responder": state_data.get("responder", {}),
+                                "completed_at": datetime.utcnow().isoformat(),
+                                "error": None,
+                            }
+                        )
+                        await _emit_event(
+                            run_id,
+                            req.tenant_id,
+                            {
+                                "kind": "completed",
+                                "agent": "orchestrator",
+                                "summary": "Investigation completed",
+                                "data": {"status": "completed"},
+                            },
+                        )
 
-                elif event.get("type") == "error":
-                    err_msg = event.get("error", "Unknown error")
-                    _runs[run_id].update({"status": "failed", "error": err_msg})
-                    await _emit_event(
-                        run_id,
-                        req.tenant_id,
-                        {
-                            "kind": "error",
-                            "agent": "orchestrator",
-                            "summary": err_msg,
-                            "data": {"status": "failed"},
-                        },
-                    )
+                    elif event.get("type") == "error":
+                        err_msg = event.get("error", "Unknown error")
+                        _runs[run_id].update({"status": "failed", "error": err_msg})
+                        await _emit_event(
+                            run_id,
+                            req.tenant_id,
+                            {
+                                "kind": "error",
+                                "agent": "orchestrator",
+                                "summary": err_msg,
+                                "data": {"status": "failed"},
+                            },
+                        )
 
     except TimeoutError as exc:
         # `asyncio.timeout` converts the cancellation it issued into
@@ -514,13 +536,15 @@ async def stream_investigation(ws: WebSocket, run_id: str):
                 await asyncio.sleep(0.5)
         else:
             # Direct streaming for ad-hoc calls; orchestrator selected by flag.
-            async for event in _investigate_stream(
-                case_id=case_id,
-                alert_summary=alert_summary,
-                raw_alert={},
-                tenant_id=tenant_id,
-            ):
-                await ws.send_text(json.dumps(event))
+            byok = await _resolve_tenant_llm_override(tenant_id)
+            with llm_override(**byok):
+                async for event in _investigate_stream(
+                    case_id=case_id,
+                    alert_summary=alert_summary,
+                    raw_alert={},
+                    tenant_id=tenant_id,
+                ):
+                    await ws.send_text(json.dumps(event))
     except WebSocketDisconnect:
         logger.info("ws.disconnected", run_id=run_id)
     except Exception as exc:  # noqa: BLE001

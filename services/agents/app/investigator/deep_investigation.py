@@ -50,7 +50,7 @@ from app.tools.customer_tools import scoped_customer_tools
 from app.tools.investigation import investigation_tools
 from app.tools.registry import default_registry
 
-from .limits import max_completion_tokens
+from .limits import llm_timeout_seconds, max_completion_tokens
 
 logger = structlog.get_logger()
 
@@ -65,7 +65,7 @@ ENABLED = os.getenv("AISOC_DEEP_INVESTIGATION", "true").strip().lower() not in (
 )
 
 MAX_ITERATIONS = int(os.getenv("AISOC_DEEP_INVESTIGATION_MAX_ITERS", "6"))
-BUDGET_SECONDS = float(os.getenv("AISOC_DEEP_INVESTIGATION_BUDGET_SECONDS", "120"))
+BUDGET_SECONDS = float(os.getenv("AISOC_DEEP_INVESTIGATION_BUDGET_SECONDS", "600"))
 
 #: Per-incident spend ceiling. The cost governor already enforces a rolling
 #: per-tenant budget, which is the wrong granularity for this: one runaway
@@ -463,7 +463,15 @@ async def run_deep_investigation(
     tokens_before = governor.spent_tokens(tenant_id)
 
     try:
-        model = llm if llm is not None else make_chat_model("investigation", max_tokens=max_completion_tokens())
+        model = (
+            llm
+            if llm is not None
+            else make_chat_model(
+                "investigation",
+                max_tokens=max_completion_tokens(),
+                timeout=llm_timeout_seconds(),
+            )
+        )
 
         registry = default_registry(tenant_id)
         for tool in investigation_tools(tenant_id):

@@ -433,7 +433,7 @@ async def list_coverage_gaps(
     """
     _ensure_dac_enabled()
     rows = await db.execute(
-        text("SELECT connector_type FROM connectors WHERE tenant_id = CAST(:tenant AS uuid) AND enabled = TRUE"),
+        text("SELECT connector_type FROM connectors WHERE tenant_id = CAST(:tenant AS uuid) AND is_enabled = TRUE"),
         {"tenant": str(current_user.tenant_id)},
     )
     connected = sorted({str(r[0]) for r in rows.fetchall() if r[0]})

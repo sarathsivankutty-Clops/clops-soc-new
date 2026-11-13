@@ -25,10 +25,20 @@ iwr -useb https://raw.githubusercontent.com/beenuar/AiSOC/main/install.ps1 | iex
 ```
 
 When the script finishes it starts the CORE stack with `make up`, creates the
-first administrator, prints that password **once**, and then runs the golden
-pipeline end to end — one real event through Kafka, fusion and detection, read
-back as an alert from the API. If that check fails the installer exits
-non-zero and says so; "the containers started" is not "it works".
+first administrator, prints a generated password **once** (a supplied
+`AISOC_ADMIN_PASSWORD` is never echoed), and then runs the golden pipeline end
+to end — one real event through Kafka, fusion and detection, read back as an
+alert from the API. If that check fails the installer exits non-zero and says
+so; "the containers started" is not "it works".
+
+For an isolated development deployment only, `AISOC_ADMIN_PASSWORD` in `.env`
+sets the first administrator password instead of generating one. The account
+and password hash are stored in PostgreSQL, not in the application image. To
+keep the account when moving to EC2, migrate/restore the PostgreSQL data along
+with the deployment. Keep the host private; do not use a known development
+password on an internet-facing deployment. If the account already exists,
+`make bootstrap ARGS=--reset-password` applies the configured development
+password again.
 
 The console is at `http://localhost:3000` and the API at
 `http://localhost:8000`. There is no interactive `/api/docs` page: this is a

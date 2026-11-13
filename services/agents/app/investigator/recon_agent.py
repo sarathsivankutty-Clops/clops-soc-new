@@ -24,7 +24,7 @@ from app.llm.prompt_registry import prompt_text
 from app.prompt_serialization import summarize_structure_for_llm
 
 from .bundle_prompt import format_bundle_prompt_append
-from .limits import max_completion_tokens
+from .limits import llm_timeout_seconds, max_completion_tokens
 from .prompt_sanitizer import sanitize_text
 from .state import InvestigatorState, ReconFindings, StepKind
 from .tools import enrich_ioc, extract_iocs, map_to_mitre, sha256_of
@@ -41,7 +41,12 @@ async def _llm_recon(state: InvestigatorState) -> dict[str, Any]:
     import json
 
     model = resolve_model_alias("recon")
-    llm = make_chat_model("recon", temperature=0, max_tokens=max_completion_tokens())
+    llm = make_chat_model(
+        "recon",
+        temperature=0,
+        max_tokens=max_completion_tokens(),
+        timeout=llm_timeout_seconds(),
+    )
 
     # Defence-in-depth: every field surfaced here can be attacker-influenced
     # (alert_summary often echoes log lines; raw_alert is verbatim event data).

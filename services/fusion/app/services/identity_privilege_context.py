@@ -108,7 +108,21 @@ class IdentityPrivilegeResolver:
         if not principal or not self._dsn:
             return dict(UNKNOWN_STAMP)
 
-        at = alert.timestamp or datetime.now(tz=_utc())
+        at = alert.event_time or alert.created_at
+        # `event_time` is when the source says it happened; `created_at` is the
+        # alert envelope's own creation time, the fallback for the alerts that
+        # carry no event time. This line read `alert.timestamp`, which is not a
+        # field on RawAlert (the model has `created_at` and `event_time` only),
+        # so every alert raised AttributeError, the caller caught it as
+        # `fuse_identity_privilege_failed`, and the stamp never reached the
+        # scorer or the queue once.
+        #
+        # The facts table's `valid_from`/`valid_until` are `timestamptz`, while
+        # `created_at` defaults with `utcnow` and an ingest-supplied event time
+        # may arrive without a zone. asyncpg will not infer one, so make the
+        # value explicit rather than lose the point-in-time read.
+        if at.tzinfo is None:
+            at = at.replace(tzinfo=_utc())
         # Bucketed to the minute so two alerts a second apart share a cache
         # entry. Posture intervals are hours to days long, so a minute of
         # granularity cannot select a different version in any case the

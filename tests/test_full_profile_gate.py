@@ -236,12 +236,12 @@ def test_connectors_binds_the_port_it_publishes() -> None:
 # scheduler at all. No connector could ever auto-poll.
 def test_credential_vault_key_reaches_the_services_that_need_it() -> None:
     services = _services()
-    for name in ("api", "connectors"):
+    for name in ("api", "connectors", "agents"):
         env = _env(services[name])
         assert "AISOC_CREDENTIAL_KEY" in env, (
             f"{name} is not given AISOC_CREDENTIAL_KEY. The API owns the vault write "
-            "path and the connectors scheduler decrypts with the same key; a "
-            "credential saved in the console is undecryptable at poll time without it."
+            "path and the connectors scheduler and agents service decrypt with the same key; a "
+            "credential saved in the console is undecryptable without it."
         )
 
 
