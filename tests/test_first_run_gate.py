@@ -357,7 +357,7 @@ def test_each_compose_file_pulls_the_image_built_for_it() -> None:
     root = ROOT_COMPOSE.read_text()
     demo = DEMO_COMPOSE.read_text()
 
-    root_ref = re.search(r"image:\s*(ghcr\.io/beenuar/aisoc-web:\S+)", root)
+    root_ref = re.search(r"image:\s*((?:ghcr\.io/beenuar/aisoc-web|clops-soc-web):\S+)", root)
     demo_ref = re.search(r"image:\s*(ghcr\.io/beenuar/aisoc-web:\S+)", demo)
     assert root_ref and demo_ref
 
