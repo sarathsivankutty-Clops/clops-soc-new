@@ -13,6 +13,7 @@
 .env.*
 !.env.example
 !.env.ports.example
+!.env.ec2.example
 
 # Dependencies
 node_modules/

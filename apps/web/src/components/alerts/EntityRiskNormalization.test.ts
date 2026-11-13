@@ -46,7 +46,7 @@ describe('normalizeEntityRiskRecord', () => {
       alert_id: 'alert-1',
       severity: 'low',
       raw_points: 3.0,
-      observed_at: '2026-11-13T09:54:04Z',
+      observed_at: '2026-11-13T09:54:04.000Z',
       title: 'ListAccessKeys',
       source: null,
     });
