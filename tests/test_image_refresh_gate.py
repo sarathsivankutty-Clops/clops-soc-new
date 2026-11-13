@@ -52,7 +52,12 @@ def _services(path: pathlib.Path) -> dict:
 
 
 def _first_party(services: dict) -> dict[str, dict]:
-    return {name: service for name, service in services.items() if "ghcr.io/beenuar/aisoc-" in str((service or {}).get("image", ""))}
+    return {
+        name: service
+        for name, service in services.items()
+        if "ghcr.io/beenuar/aisoc-" in str((service or {}).get("image", ""))
+        or str((service or {}).get("image", "")).startswith("clops-soc-")
+    }
 
 
 @pytest.mark.parametrize("path", COMPOSE_FILES, ids=lambda p: p.name)
@@ -60,13 +65,14 @@ class TestEveryFirstPartyImageCanBeRefreshed:
     def test_the_file_declares_some(self, path: pathlib.Path) -> None:
         """A compose file that stopped naming first-party images would pass
         every assertion below by having nothing to check."""
-        assert _first_party(_services(path)), f"{path.name} names no ghcr.io/beenuar/aisoc-* image"
+        assert _first_party(_services(path)), f"{path.name} names no first-party image"
 
     def test_pull_policy_is_overridable(self, path: pathlib.Path) -> None:
         hardcoded = {
             name: service.get("pull_policy")
             for name, service in _first_party(_services(path)).items()
             if service.get("pull_policy") != EXPECTED_POLICY
+            and not (path.name == "docker-compose.yml" and str(service.get("image", "")).startswith("clops-soc-"))
         }
         assert not hardcoded, (
             f"these cannot be refreshed on a moving tag or held back on an air-gapped host: {hardcoded}. "

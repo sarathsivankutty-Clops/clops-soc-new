@@ -357,13 +357,14 @@ def test_each_compose_file_pulls_the_image_built_for_it() -> None:
     root = ROOT_COMPOSE.read_text()
     demo = DEMO_COMPOSE.read_text()
 
-    root_ref = re.search(r"image:\s*((?:ghcr\.io/beenuar/aisoc-web|clops-soc-web):\S+)", root)
+    root_refs = re.findall(r"image:\s*((?:ghcr\.io/beenuar/aisoc-|clops-soc-)\S+)", root)
     demo_ref = re.search(r"image:\s*(ghcr\.io/beenuar/aisoc-web:\S+)", demo)
-    assert root_ref and demo_ref
+    assert root_refs and demo_ref
 
-    assert "demo" not in root_ref.group(1), (
-        f"docker-compose.yml (what `make up` starts) pulls {root_ref.group(1)} — a self-host stack must not pull a demo bundle"
-    )
+    for root_ref in root_refs:
+        assert "demo" not in root_ref, (
+            f"docker-compose.yml (what `make up` starts) pulls {root_ref} — a self-host stack must not pull a demo bundle"
+        )
     assert "demo" in demo_ref.group(1), (
         f"the demo stack pulls {demo_ref.group(1)}, which is the product build: no banner, no auto-login, and a visitor bounced to /login"
     )

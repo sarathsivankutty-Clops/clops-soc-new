@@ -360,8 +360,8 @@ services:
     build:
       context: ./services/api
       dockerfile: Dockerfile
-    image: ghcr.io/beenuar/aisoc-core-api:${AISOC_VERSION:-latest}
-    pull_policy: ${AISOC_PULL_POLICY:-missing}
+    image: clops-soc-api:${TAG:-local}
+    pull_policy: never
     depends_on:
       postgres:
         condition: service_healthy
@@ -585,8 +585,8 @@ services:
     build:
       context: ./services/ingest
       dockerfile: Dockerfile
-    image: ghcr.io/beenuar/aisoc-ingest:${AISOC_VERSION:-latest}
-    pull_policy: ${AISOC_PULL_POLICY:-missing}
+    image: clops-soc-ingest:${TAG:-local}
+    pull_policy: never
     depends_on:
       kafka:
         condition: service_healthy
@@ -698,8 +698,8 @@ services:
     build:
       context: ./services/fusion
       dockerfile: Dockerfile
-    image: ghcr.io/beenuar/aisoc-fusion:${AISOC_VERSION:-latest}
-    pull_policy: ${AISOC_PULL_POLICY:-missing}
+    image: clops-soc-fusion:${TAG:-local}
+    pull_policy: never
     depends_on:
       # Postgres was missing here, so during a cold boot fusion tried to write
       # alerts before the database accepted connections and logged the failure
@@ -750,8 +750,8 @@ services:
     build:
       context: ./services/agents
       dockerfile: Dockerfile
-    image: ghcr.io/beenuar/aisoc-agents:${AISOC_VERSION:-latest}
-    pull_policy: ${AISOC_PULL_POLICY:-missing}
+    image: clops-soc-agents:${TAG:-local}
+    pull_policy: never
     depends_on:
       postgres:
         condition: service_healthy
@@ -1197,8 +1197,8 @@ services:
     build:
       context: ./services/actions
       dockerfile: Dockerfile
-    image: ghcr.io/beenuar/aisoc-actions:${AISOC_VERSION:-latest}
-    pull_policy: ${AISOC_PULL_POLICY:-missing}
+    image: clops-soc-actions:${TAG:-local}
+    pull_policy: never
     depends_on:
       redis:
         condition: service_healthy
@@ -1244,8 +1244,8 @@ services:
     build:
       context: ./services/connectors
       dockerfile: Dockerfile
-    image: ghcr.io/beenuar/aisoc-connectors:${AISOC_VERSION:-latest}
-    pull_policy: ${AISOC_PULL_POLICY:-missing}
+    image: clops-soc-connectors:${TAG:-local}
+    pull_policy: never
     depends_on:
       kafka:
         condition: service_healthy
@@ -1339,8 +1339,8 @@ services:
     build:
       context: ./services/threatintel
       dockerfile: Dockerfile
-    image: ghcr.io/beenuar/aisoc-threatintel:${AISOC_VERSION:-latest}
-    pull_policy: ${AISOC_PULL_POLICY:-missing}
+    image: clops-soc-threatintel:${TAG:-local}
+    pull_policy: never
     depends_on:
       redis:
         condition: service_healthy
@@ -1591,8 +1591,8 @@ services:
     build:
       context: ./services/realtime
       dockerfile: Dockerfile
-    image: ghcr.io/beenuar/aisoc-realtime:${AISOC_VERSION:-latest}
-    pull_policy: ${AISOC_PULL_POLICY:-missing}
+    image: clops-soc-realtime:${TAG:-local}
+    pull_policy: never
     depends_on:
       redis:
         condition: service_healthy
