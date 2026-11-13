@@ -2437,22 +2437,95 @@ const FUSION_PATH = "/api/v1/fusion";
 // legitimate session. Omitting it is both safer and more correct: an explicit
 // `tenantId` is still honoured for an operator narrowing to one managed
 // customer, and naming a tenant outside their scope is refused server-side.
+function cleanIso(raw: unknown): string {
+  if (typeof raw !== "string" || !raw) return new Date().toISOString();
+  const cleaned = raw.replace(/\+00:00Z$/, "Z");
+  const d = new Date(cleaned);
+  return isNaN(d.getTime()) ? new Date().toISOString() : d.toISOString();
+}
+
+export function normalizeEntityRiskRecord(
+  raw: unknown,
+  defaultThreshold: number = 80
+): EntityRiskRecord {
+  const r = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
+  const rawSeverities = (r.severity_histogram ?? r.severities ?? {}) as Record<string, unknown>;
+  const severityHistogram: Record<AlertSeverity, number> = {
+    critical: typeof rawSeverities.critical === "number" ? rawSeverities.critical : 0,
+    high: typeof rawSeverities.high === "number" ? rawSeverities.high : 0,
+    medium: typeof rawSeverities.medium === "number" ? rawSeverities.medium : 0,
+    low: typeof rawSeverities.low === "number" ? rawSeverities.low : 0,
+    info: typeof rawSeverities.info === "number" ? rawSeverities.info : 0,
+  };
+
+  const rawContributors = Array.isArray(r.contributions)
+    ? r.contributions
+    : Array.isArray(r.contributors)
+      ? r.contributors
+      : [];
+
+  const contributions: EntityRiskContribution[] = rawContributors.map((c: any) => ({
+    alert_id: String(c.alert_id ?? ""),
+    severity: (c.severity ?? "low") as AlertSeverity,
+    raw_points: typeof c.raw_points === "number" ? c.raw_points : (typeof c.points === "number" ? c.points : 0),
+    observed_at: cleanIso(c.observed_at ?? c.at),
+    title: c.title ?? c.detection ?? null,
+    source: c.source ?? null,
+  }));
+
+  const score = typeof r.score === "number" ? r.score : 0;
+  const threshold = typeof r.threshold === "number" ? r.threshold : defaultThreshold;
+  const promoted = Boolean(r.promoted ?? r.promoted_at);
+  const lastSeen = cleanIso(r.last_seen ?? r.first_seen);
+  const firstSeen = cleanIso(r.first_seen ?? r.last_seen);
+
+  return {
+    tenant_id: String(r.tenant_id ?? ""),
+    entity_type: (r.entity_type ?? "user") as EntityType,
+    entity_value: String(r.entity_value ?? ""),
+    score,
+    display_score: typeof r.display_score === "number" ? r.display_score : Math.round(score),
+    threshold,
+    promoted,
+    promoted_incident_id: (r.promoted_incident_id as string | null) ?? null,
+    last_seen: lastSeen,
+    first_seen: firstSeen,
+    contributions,
+    severity_histogram: severityHistogram,
+    alert_count: typeof r.alert_count === "number" ? r.alert_count : contributions.length,
+  };
+}
+
 export const entityRiskApi = {
   /** Top-N entities by current decayed risk score. */
-  queue: (
+  queue: async (
     params: {
       tenantId?: string;
       limit?: number;
       promotedOnly?: boolean;
     } = {}
-  ) =>
-    request<EntityRiskQueueResponse>(`${FUSION_PATH}/entity-risk/queue`, {
+  ): Promise<EntityRiskQueueResponse> => {
+    const raw = await request<{
+      tenant_id?: string;
+      threshold?: number;
+      entities?: unknown[];
+    }>(`${FUSION_PATH}/entity-risk/queue`, {
       params: {
         tenant_id: params.tenantId,
         limit: params.limit ?? 25,
         promoted_only: params.promotedOnly ? "true" : undefined,
       },
-    }),
+    });
+    const threshold = typeof raw.threshold === "number" ? raw.threshold : 80;
+    const entities = Array.isArray(raw.entities)
+      ? raw.entities.map((e) => normalizeEntityRiskRecord(e, threshold))
+      : [];
+    return {
+      tenant_id: String(raw.tenant_id ?? ""),
+      threshold,
+      entities,
+    };
+  },
 
   /** Tenant-scoped queue stats for dashboards (banding, totals, threshold). */
   stats: (tenantId?: string) =>
@@ -2461,12 +2534,13 @@ export const entityRiskApi = {
     }),
 
   /** Full risk record for a single entity (drawer detail). */
-  get: (entityType: EntityType, entityValue: string, tenantId?: string) => {
+  get: async (entityType: EntityType, entityValue: string, tenantId?: string): Promise<EntityRiskRecord> => {
     const pathType = entityType === "ip" ? "src_ip" : entityType;
-    return request<EntityRiskRecord>(
+    const raw = await request<unknown>(
       `${FUSION_PATH}/entity-risk/${pathType}/${encodeURIComponent(entityValue)}`,
       { params: { tenant_id: tenantId } }
     );
+    return normalizeEntityRiskRecord(raw);
   },
 };
 

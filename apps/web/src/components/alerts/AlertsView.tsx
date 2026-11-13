@@ -541,12 +541,12 @@ function AlertsTable({
             { label: 'Total', value: total, tone: 'default' },
             {
               label: 'Critical',
-              value: facets ? (facets.bySeverity.critical ?? 0) : '—',
+              value: facets?.bySeverity ? (facets.bySeverity.critical ?? 0) : '—',
               tone: 'bad',
             },
             {
               label: 'High',
-              value: facets ? (facets.bySeverity.high ?? 0) : '—',
+              value: facets?.bySeverity ? (facets.bySeverity.high ?? 0) : '—',
               tone: 'warn',
             },
             {

@@ -73,6 +73,13 @@ class EntitySignal:
     occurred_at: datetime
 
 
+def _format_iso(dt: datetime | None) -> str | None:
+    if dt is None:
+        return None
+    iso = dt.isoformat()
+    return iso if (iso.endswith("Z") or "+" in iso) else iso + "Z"
+
+
 @dataclass
 class EntityRiskRecord:
     """The current decayed risk picture for one entity."""
@@ -95,11 +102,13 @@ class EntityRiskRecord:
             "entity_value": self.entity_value,
             "score": round(self.score, 2),
             "alert_count": self.alert_count,
-            "last_seen": self.last_seen.isoformat() + "Z",
+            "last_seen": _format_iso(self.last_seen),
             "contributing_alerts": self.contributing_alerts,
             "severities": self.severities,
-            "promoted_at": (self.promoted_at.isoformat() + "Z") if self.promoted_at else None,
+            "severity_histogram": self.severities,
+            "promoted_at": _format_iso(self.promoted_at),
             "contributors": self.contributors or [],
+            "contributions": self.contributors or [],
         }
 
 
@@ -277,7 +286,7 @@ class EntityRiskEngine:
                 "severity": sig.severity,
                 "detection": sig.detection,
                 "points": sig.points,
-                "at": sig.occurred_at.isoformat() + "Z",
+                "at": _format_iso(sig.occurred_at),
             }
         )
         if len(contributors) > 25:

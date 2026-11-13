@@ -145,6 +145,13 @@ export function describeQueueFailure(error: unknown): string {
   return `Could not load the entity-risk queue: ${detail}. The queue is unknown, not empty.`;
 }
 
+function parseDateSafe(raw: string | undefined | null): Date {
+  if (!raw) return new Date();
+  const cleaned = String(raw).replace(/\+00:00Z$/, 'Z');
+  const d = new Date(cleaned);
+  return isNaN(d.getTime()) ? new Date() : d;
+}
+
 function bandFor(score: number, threshold: number): {
   label: string;
   text: string;
@@ -242,7 +249,7 @@ function RatioStat({
 function SeverityHistogram({
   histogram,
 }: {
-  histogram: Record<string, number>;
+  histogram?: Record<string, number> | null;
 }) {
   const order: Array<keyof typeof SEVERITY_DOT> = [
     'critical',
@@ -254,7 +261,7 @@ function SeverityHistogram({
   return (
     <div className="flex items-center gap-2">
       {order.map((sev) => {
-        const count = histogram[sev] ?? 0;
+        const count = histogram?.[sev] ?? 0;
         if (count === 0) return null;
         return (
           <span
@@ -275,15 +282,15 @@ function SeverityHistogram({
 
 function ScoreBar({
   score,
-  threshold,
+  threshold = 80,
 }: {
   score: number;
-  threshold: number;
+  threshold?: number;
 }) {
   const band = bandFor(score, threshold);
   // Cap the rendered fill at 1.5× threshold so very-high entities don't visually
   // saturate at the same width as merely-high ones.
-  const max = threshold * 1.5;
+  const max = (threshold || 80) * 1.5;
   const pct = Math.min(100, (score / max) * 100);
   return (
     <div className="flex items-center gap-2 w-32 shrink-0">
@@ -309,7 +316,7 @@ function EntityRow({
 }) {
   const { t } = useLocale();
   const cfg = ENTITY_TYPE_CONFIG[record.entity_type] ?? ENTITY_TYPE_CONFIG.user;
-  const band = bandFor(record.score, record.threshold);
+  const band = bandFor(record.score, record.threshold ?? 80);
   return (
     <button
       type="button"
@@ -343,7 +350,7 @@ function EntityRow({
           <span className="text-gray-700">·</span>
           <span className="text-xs text-gray-500" suppressHydrationWarning>
             {t('alerts.lastSeen')}{' '}
-            {formatDistanceToNow(new Date(record.last_seen), {
+            {formatDistanceToNow(parseDateSafe(record.last_seen), {
               addSuffix: true,
             })}
           </span>
@@ -382,7 +389,9 @@ function EntityDetailDrawer({
     { fallbackData: entity, refreshInterval: 30000 },
   );
   const record = data ?? entity;
-  const band = bandFor(record.score, record.threshold);
+  const effectiveThreshold = record.threshold ?? entity.threshold ?? 80;
+  const band = bandFor(record.score, effectiveThreshold);
+  const contributions = record.contributions ?? [];
 
   return (
     <div className="fixed inset-0 z-50 flex">
@@ -430,7 +439,7 @@ function EntityDetailDrawer({
                 {Math.round(record.score)}
               </p>
               <p className="text-[10px] text-gray-500 mt-0.5">
-                threshold {Math.round(record.threshold)}
+                threshold {Math.round(effectiveThreshold)}
               </p>
             </div>
             <div className="rounded-xl px-3 py-2.5 border border-gray-800/60 bg-gray-900/60">
@@ -442,7 +451,7 @@ function EntityDetailDrawer({
               </p>
               <p className="text-[10px] text-gray-500 mt-0.5" suppressHydrationWarning>
                 {t('alerts.firstSeen')}{' '}
-                {formatDistanceToNow(new Date(record.first_seen), {
+                {formatDistanceToNow(parseDateSafe(record.first_seen || record.last_seen), {
                   addSuffix: true,
                 })}
               </p>
@@ -464,13 +473,13 @@ function EntityDetailDrawer({
             <h3 className="text-xs uppercase tracking-wider text-gray-500 mb-2">
               Contributing alerts
             </h3>
-            {record.contributions.length === 0 ? (
+            {contributions.length === 0 ? (
               <p className="text-sm text-gray-600">
                 No contributions in the current decay window.
               </p>
             ) : (
               <ol className="space-y-1.5">
-                {record.contributions.map((c) => (
+                {contributions.map((c) => (
                   <li
                     key={c.alert_id}
                     className="flex items-start gap-2 text-sm border border-gray-800/60 bg-gray-900/40 rounded-lg px-3 py-2"
@@ -494,7 +503,7 @@ function EntityDetailDrawer({
                         {c.source && <span>{c.source}</span>}
                         {c.source && <span className="text-gray-700">·</span>}
                         <span suppressHydrationWarning>
-                          {formatDistanceToNow(new Date(c.observed_at), {
+                          {formatDistanceToNow(parseDateSafe(c.observed_at), {
                             addSuffix: true,
                           })}
                         </span>
@@ -680,13 +689,16 @@ export function EntityRiskQueue() {
           </div>
         ) : (
           <div>
-            {entities.map((record) => (
-              <EntityRow
-                key={`${record.entity_type}:${record.entity_value}`}
-                record={record}
-                onSelect={() => setSelected(record)}
-              />
-            ))}
+            {entities.map((record) => {
+              const effectiveRecord = { ...record, threshold: record.threshold ?? threshold };
+              return (
+                <EntityRow
+                  key={`${record.entity_type}:${record.entity_value}`}
+                  record={effectiveRecord}
+                  onSelect={() => setSelected(effectiveRecord)}
+                />
+              );
+            })}
           </div>
         )}
       </div>
