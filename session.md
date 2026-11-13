@@ -85,3 +85,25 @@ Subsequent end-to-end validation against a real tenant configured with Groq BYOK
    - `pnpm --filter @aisoc/web type-check`: 0 errors.
    - `docker compose config -q`: Passed cleanly with 0 errors.
    - ContextVar concurrency isolation: Verified between concurrent tenant contexts.
+
+---
+
+## 5. Alerts Entities Queue & EC2 WebSocket Deployment Fixes
+
+### 5.1 Root Cause Analysis: `TypeError: Cannot read properties of undefined (reading 'critical')`
+- **Problem**: On `/alerts` (Entities tab), the UI crashed with "This page couldn't load".
+- **Root Cause**: `services/fusion/app/services/entity_risk.py` emitted `severities` and `contributors`, whereas the frontend `EntityRiskQueue.tsx` (`SeverityHistogram`) expected `severity_histogram` and `contributions`. `histogram['critical']` threw an unhandled TypeError.
+- **Fix Applied** (commit `2fb737d35`):
+  - `apps/web/src/lib/api.ts`: Added `normalizeEntityRiskRecord()` to map `severities` -> `severity_histogram` and `contributors` -> `contributions`, and sanitized ISO timestamps.
+  - `apps/web/src/components/alerts/EntityRiskQueue.tsx`: Added defensive access `histogram?.[sev] ?? 0` and `parseDateSafe()`.
+  - `services/fusion/app/services/entity_risk.py`: Dual-emitted both field sets.
+  - `apps/web/src/components/alerts/EntityRiskNormalization.test.ts`: Added passing regression tests.
+
+### 5.2 Root Cause Analysis: `ws://localhost:18086/ws/alerts` on EC2
+- **Problem**: When accessing EC2 console via `http://100.25.223.93:13000/alerts`, the browser console attempted to connect to `ws://localhost:18086/ws/alerts`.
+- **Root Cause**: Next.js inlines `NEXT_PUBLIC_*` environment variables at build time. In `docker-compose.yml`, `web.build.args` passes:
+  `NEXT_PUBLIC_WS_URL: ${NEXT_PUBLIC_WS_URL:-ws://${PUBLIC_HOST:-localhost}:${REALTIME_PORT:-18086}}`.
+  Without `PUBLIC_HOST=100.25.223.93` in `.env` during `docker compose build web`, it defaulted to `localhost:18086`. In addition, `realtime` CORS origins in `docker-compose.yml` defaulted to `localhost:13000`.
+- **Fix Applied** (commit `81605a4ab`):
+  - Created `.env.ec2.example` with `PUBLIC_HOST=100.25.223.93`, `AISOC_CONSOLE_BIND_ADDR=0.0.0.0`, `AISOC_REALTIME_BIND_ADDR=0.0.0.0`, `WEB_PORT=13000`, `REALTIME_PORT=18086`, and public CORS origins.
+  - Rebuilding `web` with `docker compose build web` on EC2 inlines `ws://100.25.223.93:18086` into the client bundle.
