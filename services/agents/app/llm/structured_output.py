@@ -30,7 +30,12 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
+_THINK_RE = re.compile(r"<think>[\s\S]*?</think>", re.IGNORECASE)
 _FENCE_RE = re.compile(r"^\s*```(?:json)?\s*|\s*```\s*$", re.IGNORECASE)
+_SECRET_PATTERNS = (
+    re.compile(r"(?i)(api[_-]?key|secret|password|token)\s*[:=]\s*['\"][A-Za-z0-9_\-]{16,}['\"]"),
+    re.compile(r"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----"),
+)
 
 
 @dataclass(frozen=True)
@@ -43,7 +48,7 @@ class ParseResult:
 def extract_json_block(text: str) -> str:
     """Best-effort extraction of a JSON object/array from an LLM reply.
 
-    Strips ``` fences and prose on *both* sides of the JSON body. Does NOT
+    Strips ``` fences, <think>...</think> blocks, and prose on *both* sides of the JSON body. Does NOT
     attempt to repair invalid JSON — a reply we can't parse cleanly is a
     failure, by design.
 
@@ -58,13 +63,53 @@ def extract_json_block(text: str) -> str:
     """
     if not isinstance(text, str):
         return ""
-    stripped = _FENCE_RE.sub("", text.strip())
+    cleaned = _THINK_RE.sub("", text)
+    stripped = re.sub(r"(?m)^\s*```(?:json)?\s*$", "", cleaned)
+    stripped = _FENCE_RE.sub("", stripped.strip())
     starts = [i for i in (stripped.find("{"), stripped.find("[")) if i != -1]
     if not starts:
         return stripped.strip()
     start = min(starts)
     end = _matching_close(stripped, start)
     return (stripped[start:end] if end is not None else stripped[start:]).strip()
+
+
+def extract_first_json_object(text: str) -> str:
+    """Extract the first balanced {...} object from text, stripping fences and think tags."""
+    if not isinstance(text, str):
+        return ""
+    cleaned = _THINK_RE.sub("", text)
+    stripped = re.sub(r"(?m)^\s*```(?:json)?\s*$", "", cleaned)
+    stripped = _FENCE_RE.sub("", stripped.strip()).strip()
+    start = stripped.find("{")
+    if start == -1:
+        return ""
+    end = _matching_close(stripped, start)
+    return (stripped[start:end] if end is not None else stripped[start:]).strip()
+
+
+def parse_json_object(text: str) -> dict[str, Any]:
+    """Parse the first balanced JSON object from an LLM reply.
+
+    1. Strip markdown fences and <think>...</think> blocks.
+    2. Extract the first balanced {...} before json.loads.
+    """
+    body = extract_first_json_object(text)
+    if not body:
+        raise ValueError("No JSON object found in response")
+    data = json.loads(body)
+    if not isinstance(data, dict):
+        raise ValueError(f"Expected JSON object, got {type(data).__name__}")
+    return data
+
+
+def sanitize_log_sample(text: Any, max_len: int = 300) -> str:
+    """Return truncated sample of raw reply with secret patterns redacted."""
+    raw = text if isinstance(text, str) else str(text or "")
+    sample = raw[:max_len]
+    for pattern in _SECRET_PATTERNS:
+        sample = pattern.sub("[REDACTED:SECRET]", sample)
+    return sample
 
 
 def _matching_close(text: str, start: int) -> int | None:

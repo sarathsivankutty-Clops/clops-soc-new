@@ -15,12 +15,13 @@ import time
 from typing import Any
 
 import structlog
-from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
 from app.core.cost_telemetry import record_llm_call
 from app.llm import safe_ainvoke
 from app.llm.factory import make_chat_model, resolve_model_alias
 from app.llm.prompt_registry import prompt_text
+from app.llm.structured_output import parse_json_object, sanitize_log_sample
 from app.prompt_serialization import summarize_structure_for_llm
 
 from .bundle_prompt import format_bundle_prompt_append
@@ -42,6 +43,7 @@ async def _llm_responder(state: InvestigatorState) -> dict[str, Any]:
         temperature=0,
         max_tokens=max_completion_tokens(),
         timeout=llm_timeout_seconds(),
+        json_output=True,
     )
 
     # Defence-in-depth: every field surfaced here originated in attacker-
@@ -122,9 +124,51 @@ async def _llm_responder(state: InvestigatorState) -> dict[str, Any]:
             cost_source=cost_source,
             resolved_model=resolved_model,
         )
-        json_match = re.search(r"\{[\s\S]*\}", content)
-        if json_match:
-            return json.loads(json_match.group())
+        try:
+            return parse_json_object(content)
+        except Exception as parse_exc:
+            logger.debug(
+                "responder llm parse failed",
+                raw_reply=sanitize_log_sample(content, 300),
+                error=str(parse_exc),
+            )
+            # Retry once with a "reply with valid JSON only" nudge
+            retry_messages = [
+                *messages,
+                AIMessage(content=content if isinstance(content, str) else str(content)),
+                HumanMessage(content="Reply with valid JSON only."),
+            ]
+            t_retry = time.monotonic()
+            retry_response = await safe_ainvoke(llm, retry_messages)
+            retry_content = retry_response.content
+            retry_latency_ms = int((time.monotonic() - t_retry) * 1000)
+            retry_tokens = 0
+            if hasattr(retry_response, "response_metadata"):
+                retry_tokens = retry_response.response_metadata.get("token_usage", {}).get("total_tokens", 0) or 0
+            record_llm_call(
+                retry_response,
+                model=model,
+                latency_ms=retry_latency_ms,
+                step="responder",
+                tool="llm.responder.retry",
+            )
+            state.log_llm_response(
+                agent="ResponderAgent",
+                response=retry_content if isinstance(retry_content, str) else str(retry_content),
+                prompt_hash=prompt_hash,
+                model=model,
+                tokens_used=retry_tokens,
+                latency_ms=retry_latency_ms,
+            )
+            try:
+                return parse_json_object(retry_content)
+            except Exception as retry_parse_exc:
+                logger.debug(
+                    "responder llm retry parse failed",
+                    raw_reply=sanitize_log_sample(retry_content, 300),
+                    error=str(retry_parse_exc),
+                )
+                raise
     except Exception as exc:  # noqa: BLE001
         logger.warning("responder llm failed", error=str(exc))
         state.log(
