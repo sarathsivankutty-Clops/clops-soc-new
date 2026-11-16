@@ -333,6 +333,7 @@ export function CaseWorkspace({ caseId }: { caseId: string }) {
   >([]);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
+  const [confirmingRerun, setConfirmingRerun] = useState(false);
 
   const stopPolling = useCallback(() => {
     if (pollRef.current) {
@@ -372,49 +373,6 @@ export function CaseWorkspace({ caseId }: { caseId: string }) {
     return () => {
       cancelled = true;
     };
-  }, [caseId]);
-
-  // Restore the latest terminal run on mount — run state lives only in
-  // memory, so a refresh left the Investigation tab on its idle prompt even
-  // though completed runs exist server-side (the ledger fetched its own list
-  // and therefore looked fine).
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const resp = await apiFetch(`/api/v1/cases/${caseId}/investigations`);
-        if (!resp.ok || cancelled) return;
-        const body = (await resp.json()) as { runs?: Array<Record<string, unknown>> };
-        const runs = body.runs ?? [];
-        const latest = runs.find(
-          (r) =>
-            typeof r?.run_id === "string" && (r.status === "completed" || r.status === "failed")
-        );
-        if (!latest || cancelled) return;
-        const runId = String(latest.run_id);
-        let skip = false;
-        setInvestigationRunId((prev) => {
-          if (prev) skip = true;
-          return prev ?? runId;
-        });
-        if (skip) return;
-        setInvestigationStatus(String(latest.status ?? "completed"));
-        const inv = (await casesApi.getInvestigation(caseId, runId)) as Record<string, unknown>;
-        if (cancelled) return;
-        setInvestigationData(inv);
-        setInvestigationStatus(String(inv.status ?? latest.status ?? "completed"));
-        if (inv.status === "completed") {
-          const rep = await apiFetch(`/api/v1/cases/${caseId}/investigations/${runId}/report.md`);
-          if (!cancelled && rep.ok) setReportMd(await rep.text());
-        }
-      } catch {
-        /* best-effort restore; tab falls back to its idle prompt */
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [caseId]);
 
   /** Connect to the realtime service WebSocket for this run_id */
@@ -501,35 +459,29 @@ export function CaseWorkspace({ caseId }: { caseId: string }) {
     [caseId, closeWs]
   );
 
-  const startInvestigation = useCallback(async () => {
-    if (!caseRecord || investigating) return;
-    setInvestigating(true);
-    setInvestigationStatus("starting");
-    setLiveSteps([]);
-    setActiveTab("investigation");
-    try {
-      const result = await casesApi.investigate(caseId, caseRecord.description ?? caseRecord.title);
-      setInvestigationRunId(result.run_id);
-      setInvestigationStatus("running");
-      toast.success("Agent investigation started");
-
+  // [TODO-BACKEND: reject or return the existing run when one is running for the case]
+  // [TODO-BACKEND: flush audit_log events during run_recon, not after it]
+  const attachRunTracking = useCallback(
+    (runId: string) => {
+      stopPolling();
       // Connect via WebSocket for live updates (falls back to polling on error)
-      connectWs(result.run_id);
+      connectWs(runId);
 
       // Polling as a reliable fallback / data sync
       pollRef.current = setInterval(async () => {
         try {
-          const inv = await casesApi.getInvestigation(caseId, result.run_id);
+          const inv = await casesApi.getInvestigation(caseId, runId);
           setInvestigationData(inv as Record<string, unknown>);
           setInvestigationStatus(inv.status);
           if (inv.status === "completed" || inv.status === "failed") {
             stopPolling();
+            closeWs();
             setInvestigating(false);
             if (inv.status === "completed") {
               toast.success("Investigation complete — report ready");
               try {
                 const resp = await apiFetch(
-                  `/api/v1/cases/${caseId}/investigations/${result.run_id}/report.md`
+                  `/api/v1/cases/${caseId}/investigations/${runId}/report.md`
                 );
                 if (resp.ok) setReportMd(await resp.text());
               } catch {
@@ -543,6 +495,120 @@ export function CaseWorkspace({ caseId }: { caseId: string }) {
           // swallow transient errors
         }
       }, 5000);
+    },
+    [caseId, closeWs, connectWs, stopPolling]
+  );
+
+  // Restore the latest running or terminal run on mount — run state lives only
+  // in memory, so a refresh or handoff from alert detail left the workspace
+  // idle even though a run was active or completed server-side.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const resp = await apiFetch(`/api/v1/cases/${caseId}/investigations`);
+        if (!resp.ok || cancelled) return;
+        const body = (await resp.json()) as { runs?: Array<Record<string, unknown>> };
+        const runs = body.runs ?? [];
+        /* [HIDDEN-UI UX-1 also handle running runs on mount]
+        const latest = runs.find(
+          (r) =>
+            typeof r?.run_id === "string" && (r.status === "completed" || r.status === "failed")
+        );
+        */
+        const running = runs.find(
+          (r) => typeof r?.run_id === "string" && r.status === "running"
+        );
+        if (running) {
+          const runId = String(running.run_id);
+          let skip = false;
+          setInvestigationRunId((prev) => {
+            if (prev) skip = true;
+            return prev ?? runId;
+          });
+          if (skip || cancelled) return;
+          setInvestigating(true);
+          setInvestigationStatus("running");
+          attachRunTracking(runId);
+          return;
+        }
+        const latest = runs.find(
+          (r) =>
+            typeof r?.run_id === "string" && (r.status === "completed" || r.status === "failed")
+        );
+        if (!latest || cancelled) return;
+        const runId = String(latest.run_id);
+        let skip = false;
+        setInvestigationRunId((prev) => {
+          if (prev) skip = true;
+          return prev ?? runId;
+        });
+        if (skip) return;
+        setInvestigationStatus(String(latest.status ?? "completed"));
+        const inv = (await casesApi.getInvestigation(caseId, runId)) as Record<string, unknown>;
+        if (cancelled) return;
+        setInvestigationData(inv);
+        setInvestigationStatus(String(inv.status ?? latest.status ?? "completed"));
+        if (inv.status === "completed") {
+          const rep = await apiFetch(`/api/v1/cases/${caseId}/investigations/${runId}/report.md`);
+          if (!cancelled && rep.ok) setReportMd(await rep.text());
+        }
+      } catch {
+        /* best-effort restore; tab falls back to its idle prompt */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [caseId, attachRunTracking]);
+
+  // [HIDDEN-UI UX-1 moved connectWs above mount-restore useEffect to reuse attachRunTracking]
+  // const connectWs = useCallback(...)
+
+  const startInvestigation = useCallback(async () => {
+    if (!caseRecord || investigating) return;
+    setConfirmingRerun(false);
+    setInvestigating(true);
+    setInvestigationStatus("starting");
+    setLiveSteps([]);
+    setActiveTab("investigation");
+    try {
+      const result = await casesApi.investigate(caseId, caseRecord.description ?? caseRecord.title);
+      setInvestigationRunId(result.run_id);
+      setInvestigationStatus("running");
+      toast.success("Agent investigation started");
+
+      attachRunTracking(result.run_id);
+
+      // [HIDDEN-UI UX-1 reuse shared attachRunTracking helper]
+      // connectWs(result.run_id);
+      // pollRef.current = setInterval(async () => {
+      //   try {
+      //     const inv = await casesApi.getInvestigation(caseId, result.run_id);
+      //     setInvestigationData(inv as Record<string, unknown>);
+      //     setInvestigationStatus(inv.status);
+      //     if (inv.status === "completed" || inv.status === "failed") {
+      //       stopPolling();
+      //       setInvestigating(false);
+      //       if (inv.status === "completed") {
+      //         toast.success("Investigation complete — report ready");
+      //         try {
+      //           const resp = await apiFetch(
+      //             `/api/v1/cases/${caseId}/investigations/${result.run_id}/report.md`
+      //           );
+      //           if (resp.ok) setReportMd(await resp.text());
+      //         } catch {
+      //           // best-effort
+      //         }
+      //       } else {
+      //         toast.error(`Investigation failed: ${inv.error ?? "unknown error"}`);
+      //       }
+      //     }
+      //   } catch {
+      //     // swallow transient errors
+      //   }
+      // }, 5000);
     } catch (e: unknown) {
       // An investigation that could not start did not reach a verdict. This
       // branch used to answer a failed request with `status: 'completed'`
@@ -558,7 +624,7 @@ export function CaseWorkspace({ caseId }: { caseId: string }) {
       setInvestigating(false);
       toast.error(`Investigation could not start: ${message}`);
     }
-  }, [caseRecord, caseId, investigating, stopPolling, connectWs, setActiveTab]);
+  }, [caseRecord, caseId, investigating, attachRunTracking, setActiveTab]);
 
   // ─── Local mutations (optimistic) ──────────────────────────────────────────
 
@@ -732,7 +798,12 @@ export function CaseWorkspace({ caseId }: { caseId: string }) {
           {/* <Link href="/cases" className="text-slate-500 hover:text-slate-300">
             Cases
           </Link> */}
+          {/* [HIDDEN-UI UX-1 make first breadcrumb segment a Link to /alerts]
           <span className="text-slate-500">Cases</span>
+          */}
+          <Link href="/alerts" className="text-fg-muted hover:text-fg-primary transition-colors">
+            Cases
+          </Link>
           <span className="text-slate-600">/</span>
           <span className="font-mono text-slate-400">{caseRecord.id}</span>
         </div>
@@ -815,6 +886,7 @@ export function CaseWorkspace({ caseId }: { caseId: string }) {
                 </option>
               ))}
             </select>
+            {/* [HIDDEN-UI UX-1 tri-state investigate button with rerun confirm]
             <button
               onClick={() => void startInvestigation()}
               disabled={investigating}
@@ -830,6 +902,76 @@ export function CaseWorkspace({ caseId }: { caseId: string }) {
               )}
               {investigating ? "Investigating…" : "Investigate with agent"}
             </button>
+            */}
+            {(() => {
+              const isRunActive =
+                investigating ||
+                investigationStatus === "running" ||
+                investigationStatus === "starting";
+              const hasTerminalRun =
+                !isRunActive &&
+                (investigationStatus === "completed" || investigationStatus === "failed");
+
+              if (isRunActive) {
+                return (
+                  <button
+                    type="button"
+                    disabled
+                    className="inline-flex cursor-not-allowed items-center gap-1.5 rounded-md border border-surface-border bg-surface-subtle px-3 py-1.5 text-xs font-semibold text-fg-muted"
+                  >
+                    <span className="h-3 w-3 animate-spin rounded-full border border-surface-border border-t-fg-muted" />
+                    Investigation in progress
+                  </button>
+                );
+              }
+
+              if (hasTerminalRun) {
+                if (confirmingRerun) {
+                  return (
+                    <div className="inline-flex items-center gap-2 rounded-md border border-surface-border bg-surface-card px-2.5 py-1">
+                      <span className="text-xs text-fg-muted">This starts a new run.</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setConfirmingRerun(false);
+                          void startInvestigation();
+                        }}
+                        className="rounded-md border border-surface-border bg-surface-elevated px-2 py-0.5 text-xs font-semibold text-fg-primary transition-colors hover:border-surface-border-strong hover:bg-surface-hover"
+                      >
+                        Confirm
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setConfirmingRerun(false)}
+                        className="rounded-md px-2 py-0.5 text-xs text-fg-muted transition-colors hover:text-fg-primary"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  );
+                }
+
+                return (
+                  <button
+                    type="button"
+                    onClick={() => setConfirmingRerun(true)}
+                    className="inline-flex items-center gap-1.5 rounded-md border border-surface-border bg-surface-card px-3 py-1.5 text-xs font-semibold text-fg-primary transition-colors hover:border-surface-border-strong hover:bg-surface-hover"
+                  >
+                    Run again
+                  </button>
+                );
+              }
+
+              return (
+                <button
+                  type="button"
+                  onClick={() => void startInvestigation()}
+                  className="inline-flex items-center gap-1.5 rounded-md border border-tone-success/40 bg-pill-success-bg px-3 py-1.5 text-xs font-semibold text-tone-success transition-colors hover:bg-surface-hover"
+                >
+                  Investigate with agent
+                </button>
+              );
+            })()}
             {/*
               WS-D2 — deterministic, analyst-ready snapshot of the entire case
               (lifecycle, MITRE coverage, observables, evidence, timeline,

@@ -374,10 +374,12 @@ function AIInvestigation({
   alertId,
   alertTitle,
   alertSeverity,
+  caseId,
 }: {
   alertId: string;
   alertTitle?: string;
   alertSeverity?: Alert['severity'];
+  caseId?: string;
 }) {
   const router = useRouter();
   const [isRunning, setIsRunning] = useState(false);
@@ -399,6 +401,11 @@ function AIInvestigation({
     setIsRunning(true);
     setError(null);
     try {
+      // [TODO-BACKEND: link existing case to alert]
+      if (caseId) {
+        router.push(`/cases/${caseId}?tab=ledger`);
+        return;
+      }
       // `alertIds` is the part that matters. The API reads it to load the
       // alerts' real `raw_event` payloads and sends those to the agent as
       // `raw_alert`; it used to forward only the string below, so the
@@ -1053,6 +1060,7 @@ export function AlertDetailView({ alertId }: { alertId: string }) {
               alertId={alertId}
               alertTitle={alert?.title}
               alertSeverity={alert?.severity}
+              caseId={alert?.caseId}
             />
           </Section>
 

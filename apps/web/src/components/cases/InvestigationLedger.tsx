@@ -159,6 +159,27 @@ export function InvestigationLedger({
     return () => clearInterval(id);
   }, [isLive, refreshRuns]);
 
+  const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
+
+  // Elapsed-time counter computed from activeRun.started_at while the run is live.
+  useEffect(() => {
+    if (!isLive || !activeRun?.started_at) return;
+    const startedMs = new Date(activeRun.started_at).getTime();
+    if (!Number.isFinite(startedMs)) return;
+    let cancelled = false;
+    const tick = () => {
+      if (!cancelled) {
+        setElapsedSeconds(Math.max(0, Math.floor((Date.now() - startedMs) / 1000)));
+      }
+    };
+    void Promise.resolve().then(tick);
+    const id = setInterval(tick, 1000);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
+  }, [isLive, activeRun?.started_at]);
+
   // ─── Run detail (includes per-model cost breakdown) ──────────────────────
   // Pulled separately from the run-list summary because `model_costs` is only
   // populated once the agents service has flushed its `CostTracker` to the
@@ -428,11 +449,27 @@ export function InvestigationLedger({
               </p>
             ) : filteredEvents.length === 0 ? (
               <div className="p-3">
+                {/* [TODO-BACKEND: flush audit_log events during run_recon, not after it] */}
+                {/* [HIDDEN-UI UX-1 replace waiting message with started copy and elapsed timer]
                 <EmptyState
                   title={isLive ? 'Waiting for the agent…' : 'No events recorded'}
                   description={
                     isLive
                       ? 'The agent is still planning. Steps will stream in here as soon as it makes its first decision.'
+                      : 'This run has no events that match the active filters. Clear filters or pick a different run from the toolbar.'
+                  }
+                  className="bg-transparent py-8"
+                />
+                */}
+                <EmptyState
+                  title={
+                    isLive
+                      ? 'Investigation started. Results appear when the first agent step finishes.'
+                      : 'No events recorded'
+                  }
+                  description={
+                    isLive
+                      ? `Elapsed: ${elapsedSeconds}s`
                       : 'This run has no events that match the active filters. Clear filters or pick a different run from the toolbar.'
                   }
                   className="bg-transparent py-8"
