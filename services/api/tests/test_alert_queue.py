@@ -851,9 +851,9 @@ class TestBuildQueue:
 
     @pytest.mark.asyncio
     async def test_unassigned_severities_constant_matches_contract(self) -> None:
-        # ``low``/``medium``/``info`` are deliberately NOT in the
+        # ``low``/``info`` are deliberately NOT in the
         # unassigned bucket — they're triaged in bulk on /alerts.
-        assert set(QUEUE_UNASSIGNED_SEVERITIES) == {"critical", "high"}
+        assert set(QUEUE_UNASSIGNED_SEVERITIES) == {"critical", "high", "medium"}
 
 
 # ---------------------------------------------------------------------------

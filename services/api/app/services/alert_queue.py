@@ -46,9 +46,9 @@ from app.services.alert_status import RESOLVED_STATUSES
 from app.services.sla import DEFAULT_SLA_TARGETS
 
 # Severities that show up in the *unassigned* bucket of the queue.
-# Low-priority alerts should be triaged in bulk on ``/alerts``; we
+# Low/info alerts should be triaged in bulk on ``/alerts``; we
 # don't want analysts paging through low-noise findings one-by-one.
-QUEUE_UNASSIGNED_SEVERITIES: tuple[str, ...] = ("critical", "high")
+QUEUE_UNASSIGNED_SEVERITIES: tuple[str, ...] = ("critical", "high", "medium")
 
 # Alert statuses that *exit* the queue. Anything in this set is
 # considered done — claim/snooze/assign must not return it to the
