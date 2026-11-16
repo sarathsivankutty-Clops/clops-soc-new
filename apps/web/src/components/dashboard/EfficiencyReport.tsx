@@ -80,14 +80,15 @@ function BarRow({
     <div>
       <div className="flex items-baseline justify-between gap-3 mb-1">
         <div className="min-w-0">
-          <p className="text-sm font-medium text-gray-200 truncate">{label}</p>
-          <p className="text-[11px] text-gray-500 truncate">{description}</p>
+          {/* [HIDDEN-UI DASH-1 allow efficiency description to wrap instead of truncating] */}
+          <p className="text-sm font-medium text-fg-primary leading-snug">{label}</p>
+          <p className="text-caption text-fg-muted leading-snug">{description}</p>
         </div>
-        <p className="text-sm font-semibold text-gray-100 tabular-nums shrink-0">
+        <p className="text-sm font-semibold text-fg-primary tabular-nums shrink-0">
           {display}
         </p>
       </div>
-      <div className="h-1.5 w-full rounded-full bg-gray-800/80 overflow-hidden">
+      <div className="h-1.5 w-full rounded-full bg-surface-subtle overflow-hidden">
         <div
           className={clsx('h-full rounded-full transition-[width]', barColor)}
           style={{ width: `${(v * 100).toFixed(1)}%` }}

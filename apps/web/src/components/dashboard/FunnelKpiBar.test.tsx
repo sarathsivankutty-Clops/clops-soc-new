@@ -223,6 +223,16 @@ describe('FunnelKpiBar', () => {
     expect(screen.queryByText(/not measured/)).not.toBeInTheDocument();
   });
 
+  it('links Correlation Instances, Alerts Generated, Events of Interest, and Analyst Queue to drill-down pages', () => {
+    swrData.set(FUNNEL_KEY, SAMPLE_FUNNEL);
+    render(<FunnelKpiBar period="24h" />);
+
+    expect(screen.getByRole('link', { name: /Correlation Instances/i })).toHaveAttribute('href', '/cases');
+    expect(screen.getByRole('link', { name: /Alerts Generated/i })).toHaveAttribute('href', '/alerts');
+    expect(screen.getByRole('link', { name: /Events of Interest/i })).toHaveAttribute('href', '/hunt');
+    expect(screen.getByRole('link', { name: /Analyst Queue/i })).toHaveAttribute('href', '/queue');
+  });
+
   it('shows skeleton tiles while loading', () => {
     swrLoading.add(FUNNEL_KEY);
     render(<FunnelKpiBar period="24h" />);

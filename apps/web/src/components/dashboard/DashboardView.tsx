@@ -577,7 +577,8 @@ export function DashboardView() {
     // PR-3 / W1+W9: Efficiency ratios (correlation efficiency, alert yield,
     // MITRE coverage) alongside per-stage pipeline health.
     'efficiency-and-pipeline': (
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      /* [HIDDEN-UI DASH-1 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">] */
+      <div className="grid grid-cols-1 gap-4">
         <EfficiencyReport period={timeWindow} />
         <PipelineHealth />
       </div>

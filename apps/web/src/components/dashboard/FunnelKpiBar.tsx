@@ -22,6 +22,7 @@
  * Polls every 60 s with stale-while-revalidate.
  */
 
+import Link from 'next/link';
 import useSWR from 'swr';
 import { clsx } from 'clsx';
 import { metricsApi, type FunnelMetrics } from '@/lib/api';
@@ -57,6 +58,8 @@ interface TileProps {
   lowerIsBetter?: boolean;
   /** Tiny note under the value (e.g. "events", "alerts/sec"). */
   unit?: string;
+  /** Optional drill-down route when the analyst clicks the tile. */
+  href?: string;
 }
 
 function formatNumber(n: number): string {
@@ -106,7 +109,7 @@ function formatDelta(deltaPercent: number | null): string {
   return `${sign}${Math.abs(Number(rounded))}%`;
 }
 
-function Tile({ label, value, delta, lowerIsBetter = false, unit, sampleCount }: TileProps) {
+function Tile({ label, value, delta, lowerIsBetter = false, unit, sampleCount, href }: TileProps) {
   const unmeasured = sampleCount === 0;
   const isGood =
     delta === null || delta === 0
@@ -121,14 +124,20 @@ function Tile({ label, value, delta, lowerIsBetter = false, unit, sampleCount }:
         ? 'text-tone-success'
         : 'text-tone-danger';
 
-  return (
-    <div className="bg-surface-card border border-surface-border rounded-container p-4 min-w-0">
-      <p className="text-caption text-fg-muted font-medium uppercase tracking-wider truncate">
+  /* [HIDDEN-UI DASH-1 allow tile labels and captions to wrap cleanly and support drill-down links] */
+  const cardClasses = clsx(
+    'bg-surface-card border border-surface-border rounded-container p-4 min-w-0 flex flex-col justify-between',
+    href && 'transition-colors hover:border-border-strong focus:outline-none focus-visible:ring-2 focus-visible:ring-accent',
+  );
+
+  const inner = (
+    <>
+      <p className="text-caption text-fg-muted font-medium uppercase tracking-wider leading-snug">
         {label}
       </p>
       <p
         className={clsx(
-          'mt-1 tabular-nums truncate text-kpi font-bold',
+          'mt-1 tabular-nums text-kpi font-bold',
           unmeasured
             ? 'text-fg-muted'
             : 'text-fg-primary',
@@ -136,9 +145,9 @@ function Tile({ label, value, delta, lowerIsBetter = false, unit, sampleCount }:
       >
         {unmeasured ? '—' : value}
       </p>
-      <div className="flex items-baseline gap-2 mt-1">
+      <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 mt-1">
         {unmeasured ? (
-          <span className="text-caption text-fg-muted truncate">
+          <span className="text-caption text-fg-muted leading-snug">
             not measured{unit ? ` · no ${unit}` : ''}
           </span>
         ) : (
@@ -146,10 +155,24 @@ function Tile({ label, value, delta, lowerIsBetter = false, unit, sampleCount }:
             <span className={clsx('text-xs font-medium tabular-nums', deltaColor)}>
               {formatDelta(delta)}
             </span>
-            {unit && <span className="text-caption text-fg-subtle truncate">{unit}</span>}
+            {unit && <span className="text-caption text-fg-subtle leading-snug">{unit}</span>}
           </>
         )}
       </div>
+    </>
+  );
+
+  if (href) {
+    return (
+      <Link href={href} className={cardClasses}>
+        {inner}
+      </Link>
+    );
+  }
+
+  return (
+    <div className={cardClasses}>
+      {inner}
     </div>
   );
 }
@@ -234,7 +257,8 @@ export function FunnelKpiBar({
           <h2 className="text-card-title font-semibold text-fg-primary">Operations Funnel</h2>
           <span className="text-xs text-fg-muted">Last {period}</span>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        {/* [HIDDEN-UI DASH-1 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">] */}
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
           {TILE_LABELS.map((l) => (
             <LoadingTile key={l} label={l} />
           ))}
@@ -259,24 +283,28 @@ export function FunnelKpiBar({
         <span className="text-xs text-fg-muted">Last {period}</span>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+      {/* [HIDDEN-UI DASH-1 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">] */}
+      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
         <Tile
           label="Events of Interest"
           value={formatNumber(data.events_of_interest)}
           delta={deltas.events_of_interest}
           unit="events"
+          href="/hunt"
         />
         <Tile
           label="Correlation Instances"
           value={formatNumber(data.correlation_instances)}
           delta={deltas.correlation_instances}
           unit="groups"
+          href="/cases"
         />
         <Tile
           label="Alerts Generated"
           value={formatNumber(data.alerts_generated)}
           delta={deltas.alerts_generated}
           unit="alerts"
+          href="/alerts"
         />
         <Tile
           label="Signal / Noise"
@@ -299,6 +327,7 @@ export function FunnelKpiBar({
           delta={deltas.analyst_queue_depth}
           lowerIsBetter
           unit="open"
+          href="/queue"
         />
       </div>
     </div>
