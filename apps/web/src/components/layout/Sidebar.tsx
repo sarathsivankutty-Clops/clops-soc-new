@@ -8,7 +8,8 @@ import { LiveQueueBadge } from './LiveQueueBadge';
 import { RoleBadge } from './RoleBadge';
 import { useOptionalTheme } from '@/components/theme/ThemeProvider';
 import { useBranding } from '@/hooks/useBranding';
-import { useConsoleVersion } from '@/hooks/useConsoleVersion';
+// [HIDDEN-UI CHROME-1 hide version and MIT License attribution from sidebar footer]
+// import { useConsoleVersion } from '@/hooks/useConsoleVersion';
 import { authApi } from '@/lib/api';
 import { BrandLogo } from './BrandLogo';
 
@@ -86,11 +87,13 @@ const ChartBarIcon = () => (
   </svg>
 );
 
+/* [HIDDEN-UI CHROME-1 SearchIcon retained for commented Hunt nav item]
 const SearchIcon = () => (
   <svg className="w-5 h-5" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
   </svg>
 );
+*/
 
 const GraphIcon = () => (
   <svg className="w-5 h-5" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -175,10 +178,18 @@ const navSections: NavSection[] = [
       { label: 'Runbooks', href: '/playbooks', icon: <PlaybookIcon /> },
     ],
   },
+  /* [HIDDEN-UI CHROME-1 hide Hunt from sidebar navigation]
   {
     title: 'Hunt & Detect',
     items: [
       { label: 'Hunt', href: '/hunt', icon: <SearchIcon /> },
+      { label: 'Detection', href: '/detection', icon: <EyeIcon /> },
+    ],
+  },
+  */
+  {
+    title: 'Detect',
+    items: [
       { label: 'Detection', href: '/detection', icon: <EyeIcon /> },
     ],
   },
@@ -288,7 +299,8 @@ export function Sidebar({ collapsed = false }: SidebarProps = {}) {
   // Was `packageJson.version`, compiled into the bundle, while Settings →
   // About read a different build-time value. One runtime source now, so the
   // two footers cannot name different releases of the same console.
-  const { version: consoleVersion } = useConsoleVersion();
+  // [HIDDEN-UI CHROME-1 hide version and MIT License attribution from sidebar footer]
+  // const { version: consoleVersion } = useConsoleVersion();
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -398,7 +410,10 @@ export function Sidebar({ collapsed = false }: SidebarProps = {}) {
               <span className="text-brand-400 font-bold text-base tracking-tight">SOC</span>
               <p className="text-xs text-fg-subtle -mt-0.5">open-source</p>
               */}
+              {/* [HIDDEN-UI CHROME-1 rename product to ClopSOC]
               <span className="text-fg-primary font-bold text-base tracking-tight">ClopsSOC</span>
+              */}
+              <span className="text-fg-primary font-bold text-base tracking-tight">ClopSOC</span>
             </>
           )}
         </div>
@@ -523,6 +538,7 @@ export function Sidebar({ collapsed = false }: SidebarProps = {}) {
           </div>
         </div>
 
+        {/* [HIDDEN-UI CHROME-1 hide version and MIT License attribution from sidebar footer]
         <div className="flex items-center gap-2 px-1 text-caption text-fg-subtle">
           <span className="font-mono">
             {consoleVersion === null ? '' : consoleVersion === 'unknown' ? 'version unknown' : `v${consoleVersion}`}
@@ -537,6 +553,7 @@ export function Sidebar({ collapsed = false }: SidebarProps = {}) {
             MIT License
           </a>
         </div>
+        */}
       </div>
     </aside>
     </>

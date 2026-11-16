@@ -81,7 +81,7 @@ export function DashboardWelcome() {
   return (
     <section
       role="region"
-      aria-label="Welcome to ClopsSOC"
+      aria-label={/* [HIDDEN-UI CHROME-1 rename product to ClopSOC] "Welcome to ClopsSOC" */ 'Welcome to ClopSOC'}
       data-testid="dashboard-welcome"
       className="rounded-xl border border-brand-400/30 bg-gradient-to-br from-brand-500/10 to-brand-700/5 p-5"
     >
@@ -90,7 +90,8 @@ export function DashboardWelcome() {
         <div>
           <p className="text-xs font-semibold uppercase tracking-wider text-brand-300">
             {/* [HIDDEN-UI THEME-7 visible product label updated: Welcome to AiSOC] */}
-            Welcome to ClopsSOC
+            {/* [HIDDEN-UI CHROME-1 rename product to ClopSOC] Welcome to ClopsSOC */}
+            Welcome to ClopSOC
           </p>
           <h2 className="mt-1 text-lg font-semibold text-fg-primary">
             You&apos;re looking at a clean console. Here&apos;s how to make it useful.

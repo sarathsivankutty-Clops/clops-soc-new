@@ -1,10 +1,13 @@
 'use client';
 
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useBranding } from '@/hooks/useBranding';
+/* [HIDDEN-UI CHROME-1 hide search bar, time window selector, and Default tenant switcher from TopBar]
+import { useEffect, useState } from 'react';
 import { TimeWindowSelector } from './TimeWindowSelector';
 import { TenantSwitcher } from './TenantSwitcher';
+*/
 import { RoleBadge } from './RoleBadge';
 import { useTenant } from './TenantProvider';
 import { BrandLogo } from './BrandLogo';
@@ -134,16 +137,20 @@ export function TopBar({
     return () => window.clearInterval(id);
   }, []);
   */
+  /* [HIDDEN-UI CHROME-1 hide search bar / command palette launcher from TopBar]
   const [shortcut, setShortcut] = useState<'⌘K' | 'Ctrl K'>('⌘K');
+  */
   const { userRole } = useTenant();
   const { branding } = useBranding();
 
+  /* [HIDDEN-UI CHROME-1 hide search bar / command palette launcher from TopBar]
   // Show the right OS-specific shortcut hint without breaking SSR.
   useEffect(() => {
     if (typeof navigator === 'undefined') return;
     const isMac = /Mac|iPod|iPhone|iPad/.test(navigator.platform);
     setShortcut(isMac ? '⌘K' : 'Ctrl K');
   }, []);
+  */
 
   // Match the most specific path first. Object insertion order is preserved
   // and routeLabels lists nested routes (e.g. /detection/catalog) before
@@ -162,12 +169,14 @@ export function TopBar({
           .split('-')
           .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
           .join(' ')
-      : 'ClopsSOC';
+      /* [HIDDEN-UI CHROME-1 rename product to ClopSOC] : 'ClopsSOC'; */
+      : 'ClopSOC';
     return { title, description: '' };
   })();
 
   const routeInfo = routeKey ? routeLabels[routeKey] : fallbackFromPath;
 
+  /* [HIDDEN-UI CHROME-1 hide search bar / command palette launcher from TopBar]
   const openPalette = () => {
     // Synthesize the same keystroke the palette listens for. Keeps a single
     // source of truth — the palette itself owns the open/close logic.
@@ -179,6 +188,7 @@ export function TopBar({
     });
     window.dispatchEvent(event);
   };
+  */
 
   /* [HIDDEN-UI THEME-7 legacy clock formatting retained with its hidden JSX]
   const timeStr = now
@@ -243,6 +253,7 @@ export function TopBar({
       </div>
 
       {/* Center: command palette launcher */}
+      {/* [HIDDEN-UI CHROME-1 hide search bar from TopBar]
       <div className="flex-1 max-w-md mx-4 hidden sm:block">
         <button
           type="button"
@@ -271,15 +282,18 @@ export function TopBar({
           </kbd>
         </button>
       </div>
+      */}
 
-      {/* Right: global selectors + brand logo (tenant logo wins; brand PNG fallback) */}
+      {/* Right: role badge + brand logo (tenant logo wins; brand PNG fallback) */}
       <div className="flex items-center gap-2.5 ml-auto">
+        {/* [HIDDEN-UI CHROME-1 hide time window selector and Default tenant switcher from TopBar]
         <div className="hidden md:block">
           <TimeWindowSelector />
         </div>
         <div className="hidden md:block">
           <TenantSwitcher />
         </div>
+        */}
         <div className="hidden lg:block">
           <RoleBadge role={userRole} />
         </div>

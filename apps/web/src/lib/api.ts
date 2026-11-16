@@ -2853,7 +2853,38 @@ export function normalizeCasesResponse(raw: unknown, filters: CaseFilters = {}):
   };
 }
 
+export interface CaseExternalRef {
+  id: string;
+  case_id: string;
+  connector_instance_id: string;
+  connector_name?: string | null;
+  vendor: string;
+  external_id: string;
+  external_url?: string | null;
+  external_status?: string | null;
+  pushed_by?: string | null;
+  last_synced_at?: string | null;
+}
+
+export interface CaseFanoutResult {
+  connector_id: string;
+  connector_name: string;
+  vendor: string;
+  status: string;
+  external_id?: string | null;
+  external_url?: string | null;
+  error?: string | null;
+}
+
 export const casesApi = {
+  listExternalRefs: (caseId: string) =>
+    request<CaseExternalRef[]>(`/api/v1/cases/${encodeURIComponent(caseId)}/external-refs`),
+
+  pushToItsm: (caseId: string, connectorIds: string[] = []) =>
+    request<CaseFanoutResult[]>(`/api/v1/cases/${encodeURIComponent(caseId)}/push`, {
+      method: "POST",
+      body: JSON.stringify({ connector_ids: connectorIds }),
+    }),
   /** Explicit reopen — the sanctioned backwards status move (PATCH is
    * forward-only and answers 422 on backwards transitions). */
   async reopen(

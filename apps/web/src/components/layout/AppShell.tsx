@@ -8,7 +8,8 @@ import { TopBar } from './TopBar';
 import { CommandPalette } from './CommandPalette';
 import { TimeWindowProvider } from './TimeWindowProvider';
 import { TenantProvider } from './TenantProvider';
-import { CopilotDock } from '@/components/copilot/CopilotDock';
+// [HIDDEN-UI CHROME-2 hide floating Ask Copilot dock]
+// import { CopilotDock } from '@/components/copilot/CopilotDock';
 import { DemoBanner } from '@/components/demo/DemoBanner';
 import { DemoAutoLogin } from '@/components/demo/DemoAutoLogin';
 import { ClientOnly } from '@/components/util/ClientOnly';
@@ -54,9 +55,11 @@ export function AppShell({ children, demoMode }: AppShellProps) {
                 <div className="max-w-content mx-auto w-full pt-7 px-8 pb-24">{children}</div>
               </main>
             </div>
+            {/* [HIDDEN-UI CHROME-2 hide floating Ask Copilot dock]
             <ClientOnly>
               <CopilotDock />
             </ClientOnly>
+            */}
             <ClientOnly>
               <CommandPalette />
             </ClientOnly>

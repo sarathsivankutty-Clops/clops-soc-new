@@ -107,3 +107,73 @@ Subsequent end-to-end validation against a real tenant configured with Groq BYOK
 - **Fix Applied** (commit `81605a4ab`):
   - Created `.env.ec2.example` with `PUBLIC_HOST=100.25.223.93`, `AISOC_CONSOLE_BIND_ADDR=0.0.0.0`, `AISOC_REALTIME_BIND_ADDR=0.0.0.0`, `WEB_PORT=13000`, `REALTIME_PORT=18086`, and public CORS origins.
   - Rebuilding `web` with `docker compose build web` on EC2 inlines `ws://100.25.223.93:18086` into the client bundle.
+
+---
+
+## 6. Exploratory QA, UX Review & AI Investigation Workflow Redesign (`UX-1` & `UX-2`)
+
+### 6.1 Exploratory QA & Workflow Analysis (`BUG_REPORT.md`, `docs/UX_REVIEW.md`)
+- Executed an exploratory Playwright QA pass against the live console (`http://127.0.0.1:13000`), capturing runtime issues, API/export errors (such as missing `libgobject-2.0-0` causing PDF report export failures in WeasyPrint), and UI/accessibility findings in `BUG_REPORT.md`.
+- Documented the end-to-end Alert -> Case -> AI Investigation workflow issues and redesign plan in `docs/UX_REVIEW.md`, covering duplicate run creation, silent startup delays, `/alerts` opening on `Entities` instead of the `Alerts` queue, competing AI CTA affordances, and missing run-picker accessibility labels.
+
+### 6.2 Phase `UX-1` — Resume Running Investigations & Prevent Duplicate Runs (commit `b4a91fa8b`)
+- `apps/web/src/components/cases/CaseWorkspace.tsx`:
+  - Extracted `attachRunTracking(runId)` and reused it inside the mount-restore `useEffect` so reloading `/cases/[id]` while a run has `status === "running"` restores `investigationRunId`, enters the investigating state, and resumes WebSocket + polling updates.
+  - Replaced the single-state `"Investigate with agent"` button with a tri-state control: disabled `"Investigation in progress"` when active, secondary `"Run again"` with an inline `"This starts a new run."` (`Confirm` / `Cancel`) confirmation when completed or failed, and `"Investigate with agent"` when no run exists.
+  - Turned the `Cases` breadcrumb segment into a `<Link href="/alerts">`, keeping `{caseRecord.id}` as plain text.
+  - Added `[TODO-BACKEND: ...]` comments tracking backend run-deduplication and incremental `audit_log` flushing.
+- `apps/web/src/components/cases/InvestigationLedger.tsx`:
+  - Updated the live empty state (`isLive` with 0 events) to display `"Investigation started. Results appear when the first agent step finishes."` alongside a live `Elapsed: Ns` counter computed from `activeRun.started_at`.
+- `apps/web/src/components/alerts/AlertDetailView.tsx`:
+  - Guarded `AIInvestigation` so alerts with an existing `caseId` route directly to `/cases/${caseId}?tab=ledger` instead of creating a duplicate case (with `[TODO-BACKEND: link existing case to alert]`).
+- Added unit tests in `CaseWorkspaceUx1.test.tsx`, `InvestigationLedger.test.tsx`, and `AlertDetailViewUx1.test.tsx`.
+
+### 6.3 Phase `UX-2` — UI Redesign (`RD1`–`RD7`, `U11`, `U13`) & Container Rebuild
+- `apps/web/src/components/alerts/AlertsView.tsx`:
+  - Changed initial `viewMode` state from `'entities'` to `'alerts'`, placed the `Alerts` tab first in the header `tablist`, and hid the disabled `+ Create Alert` / `Planned for v1.1` controls behind `[HIDDEN-UI UX-2 ...]` comments.
+- `apps/web/src/components/alerts/InvestigationRail.tsx`:
+  - Added a `footer` slot on `RailShell` and an optional `onNavigate` prop on `InvestigationRailProps`.
+  - Rendered a sticky footer with theme tokens (`border-surface-border`, `bg-surface-elevated`, `text-tone-danger`, `text-fg-secondary`) containing a primary `"Investigate with agent"` / `"Open existing investigation"` CTA and a `"Full alert view →"` link; clicking launches or opens the linked case investigation at `/cases/${caseId}?tab=investigation`.
+- `apps/web/src/components/alerts/AlertDetailView.tsx`:
+  - Promoted the `AIInvestigation` CTA button from `variant="secondary"` to `variant="primary"`.
+- `apps/web/src/components/cases/CaseWorkspace.tsx` & `apps/web/src/components/cases/InvestigationLedger.tsx`:
+  - Passed `runId={investigationRunId}` to `InvestigationPanel` and updated the `"running"` state header to show a truncated `run` badge and live step counter (`steps recorded`) using theme tokens.
+  - Added `aria-label="Select investigation run"` to the ledger run picker `<select>`.
+- Added unit tests in `InvestigationRail.test.tsx` and `InvestigationLedger.test.tsx`.
+
+### 6.4 Verification & Live Deployment Evidence
+- `pnpm --filter @aisoc/web type-check`: **0 errors** (exit 0).
+- `pnpm --filter @aisoc/web lint`: **0 errors, 95 warnings** (exit 0).
+- Targeted Vitest suites (8 alert/case test files): **8/8 files passed, 74/74 tests passed**.
+- Full Vitest suite (`pnpm --filter @aisoc/web test`): **129/132 files passed, 1,273/1,278 tests passed** (only the 3 pre-existing baseline failures in `a11y.test.tsx`, `MitrePanelWording.test.tsx`, and `ThreatIntelLookupHonesty.test.tsx`).
+- `pnpm --filter @aisoc/web build`: **passed** (exit 0, 108 static pages).
+- `docker compose -p clops-soc up -d --build web`: rebuilt `clops-soc-web:local` and started `clops-soc-web-1` on `0.0.0.0:13000->3000/tcp`; `http://127.0.0.1:13000/login` and `http://127.0.0.1:13000/api/health` both returned HTTP `200`.
+
+---
+
+## 7. Console Chrome Simplification & `ClopSOC` Branding (`CHROME-1` & `CHROME-2`)
+
+### 7.1 Phase `CHROME-1` — Sidebar Footer, `Hunt`, TopBar Controls & `ClopSOC` Branding
+All removals preserved source lines inside `[HIDDEN-UI CHROME-1 ...]` comments rather than deleting code:
+- `apps/web/src/components/layout/Sidebar.tsx`:
+  - Commented out `useConsoleVersion` and the footer `v{consoleVersion} · MIT License` (`https://github.com/beenuar/AiSOC`) block.
+  - Commented out `SearchIcon` and the `Hunt` navigation entry (`Hunt & Detect` section updated to `Detect`).
+  - Renamed the visible sidebar brand wordmark from `ClopsSOC` to `ClopSOC`.
+- `apps/web/src/components/layout/TopBar.tsx`:
+  - Commented out the command-palette search bar (`Search alerts, cases, rules, or run a command…`), `TimeWindowSelector`, and `TenantSwitcher` (`Default`), along with their unused helpers (`shortcut`, `openPalette`, `useEffect`, `useState`).
+  - Renamed the fallback product title to `ClopSOC`.
+- Updated visible product branding from `ClopsSOC` to `ClopSOC` and hid `Hunt` in `CommandPalette.tsx` (`NAV_ITEMS`), `useBranding.ts` (`DEFAULT_BRANDING`), `app/layout.tsx`, `app/login/page.tsx`, `DashboardWelcome.tsx`, and `SettingsView.tsx`.
+- Updated unit tests in `Sidebar.test.tsx`, `TopBar.test.tsx`, `BrandedDocumentTitle.test.tsx`, and `SettingsView.navigation.test.tsx`.
+
+### 7.2 Phase `CHROME-2` — Floating Ask Copilot Dock Removal
+Preserved inside `[HIDDEN-UI CHROME-2 ...]` comments:
+- `apps/web/src/components/layout/AppShell.tsx`: Commented out the `CopilotDock` import and `<ClientOnly><CopilotDock /></ClientOnly>` mount.
+- `apps/web/src/components/layout/CommandPalette.tsx`: Commented out the `'action:copilot'` (`"Open the floating Copilot dock"`) quick action.
+
+### 7.3 Verification & Live Deployment Evidence
+- `pnpm --filter @aisoc/web type-check`: **0 errors** (exit 0).
+- `pnpm --filter @aisoc/web lint`: **0 errors, 94 warnings** (exit 0).
+- Layout & settings unit tests (`Sidebar.test.tsx`, `TopBar.test.tsx`, `BrandedDocumentTitle.test.tsx`, `SettingsView.navigation.test.tsx`): **4/4 files passed, 35/35 tests passed**; `BrandedDocumentTitle.test.tsx` (`2/2`) re-verified after `CHROME-2`.
+- Filtered accessibility check (`vitest run src/test/a11y.test.tsx -t "TopBar|Sidebar"`): **2 passed, 10 skipped (filtered)**.
+- `pnpm --filter @aisoc/web build`: **passed** (exit 0, 108 static pages).
+- `docker compose -p clops-soc up -d --build web`: rebuilt `clops-soc-web:local` and started `clops-soc-web-1` on `0.0.0.0:13000->3000/tcp`; `http://127.0.0.1:13000/login` and `http://127.0.0.1:13000/api/health` both returned HTTP `200`.

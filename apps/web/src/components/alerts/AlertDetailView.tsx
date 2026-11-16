@@ -11,6 +11,7 @@ import {
   ledgerApi,
   feedbackApi, computeRedispositionToken,
   type Alert,
+  type CaseExternalRef,
   type ConfidenceFactor,
   type ConfidenceLabel,
   type AnalystVerdict,
@@ -449,8 +450,19 @@ function AIInvestigation({
         </div>
       )}
 
+      {/* [HIDDEN-UI UX-2 promote AI investigation CTA to primary (RD6)]
       <Button
         variant="secondary"
+        size="sm"
+        onClick={startInvestigation}
+        disabled={isRunning}
+        loading={isRunning}
+      >
+        {isRunning ? 'Starting investigation...' : 'Start AI investigation'}
+      </Button>
+      */}
+      <Button
+        variant="primary"
         size="sm"
         onClick={startInvestigation}
         disabled={isRunning}
@@ -515,6 +527,80 @@ const VERDICT_LABEL: Record<AnalystVerdict, string> = {
   benign: 'Benign',
   escalate: 'Escalate',
 };
+
+function AlertJiraAction({
+  alert,
+  onCaseLinked,
+}: {
+  alert: Alert;
+  onCaseLinked: () => void;
+}) {
+  const [pushing, setPushing] = useState(false);
+  const [createdRef, setCreatedRef] = useState<{ id: string; url?: string | null } | null>(null);
+  const { data: refs, mutate } = useSWR<CaseExternalRef[]>(
+    alert.caseId ? `alert-case-refs:${alert.caseId}` : null,
+    () => (alert.caseId ? casesApi.listExternalRefs(alert.caseId) : Promise.resolve([])),
+    { revalidateOnFocus: false }
+  );
+  const jiraRef = Array.isArray(refs) ? refs.find((r) => r.vendor === 'jira') : undefined;
+  const displayId = jiraRef?.external_id ?? createdRef?.id;
+  const displayUrl = jiraRef?.external_url ?? createdRef?.url;
+
+  if (displayId) {
+    return displayUrl ? (
+      <a
+        href={displayUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex items-center gap-1.5 rounded-control border border-accent/40 bg-accent/10 px-3 py-1.5 text-xs font-semibold text-accent hover:bg-accent/20 transition-colors"
+      >
+        Jira: {displayId}
+      </a>
+    ) : (
+      <span className="inline-flex items-center gap-1.5 rounded-control border border-surface-border bg-surface-subtle px-3 py-1.5 text-xs font-semibold text-fg-primary">
+        Jira: {displayId}
+      </span>
+    );
+  }
+
+  const handleCreate = async () => {
+    if (pushing) return;
+    setPushing(true);
+    try {
+      let targetCaseId = alert.caseId;
+      if (!targetCaseId) {
+        const created = await casesApi.create({
+          title: alert.title,
+          description: alert.description ?? `Opened from alert ${alert.id}`,
+          alertIds: [alert.id],
+          severity: alertSeverityToCaseSeverity(alert.severity),
+        });
+        targetCaseId = created.id;
+        onCaseLinked();
+      }
+      const results = await casesApi.pushToItsm(targetCaseId);
+      const ok = results.find((r) => r.status === 'ok');
+      const err = results.find((r) => r.status !== 'ok');
+      if (ok) {
+        setCreatedRef({ id: ok.external_id ?? 'Created', url: ok.external_url });
+        toast.success(`Created Jira issue ${ok.external_id ?? ''}`.trim());
+        await mutate();
+      } else {
+        toast.error(err?.error || 'Failed to create Jira issue');
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Could not create Jira issue');
+    } finally {
+      setPushing(false);
+    }
+  };
+
+  return (
+    <Button variant="secondary" size="md" onClick={() => void handleCreate()} disabled={pushing}>
+      {pushing ? 'Creating Jira…' : 'Create Jira Issue'}
+    </Button>
+  );
+}
 
 function AnalystOverridePanel({
   alert,
@@ -908,7 +994,8 @@ export function AlertDetailView({ alertId }: { alertId: string }) {
             Explain
           </Button>
           {/* [HIDDEN-UI NAV-6 hide Create Case button] */}
-          {/* [TODO-BACKEND: Jira link / create issue] */}
+          {/* [HIDDEN-UI JIRA-1 replaced TODO-BACKEND placeholder with AlertJiraAction] */}
+          <AlertJiraAction alert={alert} onCaseLinked={() => { void mutate(); }} />
         </div>
       </div>
 

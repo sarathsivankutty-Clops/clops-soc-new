@@ -24,36 +24,52 @@ export const metadata: Metadata = {
     template: '%s | AiSOC',
   },
   */
+  /* [HIDDEN-UI CHROME-1 rename product to ClopSOC]
   applicationName: 'ClopsSOC',
   title: {
     default: 'ClopsSOC — AI Security Operations Center',
     template: '%s | ClopsSOC',
+  },
+  description:
+    'ClopsSOC is a free, self-hostable AI-powered Security Operations Center (SOC). Real-time threat detection, alert fusion, purple-team exercises, MITRE ATT&CK-aware autonomous investigation, and detection-as-code — MIT-licensed and community-driven.',
+  */
+  applicationName: 'ClopSOC',
+  title: {
+    default: 'ClopSOC — AI Security Operations Center',
+    template: '%s | ClopSOC',
   },
   /* [HIDDEN-UI THEME-7 prior metadata copy used the AiSOC product name]
   description:
     'AiSOC is a free, self-hostable AI-powered Security Operations Center (SOC). Real-time threat detection, alert fusion, purple-team exercises, MITRE ATT&CK-aware autonomous investigation, and detection-as-code — MIT-licensed and community-driven.',
   */
   description:
-    'ClopsSOC is a free, self-hostable AI-powered Security Operations Center (SOC). Real-time threat detection, alert fusion, purple-team exercises, MITRE ATT&CK-aware autonomous investigation, and detection-as-code — MIT-licensed and community-driven.',
+    'ClopSOC is a free, self-hostable AI-powered Security Operations Center (SOC). Real-time threat detection, alert fusion, purple-team exercises, MITRE ATT&CK-aware autonomous investigation, and detection-as-code — MIT-licensed and community-driven.',
   keywords: [...DISCOVERY_KEYWORDS],
   /* [HIDDEN-UI THEME-7 prior publisher labels: AiSOC Community and AiSOC]
   authors: [{ name: 'AiSOC Community', url: 'https://github.com/beenuar/AiSOC' }],
   creator: 'AiSOC Community',
   publisher: 'AiSOC',
   */
+  /* [HIDDEN-UI CHROME-1 rename product to ClopSOC]
   authors: [{ name: 'ClopsSOC Community', url: 'https://github.com/beenuar/AiSOC' }],
   creator: 'ClopsSOC Community',
   publisher: 'ClopsSOC',
+  */
+  authors: [{ name: 'ClopSOC Community', url: 'https://github.com/beenuar/AiSOC' }],
+  creator: 'ClopSOC Community',
+  publisher: 'ClopSOC',
   category: 'cybersecurity',
   classification: 'Security Software',
   openGraph: {
     /* [HIDDEN-UI THEME-7 prior social title used AiSOC] */
-    title: 'ClopsSOC — Free, Open-Source AI Security Operations Center',
+    /* [HIDDEN-UI CHROME-1 rename product to ClopSOC] title: 'ClopsSOC — Free, Open-Source AI Security Operations Center', */
+    title: 'ClopSOC — Free, Open-Source AI Security Operations Center',
     description:
       'Self-hostable AI SOC with real-time threat detection, alert fusion, purple-team drills, MITRE ATT&CK investigation, and detection-as-code. MIT-licensed.',
     type: 'website',
     /* [HIDDEN-UI THEME-7 prior social site name: AiSOC] */
-    siteName: 'ClopsSOC',
+    /* [HIDDEN-UI CHROME-1 rename product to ClopSOC] siteName: 'ClopsSOC', */
+    siteName: 'ClopSOC',
     url: siteUrl,
     locale: 'en_US',
     images: [
@@ -62,7 +78,8 @@ export const metadata: Metadata = {
         width: 1200,
         height: 630,
         /* [HIDDEN-UI THEME-7 prior social image label: AiSOC] */
-        alt: 'ClopsSOC — open-source AI SOC platform for security operations teams',
+        /* [HIDDEN-UI CHROME-1 rename product to ClopSOC] alt: 'ClopsSOC — open-source AI SOC platform for security operations teams', */
+        alt: 'ClopSOC — open-source AI SOC platform for security operations teams',
         type: 'image/png',
       },
     ],
@@ -70,7 +87,8 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     /* [HIDDEN-UI THEME-7 prior social title used AiSOC] */
-    title: 'ClopsSOC — Free Open-Source AI SOC Platform',
+    /* [HIDDEN-UI CHROME-1 rename product to ClopSOC] title: 'ClopsSOC — Free Open-Source AI SOC Platform', */
+    title: 'ClopSOC — Free Open-Source AI SOC Platform',
     description:
       'AI-powered SOC: threat detection, alert fusion, purple team, MITRE ATT&CK mapping, detection-as-code, and eval harness in CI. Self-host for free.',
     site: '@aisoc_dev',

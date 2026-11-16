@@ -29,8 +29,8 @@
 //
 // Author: Beenu Arora <beenu@cyble.com>
 
-import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 // ─── Mocks ───────────────────────────────────────────────────────────────────
@@ -111,11 +111,12 @@ vi.mock('./ExplainDrawer', () => ({
 
 // Import AFTER the mocks so the component picks up the stubs.
 import { InvestigationRail } from './InvestigationRail';
-import type {
-  Alert,
-  RelatedEntity,
-  MiniTimelineEvent,
-  RecommendedAction,
+import {
+  casesApi,
+  type Alert,
+  type RelatedEntity,
+  type MiniTimelineEvent,
+  type RecommendedAction,
 } from '@/lib/api';
 
 // ─── Fixtures ────────────────────────────────────────────────────────────────
@@ -851,5 +852,74 @@ describe('InvestigationRail — story is the primary view', () => {
     fireEvent.click(screen.getByRole('tab', { name: 'Details' }));
     fireEvent.click(screen.getByRole('tab', { name: 'Story' }));
     expect(screen.getByLabelText('Attack story')).toBeInTheDocument();
+  });
+});
+
+// ─── Sticky investigation CTA (RD1 + RD2) ────────────────────────────────────
+
+describe('InvestigationRail — sticky investigation CTA', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('creates a case, starts an investigation, and navigates to the case investigation tab', async () => {
+    const createSpy = vi
+      .spyOn(casesApi, 'create')
+      .mockResolvedValue({ id: 'case-created-42' } as Awaited<ReturnType<typeof casesApi.create>>);
+    const investigateSpy = vi
+      .spyOn(casesApi, 'investigate')
+      .mockResolvedValue({
+        run_id: 'run-42',
+        case_id: 'case-created-42',
+        status: 'running',
+        message: 'started',
+      });
+    const onNavigate = vi.fn();
+
+    swrState.data = buildAlert({ caseId: undefined });
+    render(
+      <InvestigationRail
+        alertId="ALERT-W6-0001"
+        onClose={vi.fn()}
+        onNavigate={onNavigate}
+      />,
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: /investigate with agent/i }));
+
+    await waitFor(() => {
+      expect(createSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          alertIds: ['ALERT-W6-0001'],
+          severity: 'high',
+        }),
+      );
+      expect(investigateSpy).toHaveBeenCalledWith(
+        'case-created-42',
+        'Opened from the alert investigation rail by an analyst.',
+      );
+      expect(onNavigate).toHaveBeenCalledWith('/cases/case-created-42?tab=investigation');
+    });
+  });
+
+  it('opens an existing linked case directly without creating a duplicate case', async () => {
+    const createSpy = vi.spyOn(casesApi, 'create');
+    const investigateSpy = vi.spyOn(casesApi, 'investigate');
+    const onNavigate = vi.fn();
+
+    swrState.data = buildAlert({ caseId: 'case-existing-99' });
+    render(
+      <InvestigationRail
+        alertId="ALERT-W6-0001"
+        onClose={vi.fn()}
+        onNavigate={onNavigate}
+      />,
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: /open existing investigation/i }));
+
+    expect(onNavigate).toHaveBeenCalledWith('/cases/case-existing-99?tab=investigation');
+    expect(createSpy).not.toHaveBeenCalled();
+    expect(investigateSpy).not.toHaveBeenCalled();
   });
 });

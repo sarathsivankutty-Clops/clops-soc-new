@@ -34,13 +34,14 @@ const { state } = vi.hoisted(() => ({
   state: {
     response: {
       /* [HIDDEN-UI THEME-2 default product_name updated to ClopsSOC] product_name: 'AiSOC', */
-      product_name: 'ClopsSOC',
+      /* [HIDDEN-UI CHROME-1 rename product to ClopSOC] product_name: 'ClopsSOC', sender_name: 'ClopsSOC', footer_text: 'ClopsSOC', */
+      product_name: 'ClopSOC',
       primary_color: '#2563EB',
       accent_color: '#7C3AED',
       support_email: null,
       support_url: null,
-      sender_name: 'ClopsSOC',
-      footer_text: 'ClopsSOC',
+      sender_name: 'ClopSOC',
+      footer_text: 'ClopSOC',
       logo_url: null,
       org_id: null,
       is_white_labelled: false,
@@ -79,7 +80,8 @@ describe('the console tab title', () => {
   it("replaces the platform name with the organisation's", async () => {
     state.response = { ...state.response, product_name: 'Acme Shield', is_white_labelled: true };
     /* [HIDDEN-UI THEME-2 default product_name updated to ClopsSOC] document.title = 'Honeytokens | AiSOC'; */
-    document.title = 'Honeytokens | ClopsSOC';
+    /* [HIDDEN-UI CHROME-1 rename product to ClopSOC] document.title = 'Honeytokens | ClopsSOC'; */
+    document.title = 'Honeytokens | ClopSOC';
 
     mountConsole();
 
@@ -93,13 +95,17 @@ describe('the console tab title', () => {
     state.response = { ...state.response, product_name: 'AiSOC', is_white_labelled: false };
     document.title = 'Honeytokens | AiSOC';
     */
+    /* [HIDDEN-UI CHROME-1 rename product to ClopSOC]
     state.response = { ...state.response, product_name: 'ClopsSOC', is_white_labelled: false };
     document.title = 'Honeytokens | ClopsSOC';
+    */
+    state.response = { ...state.response, product_name: 'ClopSOC', is_white_labelled: false };
+    document.title = 'Honeytokens | ClopSOC';
 
     mountConsole();
 
     // The negative control. Rewriting unconditionally would be invisible
     // today and a silent corruption the moment the platform default moves.
-    await waitFor(() => expect(document.title).toBe('Honeytokens | ClopsSOC'));
+    await waitFor(() => expect(document.title).toBe('Honeytokens | ClopSOC'));
   });
 });

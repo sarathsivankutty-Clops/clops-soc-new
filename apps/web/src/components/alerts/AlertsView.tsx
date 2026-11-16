@@ -377,10 +377,11 @@ export function AlertsView() {
     pageSize: 25,
     sort: 'priority',
   });
-  // Default to the entity-centric queue — that's the whole point of Wave 1's
-  // RBA work. Analysts can flip back to the raw alert grid for legacy
-  // workflows or when triaging a specific alert ID.
-  const [viewMode, setViewMode] = useState<ViewMode>('entities');
+  // Default to the alert queue (RD4) so triage actions and the rail are
+  // immediately reachable; analysts can flip to the entity-centric view any time.
+  // [HIDDEN-UI UX-2 default /alerts to alerts tab instead of entities (RD4)]
+  // const [viewMode, setViewMode] = useState<ViewMode>('entities');
+  const [viewMode, setViewMode] = useState<ViewMode>('alerts');
   const { t } = useLocale();
 
   const { data, error, isLoading } = useSWR(
@@ -432,6 +433,7 @@ export function AlertsView() {
               aria-label="View mode"
               className="inline-flex items-center bg-surface-card border border-surface-border rounded-control p-1 gap-0.5"
             >
+              {/* [HIDDEN-UI UX-2 order Alerts tab first (RD4)]
               <button
                 type="button"
                 role="tab"
@@ -446,6 +448,7 @@ export function AlertsView() {
               >
                 Entities
               </button>
+              */}
               <button
                 type="button"
                 role="tab"
@@ -460,7 +463,22 @@ export function AlertsView() {
               >
                 Alerts
               </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={viewMode === 'entities'}
+                onClick={() => setViewMode('entities')}
+                className={clsx(
+                  'text-control-sm font-medium px-3 py-1 rounded-control transition-colors',
+                  viewMode === 'entities'
+                    ? 'bg-surface-subtle text-fg-primary font-semibold'
+                    : 'text-fg-muted hover:text-fg-primary',
+                )}
+              >
+                Entities
+              </button>
             </div>
+            {/* [HIDDEN-UI UX-2 hide unshipped Create Alert button (U13)]
             <div className="flex items-center gap-2">
               <button
                 disabled
@@ -471,6 +489,7 @@ export function AlertsView() {
               </button>
               <Badge tone="warning">Planned for v1.1</Badge>
             </div>
+            */}
           </div>
         }
       />

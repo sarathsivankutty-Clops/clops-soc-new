@@ -30,6 +30,7 @@ import {
   type AttackChainWindow,
   type Case,
   type CaseAttackPath,
+  type CaseExternalRef,
   casesApi,
   type CaseSeverity,
   type CaseStatus,
@@ -328,6 +329,36 @@ export function CaseWorkspace({ caseId }: { caseId: string }) {
   const [investigationStatus, setInvestigationStatus] = useState<string>("idle");
   const [investigationData, setInvestigationData] = useState<Record<string, unknown> | null>(null);
   const [reportMd, setReportMd] = useState<string>("");
+  const [pushingJira, setPushingJira] = useState(false);
+  const { data: externalRefs, mutate: mutateExternalRefs } = useSWR<CaseExternalRef[]>(
+    caseId ? `case-external-refs:${caseId}` : null,
+    () => casesApi.listExternalRefs(caseId),
+    { revalidateOnFocus: false }
+  );
+  const jiraRefs = useMemo(
+    () => (Array.isArray(externalRefs) ? externalRefs.filter((r) => r.vendor === "jira") : []),
+    [externalRefs]
+  );
+
+  const handlePushToJira = useCallback(async () => {
+    if (!caseRecord || pushingJira) return;
+    setPushingJira(true);
+    try {
+      const results = await casesApi.pushToItsm(caseRecord.id);
+      const ok = results.find((r) => r.status === "ok");
+      const err = results.find((r) => r.status !== "ok");
+      if (ok) {
+        toast.success(`Created Jira issue ${ok.external_id ?? ""}`.trim());
+        await mutateExternalRefs();
+      } else {
+        toast.error(err?.error || "Failed to push case to Jira");
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not create Jira issue");
+    } finally {
+      setPushingJira(false);
+    }
+  }, [caseRecord, pushingJira, mutateExternalRefs]);
   const [liveSteps, setLiveSteps] = useState<
     Array<{ kind: string; agent: string; summary: string; ts: string }>
   >([]);
@@ -998,6 +1029,45 @@ export function CaseWorkspace({ caseId }: { caseId: string }) {
               )}
               {summaryDownloading ? "Generating…" : "Summary"}
             </button>
+            {jiraRefs.map((ref) =>
+              ref.external_url ? (
+                <a
+                  key={ref.id}
+                  href={ref.external_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-md border border-accent/40 bg-accent/10 px-3 py-1.5 text-xs font-semibold text-accent hover:bg-accent/20 transition-colors"
+                  title={ref.external_status ? `Jira status: ${ref.external_status}` : "Open Jira issue"}
+                >
+                  <span>Jira: {ref.external_id}</span>
+                  {ref.external_status && (
+                    <span className="text-caption opacity-80">· {ref.external_status}</span>
+                  )}
+                </a>
+              ) : (
+                <span
+                  key={ref.id}
+                  className="inline-flex items-center gap-1.5 rounded-md border border-surface-border bg-surface-subtle px-3 py-1.5 text-xs font-semibold text-fg-primary"
+                >
+                  Jira: {ref.external_id}
+                </span>
+              )
+            )}
+            {jiraRefs.length === 0 && (
+              <button
+                onClick={() => void handlePushToJira()}
+                disabled={pushingJira || !caseRecord}
+                className={clsx(
+                  "inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-semibold transition-colors",
+                  pushingJira || !caseRecord
+                    ? "cursor-not-allowed border-surface-border bg-surface-subtle text-fg-muted"
+                    : "border-surface-border bg-surface-card text-fg-primary hover:border-border-strong"
+                )}
+                title="Create a Jira issue from this case"
+              >
+                {pushingJira ? "Creating Jira…" : "Create Jira Issue"}
+              </button>
+            )}
           </div>
         </div>
 
@@ -1087,6 +1157,7 @@ export function CaseWorkspace({ caseId }: { caseId: string }) {
           status={investigationStatus}
           data={investigationData}
           liveSteps={liveSteps}
+          runId={investigationRunId}
           onViewReport={() => setActiveTab("report")}
         />
       )}
@@ -1306,11 +1377,13 @@ function InvestigationPanel({
   status,
   data,
   liveSteps,
+  runId,
   onViewReport,
 }: {
   status: string;
   data: Record<string, unknown> | null;
   liveSteps: LiveStep[];
+  runId?: string | null;
   onViewReport: () => void;
 }) {
   if (status === "idle" || status === "starting") {
@@ -1327,14 +1400,37 @@ function InvestigationPanel({
 
   if (status === "running") {
     return (
-      <div className="rounded-xl border border-slate-800/70 bg-slate-900/30 p-5 space-y-4">
-        <div className="flex items-center gap-3">
-          <span className="h-7 w-7 animate-spin rounded-full border-2 border-emerald-500/30 border-t-emerald-400 shrink-0" />
-          <div>
-            <p className="text-sm font-medium text-slate-300">Investigation in progress…</p>
-            <p className="text-xs text-slate-500">
-              Agents are working. Steps appear below in real-time.
-            </p>
+      <div className="rounded-xl border border-surface-border bg-surface-card p-5 space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          {/* [HIDDEN-UI UX-2 show runId and step count in running InvestigationPanel (RD7)]
+          <div className="flex items-center gap-3">
+            <span className="h-7 w-7 animate-spin rounded-full border-2 border-emerald-500/30 border-t-emerald-400 shrink-0" />
+            <div>
+              <p className="text-sm font-medium text-slate-300">Investigation in progress…</p>
+              <p className="text-xs text-slate-500">
+                Agents are working. Steps appear below in real-time.
+              </p>
+            </div>
+          </div>
+          */}
+          <div className="flex items-center gap-3">
+            <span className="h-7 w-7 animate-spin rounded-full border-2 border-accent/30 border-t-accent shrink-0" />
+            <div>
+              <p className="text-sm font-medium text-fg-primary">Investigation in progress…</p>
+              <p className="text-xs text-fg-muted">
+                Agents are working. Steps appear below in real-time.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 text-xs">
+            {runId && (
+              <span className="rounded-control border border-surface-border bg-surface-subtle px-2 py-0.5 font-mono text-fg-secondary">
+                run {runId.slice(0, 8)}
+              </span>
+            )}
+            <span className="rounded-control border border-surface-border bg-surface-subtle px-2 py-0.5 text-fg-secondary">
+              {liveSteps.length} {liveSteps.length === 1 ? "step" : "steps"} recorded
+            </span>
           </div>
         </div>
         {liveSteps.length > 0 && <LiveStepsFeed steps={liveSteps} />}

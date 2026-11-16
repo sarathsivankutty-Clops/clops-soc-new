@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+// [HIDDEN-UI CHROME-1 userEvent retained for commented command palette click test]
+// import userEvent from '@testing-library/user-event';
 
 const pathnameMock = vi.fn(() => '/cases');
 const searchParamsMock = vi.fn(() => new URLSearchParams());
@@ -75,6 +76,7 @@ describe('TopBar', () => {
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Some New Page');
   });
 
+  /* [HIDDEN-UI CHROME-1 hide search bar, time window selector, and Default tenant switcher from TopBar]
   it('dispatches a Cmd-K keyboard event when the palette button is clicked', async () => {
     pathnameMock.mockReturnValue('/dashboard');
     renderTopBar();
@@ -90,5 +92,14 @@ describe('TopBar', () => {
     expect(event.metaKey).toBe(true);
 
     window.removeEventListener('keydown', listener);
+  });
+  */
+  it('hides the search bar, time window selector, and tenant switcher from the TopBar UI', () => {
+    pathnameMock.mockReturnValue('/dashboard');
+    renderTopBar();
+
+    expect(screen.queryByRole('button', { name: /open command palette/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /time window/i })).not.toBeInTheDocument();
+    expect(screen.queryByText('Default')).not.toBeInTheDocument();
   });
 });

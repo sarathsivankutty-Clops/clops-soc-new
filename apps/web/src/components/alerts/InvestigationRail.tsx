@@ -39,6 +39,7 @@ import { clsx } from 'clsx';
 import { format, formatDistanceToNow } from 'date-fns';
 import {
   alertsApi,
+  casesApi,
   type Alert,
   type BusinessContextRail,
   type MiniTimelineEvent,
@@ -46,8 +47,10 @@ import {
   type RelatedEntity,
 } from '@/lib/api';
 import { AttackStory } from './AttackStory';
+import { alertSeverityToCaseSeverity } from './CreateCaseModal';
 import { ExplainDrawer } from './ExplainDrawer';
 import { NarrativeMarkdown } from './NarrativeMarkdown';
+import { Button } from '@/components/ui/Button';
 import { Skeleton } from '@/components/ui/Skeleton';
 
 // ─── Visual config ───────────────────────────────────────────────────────────
@@ -86,15 +89,19 @@ export interface InvestigationRailProps {
   alertId: string | null;
   /** Called when the analyst dismisses the rail (close button). */
   onClose: () => void;
+  /** Optional navigation handler (used in tests or router wrappers). */
+  onNavigate?: (href: string) => void;
 }
 
 // ─── Main component ──────────────────────────────────────────────────────────
 
-export function InvestigationRail({ alertId, onClose }: InvestigationRailProps) {
+export function InvestigationRail({ alertId, onClose, onNavigate }: InvestigationRailProps) {
   const [view, setView] = useState<RailView>('story');
   // The drawer is mounted on demand and closed by default; we don't
   // burn the LLM call until the analyst explicitly asks for it.
   const [deepExplainOpen, setDeepExplainOpen] = useState(false);
+  const [isLaunching, setIsLaunching] = useState(false);
+  const [launchError, setLaunchError] = useState<{ alertId: string; message: string } | null>(null);
 
   const { data: alert, error, isLoading } = useSWR(
     alertId ? (['alerts', alertId, 'rail'] as const) : null,
@@ -130,9 +137,84 @@ export function InvestigationRail({ alertId, onClose }: InvestigationRailProps) 
     );
   }
 
+  const navigateTo = (href: string) => {
+    if (onNavigate) {
+      onNavigate(href);
+    } else if (typeof window !== 'undefined') {
+      window.location.href = href;
+    }
+  };
+
+  const handleInvestigateWithAgent = async () => {
+    if (!alert || isLaunching) return;
+    setIsLaunching(true);
+    setLaunchError(null);
+    try {
+      if (alert.caseId) {
+        navigateTo(`/cases/${alert.caseId}?tab=investigation`);
+        return;
+      }
+      const createdCase = await casesApi.create({
+        title: alert.title ? `Investigation — ${alert.title}` : `Investigation — alert ${alert.id}`,
+        description: alert.title ? `Opened from alert: ${alert.title}` : `Opened from alert ${alert.id}`,
+        alertIds: [alert.id],
+        severity: alert.severity ? alertSeverityToCaseSeverity(alert.severity) : undefined,
+      });
+      await casesApi.investigate(
+        createdCase.id,
+        'Opened from the alert investigation rail by an analyst.',
+      );
+      navigateTo(`/cases/${createdCase.id}?tab=investigation`);
+    } catch (err) {
+      setLaunchError({
+        alertId: alert.id,
+        message:
+          err instanceof Error
+            ? err.message
+            : 'Could not start the investigation. Check that the agents service is reachable.',
+      });
+      setIsLaunching(false);
+    }
+  };
+
+  const activeLaunchError = launchError?.alertId === alert.id ? launchError.message : null;
+
   return (
     <>
-      <RailShell title={alert.title} onClose={onClose}>
+      <RailShell
+        title={alert.title}
+        onClose={onClose}
+        footer={
+          <div className="border-t border-surface-border bg-surface-elevated px-4 py-3 space-y-2">
+            {activeLaunchError && (
+              <p role="alert" className="text-xs text-tone-danger">
+                {activeLaunchError}
+              </p>
+            )}
+            <div className="flex items-center justify-between gap-2">
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => void handleInvestigateWithAgent()}
+                disabled={isLaunching}
+                loading={isLaunching}
+              >
+                {isLaunching
+                  ? 'Starting investigation…'
+                  : alert.caseId
+                    ? 'Open existing investigation'
+                    : 'Investigate with agent'}
+              </Button>
+              <Link
+                href={`/alerts/${alert.id}`}
+                className="text-xs text-fg-secondary hover:text-fg-primary transition-colors"
+              >
+                Full alert view →
+              </Link>
+            </div>
+          </div>
+        }
+      >
         <RailHeader alert={alert} onDeepExplain={() => setDeepExplainOpen(true)} />
         {/*
          * Story first, detail behind a toggle. An analyst holds "what
@@ -221,10 +303,12 @@ function RailShell({
   title,
   onClose,
   children,
+  footer,
 }: {
   title: string;
   onClose: () => void;
   children: React.ReactNode;
+  footer?: React.ReactNode;
 }) {
   return (
     <aside
@@ -245,6 +329,7 @@ function RailShell({
         </button>
       </div>
       <div className="flex-1 overflow-y-auto">{children}</div>
+      {footer}
     </aside>
   );
 }

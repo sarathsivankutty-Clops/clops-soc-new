@@ -225,13 +225,12 @@ async function landingRoute(requested: string): Promise<string> {
         <div className="w-full max-w-md rounded-container border border-surface-border bg-surface-card p-8 shadow-overlay">
           {/* Brand */}
           <div className="flex flex-col items-center text-center mb-8">
+            {/* [HIDDEN-UI CHROME-1 rename product to ClopSOC]
             <Link
               href="/"
               className="mb-5 inline-flex items-center justify-center rounded-control focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
               aria-label="Back to ClopsSOC home"
             >
-              {/* [HIDDEN-UI THEME-5 replaced indigo shield icon with ClopsSOC fallback mark] */}
-              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={fallbackLogo}
                 alt="ClopsSOC"
@@ -240,6 +239,23 @@ async function landingRoute(requested: string): Promise<string> {
             </Link>
             <h1 className="text-page-title font-semibold tracking-tight text-fg-primary">
               Sign in to ClopsSOC
+            </h1>
+            */}
+            <Link
+              href="/"
+              className="mb-5 inline-flex items-center justify-center rounded-control focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+              aria-label="Back to ClopSOC home"
+            >
+              {/* [HIDDEN-UI THEME-5 replaced indigo shield icon with ClopSOC fallback mark] */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={fallbackLogo}
+                alt="ClopSOC"
+                className="h-9 w-auto max-w-44 object-contain"
+              />
+            </Link>
+            <h1 className="text-page-title font-semibold tracking-tight text-fg-primary">
+              Sign in to ClopSOC
             </h1>
             <p className="text-body text-fg-muted mt-1.5 leading-relaxed">
               Sign in with your tenant&rsquo;s security operations account.
@@ -517,8 +533,13 @@ async function landingRoute(requested: string): Promise<string> {
       </div>
 
       <div className="px-6 pb-4 pt-2 text-center">
+        {/* [HIDDEN-UI CHROME-1 rename product to ClopSOC]
         <p className="text-eyebrow text-fg-subtle uppercase tracking-widest">
           ClopsSOC · Security Operations Console · MIT-licensed
+        </p>
+        */}
+        <p className="text-eyebrow text-fg-subtle uppercase tracking-widest">
+          ClopSOC · Security Operations Console · MIT-licensed
         </p>
       </div>
     </div>

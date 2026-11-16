@@ -345,7 +345,15 @@ export function InvestigationLedger({
         <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">
           Run
         </span>
+        {/* [HIDDEN-UI UX-2 add accessible aria-label to run picker (U11)]
         <select
+          value={resolvedRunId ?? ''}
+          onChange={(e) => onSelectRun?.(e.target.value)}
+          className="rounded-md border border-slate-700/70 bg-slate-900/60 px-2 py-1.5 text-xs text-slate-200 focus:border-emerald-500/40 focus:outline-none"
+        >
+        */}
+        <select
+          aria-label="Select investigation run"
           value={resolvedRunId ?? ''}
           onChange={(e) => onSelectRun?.(e.target.value)}
           className="rounded-md border border-slate-700/70 bg-slate-900/60 px-2 py-1.5 text-xs text-slate-200 focus:border-emerald-500/40 focus:outline-none"

@@ -477,7 +477,20 @@ async def get_report_pdf(run_id: str, principal: ScopedPrincipal):
             status_code=501,
             detail="PDF generation requires weasyprint. Install with: pip install weasyprint",
         ) from exc
+    except OSError as exc:
+        # The distinctive failure: weasyprint is installed but its native stack
+        # is not, so the import raises `cannot load library 'libgobject-2.0-0'`.
+        # That is a property of this deployment, not of the request, so it is a
+        # 503 with a sentence a reader can act on — and the cffi message stays in
+        # the log rather than in the response body, where it only ever reached
+        # the user as JSON-inside-JSON.
+        logger.error("investigation.pdf_renderer_unavailable", run_id=run_id, error=str(exc))
+        raise HTTPException(
+            status_code=503,
+            detail="PDF rendering is not available in this deployment. The HTML report still is.",
+        ) from exc
     except Exception as exc:  # noqa: BLE001
+        logger.error("investigation.pdf_render_failed", run_id=run_id, error=str(exc))
         raise HTTPException(status_code=500, detail=f"PDF generation failed: {exc}") from exc
 
 

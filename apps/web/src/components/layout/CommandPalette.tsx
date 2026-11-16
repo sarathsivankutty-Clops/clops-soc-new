@@ -74,7 +74,8 @@ const NAV_ITEMS: { label: string; href: string; keywords: string[]; adminOnly?: 
   { label: 'Alerts',              href: '/alerts',                  keywords: ['notifications', 'incidents'] },
   { label: 'Investigation Queue', href: '/queue',                   keywords: ['queue', 'triage', 'entity risk'] },
   { label: 'Runbooks',            href: '/playbooks',               keywords: ['runbooks', 'playbooks', 'soar', 'automation'] },
-  { label: 'Hunt',                href: '/hunt',                    keywords: ['threat hunting', 'search', 'kql', 'esql'] },
+  // [HIDDEN-UI CHROME-1 hide Hunt from command palette]
+  // { label: 'Hunt',                href: '/hunt',                    keywords: ['threat hunting', 'search', 'kql', 'esql'] },
   { label: 'Detection',           href: '/detection',               keywords: ['rules', 'detections', 'sigma', 'catalog', 'mitre', 'coverage', 'tuning'] },
   { label: 'Settings',            href: '/settings',                keywords: ['preferences', 'profile', 'tenant', 'connectors', 'users', 'rbac', 'mfa', 'compliance', 'audit'] },
   // Deep link into the AI tab. `SettingsTabs` selects on `?tab=`, so this used
@@ -127,6 +128,29 @@ export function CommandPalette() {
 
   const close = useCallback(() => setOpen(false), []);
 
+  // Escape closes the palette.
+  //
+  // `cmdk@1.1.1` ships no Escape handling of its own (there is no "Escape"
+  // string anywhere in its dist), so the `ESC` keycap this dialog renders was
+  // decoration: the key did nothing, and the only ways out were the backdrop or
+  // choosing an item. A modal that can only be dismissed by pointer is a
+  // keyboard trap — WCAG 2.1.2 — and every other dialog in the console already
+  // honours Escape, so this is also the behaviour an analyst arrives with.
+  //
+  // Bound on `document` in the capture phase rather than on the dialog: the
+  // focus can be inside `Command.Input`, and the palette's own shortcut listener
+  // on `window` must not swallow the key first.
+  useEffect(() => {
+    if (!open) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key !== 'Escape') return;
+      e.preventDefault();
+      close();
+    }
+    document.addEventListener('keydown', onKey, true);
+    return () => document.removeEventListener('keydown', onKey, true);
+  }, [open, close]);
+
   const navigate = useCallback(
     (href: string) => {
       router.push(href);
@@ -153,19 +177,21 @@ export function CommandPalette() {
       id: 'actions',
       heading: 'Quick actions',
       items: [
-        {
-          id: 'action:copilot',
-          /* [HIDDEN-UI THEME-2 visible product name changed to ClopsSOC] label: 'Ask AiSOC Copilot', */
-          label: 'Ask ClopsSOC Copilot',
-          hint: 'Open the floating Copilot dock',
-          shortcut: ['⌘', 'J'],
-          keywords: ['ai', 'copilot', 'assistant', 'investigate'],
-          perform: () => {
-            // Tell the floating dock to open. Lives in CopilotDock.tsx.
-            window.dispatchEvent(new Event('aisoc:open-copilot'));
-            close();
-          },
-        },
+        // [HIDDEN-UI CHROME-2 hide floating Copilot dock quick action]
+        // {
+        //   id: 'action:copilot',
+        //   /* [HIDDEN-UI THEME-2 visible product name changed to ClopsSOC] label: 'Ask AiSOC Copilot', */
+        //   /* [HIDDEN-UI CHROME-1 rename product to ClopSOC] label: 'Ask ClopsSOC Copilot', */
+        //   label: 'Ask ClopSOC Copilot',
+        //   hint: 'Open the floating Copilot dock',
+        //   shortcut: ['⌘', 'J'],
+        //   keywords: ['ai', 'copilot', 'assistant', 'investigate'],
+        //   perform: () => {
+        //     // Tell the floating dock to open. Lives in CopilotDock.tsx.
+        //     window.dispatchEvent(new Event('aisoc:open-copilot'));
+        //     close();
+        //   },
+        // },
         // [HIDDEN-UI NAV-1 full /copilot page hidden; floating CopilotDock remains active]
         // {
         //   id: 'action:full-copilot',
@@ -253,7 +279,8 @@ export function CommandPalette() {
             className="relative w-full max-w-xl rounded-container border border-surface-border-strong bg-surface-card shadow-overlay overflow-hidden"
           >
             <Command
-              label="ClopsSOC command palette"
+              /* [HIDDEN-UI CHROME-1 rename product to ClopSOC] label="ClopsSOC command palette" */
+              label="ClopSOC command palette"
               loop
               className="flex flex-col"
             >
@@ -345,7 +372,8 @@ export function CommandPalette() {
                     select
                   </span>
                 </div>
-                <span className="hidden sm:inline">ClopsSOC · ⌘K to toggle</span>
+                {/* [HIDDEN-UI CHROME-1 rename product to ClopSOC] <span className="hidden sm:inline">ClopsSOC · ⌘K to toggle</span> */}
+                <span className="hidden sm:inline">ClopSOC · ⌘K to toggle</span>
               </div>
             </Command>
           </motion.div>

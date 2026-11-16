@@ -38,8 +38,22 @@ WORKDIR /app
 # System deps occasionally needed by transitive packages (weasyprint and its
 # pillow leg, etc.). Keep the list small; expand only when poetry resolution
 # proves a missing system library is required.
+#
+# WeasyPrint is not a transitive nicety here: `GET /report.pdf` renders the
+# incident report with it. It is a Python wrapper over Pango/Cairo/GObject
+# loaded through cffi at *import* time, and `python:3.11-slim` ships none of
+# them, so the image built, booted, and then answered every PDF download with
+# `OSError: cannot load library 'libgobject-2.0-0'` — an unhandled 500. The list
+# is the one `services/api/Dockerfile` installs for the same library, kept
+# identical so the two images cannot drift apart again.
 RUN apt-get update && apt-get install -y --no-install-recommends \
         build-essential \
+        libpango-1.0-0 \
+        libpangocairo-1.0-0 \
+        libcairo2 \
+        libgdk-pixbuf-2.0-0 \
+        libglib2.0-0 \
+        shared-mime-info \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=deps /requirements.txt /requirements.txt
@@ -70,6 +84,18 @@ COPY pyproject.toml poetry.lock ./
 # sentinel — langgraph 0.0.x silently lacked it, which previously crashed the
 # agents service at boot with ``ImportError: cannot import name 'START'``.
 RUN python -c "import opentelemetry, langgraph, fastapi, sqlalchemy, asyncpg, redis, httpx, structlog, apscheduler, yaml, _cffi_backend; from cryptography.fernet import Fernet; from langgraph.graph import END, START, StateGraph"
+
+# weasyprint is the one dependency whose import can fail on a *correct* pip
+# install: it loads Pango/Cairo/GObject through cffi, so a missing `libpango`
+# turns into an ImportError at first use rather than a pip error. The image
+# shipped that way — `/report.pdf` answered 500 with
+# `cannot load library 'libgobject-2.0-0'` on every case — while the build was
+# green. Importing here moves that failure to the build, where it costs a
+# rebuild instead of a broken feature behind a 200 on `/health`.
+RUN python -c "\
+import sys; \
+import weasyprint; \
+sys.exit(0 if weasyprint.__version__ else 1)"
 
 COPY app/ ./app/
 

@@ -79,6 +79,7 @@ router = APIRouter(prefix="/cases", tags=["cases"])
 # `require_permission`, so a key minted with nothing but `alerts:read` could
 # list cases and read their comments, timeline and evidence chain.
 CaseReader = Annotated[AuthUser, Depends(require_permission("cases:read"))]
+CaseWriter = Annotated[AuthUser, Depends(require_permission("cases:write"))]
 
 # The agents service owns the actual investigation orchestrator (Pillar-1).
 # We keep the route surface on `/cases/{id}/investigate` and
@@ -640,6 +641,89 @@ async def get_case(case_id: str, db: DBSession, user: CaseReader) -> CaseRespons
     if not row:
         raise HTTPException(status_code=404, detail="Case not found.")
     return _row_to_case(row)
+
+
+class ExternalRefOut(BaseModel):
+    id: uuid.UUID
+    case_id: uuid.UUID
+    connector_instance_id: uuid.UUID
+    connector_name: str | None = None
+    vendor: str
+    external_id: str
+    external_url: str | None = None
+    external_status: str | None = None
+    pushed_by: str | None = None
+    last_synced_at: datetime | None = None
+
+
+class PushCaseRequest(BaseModel):
+    connector_ids: list[uuid.UUID] = Field(default_factory=list)
+
+
+@router.get("/{case_id}/external-refs", response_model=list[ExternalRefOut], summary="List external ITSM ticket links for a case")
+async def list_case_external_refs(case_id: str, db: DBSession, user: CaseReader) -> list[ExternalRefOut]:
+    cid = await _resolve_case_id(case_id, db, user.tenant_id)
+    rows = (
+        await db.execute(
+            text(
+                """
+                SELECT r.id, r.case_id, r.connector_instance_id, c.name AS connector_name,
+                       r.vendor, r.external_id, r.external_url, r.external_status,
+                       r.pushed_by, r.last_synced_at
+                FROM case_external_refs r
+                LEFT JOIN connectors c ON c.id = r.connector_instance_id
+                WHERE r.case_id = :case_id
+                ORDER BY r.created_at DESC
+                """
+            ).bindparams(case_id=cid)
+        )
+    ).fetchall()
+    return [ExternalRefOut(**dict(r._mapping)) for r in rows]
+
+
+@router.post("/{case_id}/push", response_model=list[FanoutResult], summary="Push an existing case to Jira / ITSM connectors")
+async def push_case_to_itsm(case_id: str, body: PushCaseRequest, db: DBSession, user: CaseWriter) -> list[FanoutResult]:
+    cid = await _resolve_case_id(case_id, db, user.tenant_id)
+    row = (
+        await db.execute(
+            text("SELECT * FROM aisoc_cases WHERE id = :id AND tenant_id = :tenant_id").bindparams(id=cid, tenant_id=user.tenant_id)
+        )
+    ).fetchone()
+    if not row:
+        raise HTTPException(status_code=404, detail="Case not found.")
+
+    target_ids = list(body.connector_ids)
+    if not target_ids:
+        connector_rows = (
+            await db.execute(
+                text(
+                    """
+                    SELECT id FROM connectors
+                    WHERE tenant_id = :tenant_id
+                      AND is_enabled = true
+                      AND connector_type IN ('jira', 'servicenow')
+                    ORDER BY created_at ASC
+                    """
+                ).bindparams(tenant_id=user.tenant_id)
+            )
+        ).fetchall()
+        target_ids = [r[0] for r in connector_rows]
+
+    if not target_ids:
+        raise HTTPException(
+            status_code=400,
+            detail="No enabled Jira or ServiceNow connector configured. Add one in Connectors.",
+        )
+
+    results = await fanout_create_case(
+        db,
+        case_row=row,
+        tenant_id=user.tenant_id,
+        connector_ids=target_ids,
+        pushed_by=getattr(user, "email", None),
+    )
+    await db.commit()
+    return results
 
 
 class ReopenCaseRequest(BaseModel):

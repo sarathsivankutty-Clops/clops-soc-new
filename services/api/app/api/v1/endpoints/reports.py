@@ -52,12 +52,18 @@ class TemplateCreate(BaseModel):
 
 
 class TemplateOut(TemplateCreate):
+    # These mirror ``DateTime(timezone=True)`` columns on ``ReportTemplate``.
+    # Declaring them ``str`` made ``from_attributes`` hand a ``datetime`` to a
+    # string field, so every one of these routes failed response validation
+    # with ``string_type`` instead of returning the row. FastAPI serialises a
+    # ``datetime`` to an ISO 8601 string on the wire, so the JSON contract is
+    # unchanged and no union with ``str`` is needed.
     id: uuid.UUID
     tenant_id: uuid.UUID
     is_enabled: bool
-    last_run_at: str | None = None
-    created_at: str
-    updated_at: str
+    last_run_at: datetime | None = None
+    created_at: datetime
+    updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -68,16 +74,16 @@ class ArtefactOut(BaseModel):
     template_id: uuid.UUID | None
     report_type: str
     title: str
-    period_start: str
-    period_end: str
+    period_start: datetime
+    period_end: datetime
     output_format: str
     file_size_bytes: int | None
     delivered_to: list[str] | None
-    delivered_at: str | None
+    delivered_at: datetime | None
     generated_by: str
     status: str
     error_message: str | None
-    created_at: str
+    created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
 

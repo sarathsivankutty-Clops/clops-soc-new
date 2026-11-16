@@ -97,6 +97,7 @@ describe('InvestigationLedger UX-1 empty state', () => {
       await vi.advanceTimersByTimeAsync(0);
     });
 
+    expect(screen.getByLabelText('Select investigation run')).toHaveValue('run-live-1');
     expect(
       screen.getByText('Investigation started. Results appear when the first agent step finishes.'),
     ).toBeInTheDocument();
