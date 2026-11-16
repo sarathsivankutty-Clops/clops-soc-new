@@ -1,11 +1,11 @@
 import { redirect } from 'next/navigation';
-// [HIDDEN-UI NAV-3 consolidated into Dashboards SectionTabs]
+// [HIDDEN-UI NAV-8 consolidated into /dashboards?tab=mssp]
 // import MSSPDashboardView from '@/components/mssp/MSSPDashboardView';
 
 export const metadata = { title: 'MSSP Executive Dashboard' };
 
 export default function MSSPPage() {
-  // [HIDDEN-UI NAV-3 redirect with permanent:false (307) to MSSP tab]
+  // [HIDDEN-UI NAV-8 redirect with permanent:false (307) to MSSP tab]
   // return <MSSPDashboardView />;
-  redirect('/sla?tab=mssp');
+  redirect('/dashboards?tab=mssp');
 }

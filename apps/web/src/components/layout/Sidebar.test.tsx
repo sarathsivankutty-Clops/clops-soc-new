@@ -27,26 +27,41 @@ vi.mock('next/link', () => ({
 import { Sidebar } from './Sidebar';
 
 describe('Sidebar', () => {
-  it('renders the ClopsSOC mark and the 10 flat nav items', () => {
+  it('renders the ClopsSOC mark and the 4 grouped sections', () => {
     render(<Sidebar />);
 
     // Brand — [HIDDEN-UI THEME-2 visible product name changed from Ai/SOC to ClopsSOC]
     expect(screen.getByText('ClopsSOC')).toBeInTheDocument();
 
+    // NAV-8: 4 labelled sections, 7 destinations.
+    for (const heading of ['Monitor', 'Respond', 'Hunt & Detect', 'Admin']) {
+      expect(screen.getByText(heading)).toBeInTheDocument();
+    }
+
     const expected: [string, string][] = [
-      ['Dashboard', '/dashboard'],
-      ['SOC Insights', '/dashboards/soc-insights'],
-      ['SOC Operations', '/dashboards/operations'],
+      ['Dashboards', '/dashboards'],
       ['Alerts', '/alerts'],
       ['Investigation Queue', '/queue'],
+      ['Runbooks', '/playbooks'],
       ['Hunt', '/hunt'],
       ['Detection', '/detection'],
-      ['Runbooks', '/playbooks'],
-      ['Dashboards', '/sla'],
       ['Settings', '/settings'],
     ];
     for (const [label, href] of expected) {
       expect(screen.getByRole('link', { name: new RegExp(`^${label}(?:\\s|$)`, 'i') })).toHaveAttribute('href', href);
+    }
+
+    // The six tabs that used to be peers are no longer top-level links.
+    for (const retired of ['SOC Insights', 'SOC Operations', 'Dashboard', 'SLA', 'Team Analytics', 'MSSP', 'Cost']) {
+      expect(screen.queryByRole('link', { name: new RegExp(`^${retired}(?:\\s|$)`, 'i') })).not.toBeInTheDocument();
+    }
+  });
+
+  it('hides the section headings when the rail is collapsed', () => {
+    render(<Sidebar collapsed />);
+
+    for (const heading of ['Monitor', 'Respond', 'Hunt & Detect', 'Admin']) {
+      expect(screen.queryByText(heading)).not.toBeInTheDocument();
     }
   });
 

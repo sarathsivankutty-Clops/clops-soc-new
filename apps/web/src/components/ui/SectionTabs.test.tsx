@@ -79,4 +79,26 @@ describe('SectionTabs', () => {
     expect(screen.getByRole('tab', { name: 'General' })).toBeInTheDocument();
     expect(screen.queryByRole('tab', { name: 'Users' })).not.toBeInTheDocument();
   });
+
+  it('renders one group divider before the requested tab and none by default', () => {
+    const counts: Record<string, number> = {};
+    const { unmount } = render(
+      <SectionTabs tabs={makeTabs(counts)} defaultTab="rules" dividerAfter={2} />,
+      { wrapper: NavigationTestProvider },
+    );
+
+    const tablist = screen.getByRole('tablist');
+    // The rule is decorative only — it must not become a tab stop.
+    expect(tablist.querySelectorAll('[aria-hidden="true"]')).toHaveLength(1);
+    expect(screen.getAllByRole('tab')).toHaveLength(3);
+    unmount();
+
+    // Detection and Settings pass no divider and keep their plain bar.
+    const plain = render(<SectionTabs tabs={makeTabs(counts)} defaultTab="rules" />, {
+      wrapper: NavigationTestProvider,
+    });
+    expect(
+      plain.container.querySelector('[role="tablist"]')?.querySelectorAll('[aria-hidden="true"]'),
+    ).toHaveLength(0);
+  });
 });

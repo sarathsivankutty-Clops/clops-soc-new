@@ -157,6 +157,44 @@ const UsersIcon = () => (
 
 const navSections: NavSection[] = [
   {
+    title: 'Monitor',
+    items: [
+      { label: 'Dashboards', href: '/dashboards', icon: <ChartBarIcon /> },
+      { label: 'Alerts', href: '/alerts', icon: <BellIcon /> },
+    ],
+  },
+  {
+    title: 'Respond',
+    items: [
+      {
+        label: 'Investigation Queue',
+        href: '/queue',
+        icon: <InboxIcon />,
+        liveBadge: <LiveQueueBadge />,
+      },
+      { label: 'Runbooks', href: '/playbooks', icon: <PlaybookIcon /> },
+    ],
+  },
+  {
+    title: 'Hunt & Detect',
+    items: [
+      { label: 'Hunt', href: '/hunt', icon: <SearchIcon /> },
+      { label: 'Detection', href: '/detection', icon: <EyeIcon /> },
+    ],
+  },
+  {
+    // Only admin-scoped destination left in the rail. Everything that used to
+    // sit under "Platform" is either a tab of /settings, a tab of /dashboards,
+    // or retired — see the NAV-1/NAV-2/NAV-3/NAV-4/NAV-8 entries below.
+    title: 'Admin',
+    items: [{ label: 'Settings', href: '/settings', icon: <CogIcon /> }],
+  },
+  // [HIDDEN-UI NAV-8 flat 10-item rail grouped into Monitor / Respond /
+  // Hunt & Detect / Admin. Dashboard, SOC Insights, SOC Operations, SLA, Team
+  // Analytics, MSSP and Cost are now tabs of /dashboards; Settings carries its
+  // own tab bar.]
+  /*
+  {
     items: [
       { label: 'Dashboard', href: '/dashboard', icon: <ChartBarIcon /> },
       { label: 'SOC Insights', href: '/dashboards/soc-insights', icon: <ChartBarIcon /> },
@@ -175,6 +213,7 @@ const navSections: NavSection[] = [
       { label: 'Settings', href: '/settings', icon: <CogIcon /> },
     ],
   },
+  */
   // [HIDDEN-UI NAV-1 flattened to 10 top-level nav items; sub-pages consolidated into SectionTabs or hidden]
   /*
   {
@@ -280,7 +319,21 @@ export function Sidebar({ collapsed = false }: SidebarProps = {}) {
       .join('') || 'OP';
 
   const isActive = (href: string) => {
-    if (href === '/dashboard') return pathname === '/dashboard';
+    // [HIDDEN-UI NAV-8 /dashboard is a redirect to /dashboards?tab=overview]
+    // if (href === '/dashboard') return pathname === '/dashboard';
+    if (href === '/dashboards') {
+      // The old dashboard routes (/dashboard, /sla, /mssp, /costs,
+      // /dashboards/*) all 307 into the same tab bar, so the rail must stay lit
+      // on the destination *and* while the redirect is in flight.
+      return (
+        pathname.startsWith('/dashboards') ||
+        pathname === '/dashboard' ||
+        pathname === '/sla' ||
+        pathname === '/mssp' ||
+        pathname === '/costs' ||
+        pathname === '/analytics/team'
+      );
+    }
     return pathname.startsWith(href);
   };
 
@@ -354,10 +407,14 @@ export function Sidebar({ collapsed = false }: SidebarProps = {}) {
       {/* Nav */}
       <nav aria-label="Main navigation" className="flex-1 overflow-y-auto py-3 px-2.5 space-y-4">
         {navSections.map((section, si) => {
-          const groupLabel = section.title ?? (si === 0 ? 'Navigation' : undefined);
+          // NAV-8: every section carries its own label, so the old
+          // `si === 0 ? 'Navigation' : undefined` fallback is gone.
+          // [HIDDEN-UI NAV-8 unlabelled first section needed a fallback title]
+          // const groupLabel = section.title ?? (si === 0 ? 'Navigation' : undefined);
+          const groupLabel = section.title;
           return (
           <div key={si}>
-            {groupLabel && (
+            {groupLabel && !collapsed && (
               <p className="px-2.5 mb-1.5 text-eyebrow font-semibold text-fg-subtle uppercase tracking-wider">
                 {groupLabel}
               </p>

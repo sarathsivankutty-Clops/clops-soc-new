@@ -21,16 +21,20 @@ interface RouteInfo {
 }
 
 const routeLabels: Record<string, RouteInfo> = {
-  '/dashboards/soc-insights': { title: 'SOC Insights', description: 'Rolling KPIs, MTTA, MTTR, and cost per investigation' },
-  '/dashboards/operations': { title: 'SOC Operations', description: 'Pipeline health, connector fleet, and agent throughput' },
+  // [HIDDEN-UI NAV-8 SOC Insights / SOC Operations became tabs of /dashboards]
+  // '/dashboards/soc-insights': { title: 'SOC Insights', description: 'Rolling KPIs, MTTA, MTTR, and cost per investigation' },
+  // '/dashboards/operations': { title: 'SOC Operations', description: 'Pipeline health, connector fleet, and agent throughput' },
   '/detection/catalog': { title: 'Detection Catalog', description: 'Curated rule packs and templates' },
   '/detection/coverage': { title: 'MITRE Coverage', description: 'ATT&CK technique coverage across active rules' },
   '/detection/tuning': { title: 'Detection Tuning', description: 'Alert noise tuning and suppression rules' },
   '/settings/users': { title: 'Users', description: 'Member and role management' },
   '/settings/rbac': { title: 'Roles & Permissions', description: 'Access control and team management' },
   '/settings/mfa': { title: 'Two-Factor Auth', description: 'Your second factor, and whether this tenant requires one' },
-  '/analytics/team': { title: 'Team Analytics', description: 'Analyst workload, resolution speed, and accuracy' },
-  '/dashboard': { title: 'Dashboard', description: 'SOC overview and metrics' },
+  // [HIDDEN-UI NAV-8 /analytics/team is a 307 to /dashboards?tab=team]
+  // '/analytics/team': { title: 'Team Analytics', description: 'Analyst workload, resolution speed, and accuracy' },
+  '/dashboards': { title: 'Dashboards', description: 'SOC overview, insights, operations, SLA, team analytics, MSSP, and cost' },
+  // [HIDDEN-UI NAV-8 /dashboard redirects to /dashboards?tab=overview]
+  // '/dashboard': { title: 'Dashboard', description: 'SOC overview and metrics' },
   '/alerts': { title: 'Alerts', description: 'Security alerts and incidents' },
   '/queue': { title: 'Investigation Queue', description: 'Entity risk-based alerting queue' },
   '/hunt': { title: 'Hunt', description: 'Proactive threat hunts and queries' },
@@ -38,9 +42,10 @@ const routeLabels: Record<string, RouteInfo> = {
   // [HIDDEN-UI NAV-1 renamed Playbooks -> Runbooks]
   // '/playbooks': { title: 'Playbooks', description: 'Automated response and SOAR workflows' },
   '/playbooks': { title: 'Runbooks', description: 'Automated response and SOAR workflows' },
-  '/sla': { title: 'Dashboards', description: 'SLA, team analytics, MSSP, and cost' },
-  '/mssp': { title: 'MSSP', description: 'Managed multi-tenant portfolio overview' },
-  '/costs': { title: 'Cost', description: 'LLM spend, token usage, and BYOK savings' },
+  // [HIDDEN-UI NAV-8 /sla, /mssp and /costs redirect into the Dashboards tabs]
+  // '/sla': { title: 'Dashboards', description: 'SLA, team analytics, MSSP, and cost' },
+  // '/mssp': { title: 'MSSP', description: 'Managed multi-tenant portfolio overview' },
+  // '/costs': { title: 'Cost', description: 'LLM spend, token usage, and BYOK savings' },
   '/settings': { title: 'Settings', description: 'General, AI settings, connectors, access, compliance, and audit logs' },
   '/connectors': { title: 'Connectors', description: 'Security tool integrations' },
   '/compliance': { title: 'Compliance', description: 'Frameworks, controls, and evidence' },
@@ -57,6 +62,19 @@ const routeLabels: Record<string, RouteInfo> = {
   '/': { title: 'Dashboard', description: 'SOC overview and metrics' },
 };
 
+// NAV-8: `/dashboards` is one route with seven tabs, so the bar title has to
+// come from `?tab=` the same way the panel does. Keys mirror
+// `DASHBOARD_TABS` in components/dashboard/DashboardsTabs.tsx.
+const dashboardTabLabels: Record<string, RouteInfo> = {
+  overview: { title: 'Overview', description: 'SOC overview and metrics' },
+  'soc-insights': { title: 'SOC Insights', description: 'Rolling KPIs, MTTA, MTTR, and cost per investigation' },
+  operations: { title: 'SOC Operations', description: 'Pipeline health, connector fleet, and agent throughput' },
+  sla: { title: 'SLA', description: 'Response targets and breach posture' },
+  team: { title: 'Team Analytics', description: 'Analyst workload, resolution speed, and accuracy' },
+  mssp: { title: 'MSSP', description: 'Managed multi-tenant portfolio overview' },
+  costs: { title: 'Cost', description: 'LLM spend, token usage, and BYOK savings' },
+};
+
 function TopBarHeading({
   pathname,
   routeInfo,
@@ -68,13 +86,16 @@ function TopBarHeading({
   const selectedSettingsTab =
     searchParams?.get('tab') ??
     (searchParams?.get('section') === 'deployment' ? 'deployment' : null);
+  const dashboardTab = searchParams?.get('tab') ?? 'overview';
   const pageInfo =
     pathname === '/settings' && selectedSettingsTab === 'deployment'
       ? {
           title: 'AI Settings',
           description: 'LLM provider, BYOK, and air-gap configuration',
         }
-      : routeInfo;
+      : pathname === '/dashboards'
+        ? (dashboardTabLabels[dashboardTab] ?? routeInfo)
+        : routeInfo;
 
   return (
     <div className="min-w-0">

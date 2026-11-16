@@ -35,7 +35,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/login",
     "/detection",
     "/threat-intel",
-    "/sla",
+    "/dashboards",
     "/press",
     "/privacy",
     "/terms",

@@ -65,17 +65,21 @@ function writeRecent(path: string) {
 }
 
 const NAV_ITEMS: { label: string; href: string; keywords: string[]; adminOnly?: boolean }[] = [
-  { label: 'Dashboard',           href: '/dashboard',               keywords: ['home', 'overview', 'metrics'] },
-  { label: 'SOC Insights',        href: '/dashboards/soc-insights', keywords: ['insights', 'mtta', 'mttr', 'kpi'] },
-  { label: 'SOC Operations',      href: '/dashboards/operations',   keywords: ['operations', 'pipeline', 'throughput'] },
+  // [HIDDEN-UI NAV-8 seven dashboard entries collapsed into one destination]
+  // { label: 'Dashboard',           href: '/dashboard',               keywords: ['home', 'overview', 'metrics'] },
+  // { label: 'SOC Insights',        href: '/dashboards/soc-insights', keywords: ['insights', 'mtta', 'mttr', 'kpi'] },
+  // { label: 'SOC Operations',      href: '/dashboards/operations',   keywords: ['operations', 'pipeline', 'throughput'] },
+  // { label: 'Dashboards',          href: '/sla',                     keywords: ['sla', 'team analytics', 'mssp', 'cost', 'reports'] },
+  { label: 'Dashboards',          href: '/dashboards',              keywords: ['dashboard', 'overview', 'metrics', 'insights', 'mtta', 'mttr', 'kpi', 'operations', 'pipeline', 'throughput', 'sla', 'team analytics', 'mssp', 'cost', 'reports'] },
   { label: 'Alerts',              href: '/alerts',                  keywords: ['notifications', 'incidents'] },
   { label: 'Investigation Queue', href: '/queue',                   keywords: ['queue', 'triage', 'entity risk'] },
+  { label: 'Runbooks',            href: '/playbooks',               keywords: ['runbooks', 'playbooks', 'soar', 'automation'] },
   { label: 'Hunt',                href: '/hunt',                    keywords: ['threat hunting', 'search', 'kql', 'esql'] },
   { label: 'Detection',           href: '/detection',               keywords: ['rules', 'detections', 'sigma', 'catalog', 'mitre', 'coverage', 'tuning'] },
-  { label: 'Runbooks',            href: '/playbooks',               keywords: ['runbooks', 'playbooks', 'soar', 'automation'] },
-  { label: 'Dashboards',          href: '/sla',                     keywords: ['sla', 'team analytics', 'mssp', 'cost', 'reports'] },
   { label: 'Settings',            href: '/settings',                keywords: ['preferences', 'profile', 'tenant', 'connectors', 'users', 'rbac', 'mfa', 'compliance', 'audit'] },
-  { label: 'AI Settings',         href: '/settings?section=deployment', keywords: ['ai', 'llm', 'provider', 'model', 'byok'] },
+  // Deep link into the AI tab. `SettingsTabs` selects on `?tab=`, so this used
+  // to land on General while the TopBar title said "AI Settings".
+  { label: 'AI Settings',         href: '/settings?tab=deployment', keywords: ['ai', 'llm', 'provider', 'model', 'byok'] },
   // [HIDDEN-UI NAV-1 consolidated into SectionTabs or hidden from primary navigation]
   // { label: 'Cases',        href: '/cases',        keywords: ['investigations', 'tickets'] },
   // { label: 'Explore',      href: '/explore',      keywords: ['data explorer', 'lake', 'sql', 'bi', 'query', 'identity', 'intel'] },
