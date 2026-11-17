@@ -56,6 +56,7 @@ from app.models.investigation import (
     InvestigationRun,
 )
 from app.services import alert_status, case_orchestration, case_status, evidence_custody
+from app.services.llm_json import parse_llm_json_payload as _parse_llm_json
 from app.services.audit import emit_audit
 from app.services.branding.resolver import resolve_branding
 from app.services.case_fanout import (
@@ -1926,32 +1927,11 @@ async def _ledger_investigation_run(db, tenant_id: uuid.UUID, cid: Any, run_id: 
     }
 
 
-def _parse_llm_json(payload: Any) -> dict[str, Any]:
-    """The JSON an agent emitted in its `llm_response` event payload.
-
-    Agents return a JSON string in `payload["response"]`; the API's jsonb
-    column already deserialises the envelope, so we only parse the inner
-    string. Anything that isn't a JSON object yields {} (tabs then show just
-    the event summary rather than crashing on a malformed body).
-    """
-    if not isinstance(payload, dict):
-        return {}
-    raw = payload.get("response")
-    if isinstance(raw, dict):
-        return raw
-    if not isinstance(raw, str) or not raw.strip():
-        return {}
-    try:
-        obj = json.loads(raw)
-    except (ValueError, TypeError):
-        return {}
-    return obj if isinstance(obj, dict) else {}
-
-
 def _audit_from_events(events: list[Any]) -> list[dict[str, Any]]:
     """Map ledger rows to the workspace's audit-log step shape."""
     return [
         {
+            "seq": getattr(ev, "seq", None),
             "kind": ev.kind,
             "agent": ev.agent,
             "summary": ev.summary or "",

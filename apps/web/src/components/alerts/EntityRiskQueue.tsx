@@ -576,47 +576,47 @@ export function EntityRiskQueue() {
 
       {/* Stats strip — anchored on the 2026 KPI bar */}
       <div className="grid grid-cols-4 gap-3">
-        <div className="bg-gray-900/60 border border-gray-800/60 rounded-xl px-4 py-3">
-          <p className="text-xs text-gray-500">Active entities</p>
+        <div className="bg-surface-card border border-surface-border rounded-container px-4 py-3">
+          <p className="text-xs text-fg-muted">Active entities</p>
           <p
             className={clsx(
               'text-2xl font-bold mt-1',
-              total === undefined ? 'text-gray-600' : 'text-gray-200',
+              total === undefined ? 'text-fg-muted' : 'text-fg-primary',
             )}
           >
             {total ?? '—'}
           </p>
-          <p className="text-[10px] text-gray-600 mt-0.5">
+          <p className="text-[10px] text-fg-muted mt-0.5">
             {total === undefined
               ? t('common.notMeasured')
               : `threshold ${Math.round(threshold)} pts`}
           </p>
         </div>
-        <div className="bg-gray-900/60 border border-gray-800/60 rounded-xl px-4 py-3">
-          <p className="text-xs text-gray-500">Promoted</p>
+        <div className="bg-surface-card border border-surface-border rounded-container px-4 py-3">
+          <p className="text-xs text-fg-muted">Promoted</p>
           <p
             className={clsx(
               'text-2xl font-bold mt-1',
-              promotedCount === undefined ? 'text-gray-600' : 'text-red-400',
+              promotedCount === undefined ? 'text-fg-muted' : 'text-severity-ink-critical',
             )}
           >
             {promotedCount ?? '—'}
           </p>
-          <p className="text-[10px] text-gray-600 mt-0.5">
+          <p className="text-[10px] text-fg-muted mt-0.5">
             {promotedCount === undefined ? t('common.notMeasured') : 'entity-incidents'}
           </p>
         </div>
-        <div className="bg-gray-900/60 border border-gray-800/60 rounded-xl px-4 py-3">
-          <p className="text-xs text-gray-500">Contributing alerts</p>
+        <div className="bg-surface-card border border-surface-border rounded-container px-4 py-3">
+          <p className="text-xs text-fg-muted">Contributing alerts</p>
           <p
             className={clsx(
               'text-2xl font-bold mt-1',
-              alertCount === undefined ? 'text-gray-600' : 'text-gray-200',
+              alertCount === undefined ? 'text-fg-muted' : 'text-fg-primary',
             )}
           >
             {alertCount ?? '—'}
           </p>
-          <p className="text-[10px] text-gray-600 mt-0.5">
+          <p className="text-[10px] text-fg-muted mt-0.5">
             {alertCount === undefined ? t('common.notMeasured') : 'current decay window'}
           </p>
         </div>
@@ -624,15 +624,15 @@ export function EntityRiskQueue() {
       </div>
 
       {/* Filters */}
-      <div className="flex items-center gap-3 flex-wrap py-3 px-4 bg-gray-900/40 border border-gray-800/60 rounded-xl">
+      <div className="flex items-center gap-3 flex-wrap py-3 px-4 bg-surface-card border border-surface-border rounded-container">
         <div className="flex items-center gap-1">
           <button
             onClick={() => setPromotedOnly(false)}
             className={clsx(
-              'text-xs px-2.5 py-1 rounded-lg transition-colors',
+              'text-xs px-2.5 py-1 rounded-control transition-colors',
               !promotedOnly
-                ? 'bg-blue-600 text-white'
-                : 'text-gray-500 hover:text-gray-300 hover:bg-gray-800/60',
+                ? 'bg-pill-info-bg text-accent font-semibold'
+                : 'text-fg-muted hover:text-fg-primary hover:bg-surface-hover',
             )}
           >
             All entities
@@ -640,24 +640,24 @@ export function EntityRiskQueue() {
           <button
             onClick={() => setPromotedOnly(true)}
             className={clsx(
-              'text-xs px-2.5 py-1 rounded-lg transition-colors',
+              'text-xs px-2.5 py-1 rounded-control transition-colors',
               promotedOnly
-                ? 'bg-red-600 text-white'
-                : 'text-gray-500 hover:text-gray-300 hover:bg-gray-800/60',
+                ? 'bg-severity-bg-critical text-severity-ink-critical font-semibold'
+                : 'text-fg-muted hover:text-fg-primary hover:bg-surface-hover',
             )}
           >
             Promoted only
           </button>
         </div>
-        <span className="ml-auto text-xs text-gray-600">
+        <span className="ml-auto text-xs text-fg-muted">
           {entities.length} shown
         </span>
       </div>
 
       {/* Queue */}
-      <div className="bg-gray-900/60 border border-gray-800/60 rounded-xl overflow-hidden">
-        <div className="flex items-center px-4 py-2 border-b border-gray-800/60 bg-gray-900/80 gap-4">
-          <span className="text-xs text-gray-500 flex-1">ENTITY</span>
+      <div className="bg-surface-card border border-surface-border rounded-container overflow-hidden">
+        <div className="flex items-center px-4 py-2 border-b border-surface-border bg-surface-elevated gap-4">
+          <span className="text-xs text-fg-muted flex-1">ENTITY</span>
           <span className="text-xs text-gray-500 w-32">RISK</span>
           <span className="text-xs text-gray-500 w-20 text-center">BAND</span>
         </div>
