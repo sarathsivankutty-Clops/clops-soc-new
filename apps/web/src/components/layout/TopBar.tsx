@@ -43,7 +43,10 @@ const routeLabels: Record<string, RouteInfo> = {
   '/alerts': { title: 'Alerts', description: 'Security alerts and incidents' },
   '/queue': { title: 'Investigation Queue', description: 'Entity risk-based alerting queue' },
   '/hunt': { title: 'Hunt', description: 'Proactive threat hunts and queries' },
+  /* [HIDDEN-UI NAV-9 rename Detection to Detection Rules]
   '/detection': { title: 'Detection', description: 'Rules, catalog, MITRE coverage, and tuning' },
+  */
+  '/detection': { title: 'Detection Rules', description: 'Rules, catalog, MITRE coverage, and tuning' },
   // [HIDDEN-UI NAV-1 renamed Playbooks -> Runbooks]
   // '/playbooks': { title: 'Playbooks', description: 'Automated response and SOAR workflows' },
   '/playbooks': { title: 'Runbooks', description: 'Automated response and SOAR workflows' },

@@ -76,7 +76,10 @@ const NAV_ITEMS: { label: string; href: string; keywords: string[]; adminOnly?: 
   { label: 'Runbooks',            href: '/playbooks',               keywords: ['runbooks', 'playbooks', 'soar', 'automation'] },
   // [HIDDEN-UI CHROME-1 hide Hunt from command palette]
   // { label: 'Hunt',                href: '/hunt',                    keywords: ['threat hunting', 'search', 'kql', 'esql'] },
+  /* [HIDDEN-UI NAV-9 rename Detection to Detection Rules]
   { label: 'Detection',           href: '/detection',               keywords: ['rules', 'detections', 'sigma', 'catalog', 'mitre', 'coverage', 'tuning'] },
+  */
+  { label: 'Detection Rules',     href: '/detection',               keywords: ['rules', 'detections', 'sigma', 'catalog', 'mitre', 'coverage', 'tuning'] },
   { label: 'Settings',            href: '/settings',                keywords: ['preferences', 'profile', 'tenant', 'connectors', 'users', 'rbac', 'mfa', 'compliance', 'audit'] },
   // Deep link into the AI tab. `SettingsTabs` selects on `?tab=`, so this used
   // to land on General while the TopBar title said "AI Settings".

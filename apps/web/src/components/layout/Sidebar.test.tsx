@@ -37,11 +37,11 @@ describe('Sidebar', () => {
     // expect(screen.getByText('ClopSOC')).toBeInTheDocument();
     expect(screen.getByText('SOC')).toBeInTheDocument();
 
-    // NAV-8 / CHROME-1: 4 labelled sections, 6 destinations (Hunt hidden).
-    // [HIDDEN-UI CHROME-1 hide Hunt from sidebar navigation]
-    // for (const heading of ['Monitor', 'Respond', 'Hunt & Detect', 'Admin']) {
-    for (const heading of ['Monitor', 'Respond', 'Detect', 'Admin']) {
-      expect(screen.getByText(heading)).toBeInTheDocument();
+    // [HIDDEN-UI NAV-9 rename Monitor to Navigation, remove Respond/Detect/Admin subheadings, rename Detection to Detection Rules]
+    // for (const heading of ['Monitor', 'Respond', 'Detect', 'Admin']) {
+    expect(screen.getByText('Navigation')).toBeInTheDocument();
+    for (const removed of ['Monitor', 'Respond', 'Detect', 'Admin']) {
+      expect(screen.queryByText(removed)).not.toBeInTheDocument();
     }
 
     const expected: [string, string][] = [
@@ -51,7 +51,7 @@ describe('Sidebar', () => {
       ['Runbooks', '/playbooks'],
       // [HIDDEN-UI CHROME-1 hide Hunt from sidebar navigation]
       // ['Hunt', '/hunt'],
-      ['Detection', '/detection'],
+      ['Detection Rules', '/detection'],
       ['Settings', '/settings'],
     ];
     for (const [label, href] of expected) {
@@ -68,11 +68,8 @@ describe('Sidebar', () => {
   it('hides the section headings when the rail is collapsed', () => {
     render(<Sidebar collapsed />);
 
-    // [HIDDEN-UI CHROME-1 hide Hunt from sidebar navigation]
-    // for (const heading of ['Monitor', 'Respond', 'Hunt & Detect', 'Admin']) {
-    for (const heading of ['Monitor', 'Respond', 'Detect', 'Admin']) {
-      expect(screen.queryByText(heading)).not.toBeInTheDocument();
-    }
+    // [HIDDEN-UI NAV-9 rename Monitor to Navigation, remove subheadings]
+    expect(screen.queryByText('Navigation')).not.toBeInTheDocument();
   });
 
   it('hides consolidated and retired nav links', () => {

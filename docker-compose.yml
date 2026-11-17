@@ -65,7 +65,7 @@
 # reasoning is tabulated in apps/docs/docs/operations/security.md.
 ###############################################################################
 
-name: clops-soc
+name: clopsoc
 
 networks:
   clops-soc:
@@ -111,8 +111,6 @@ volumes:
   prometheus_data:
   grafana_data:
   alertmanager_data:
-
-name: clopsoc
 
 services:
 

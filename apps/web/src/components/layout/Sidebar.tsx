@@ -160,6 +160,23 @@ const UsersIcon = () => (
 
 const navSections: NavSection[] = [
   {
+    title: 'Navigation',
+    items: [
+      { label: 'Dashboards', href: '/dashboards', icon: <ChartBarIcon /> },
+      { label: 'Alerts', href: '/alerts', icon: <BellIcon /> },
+      {
+        label: 'Investigation Queue',
+        href: '/queue',
+        icon: <InboxIcon />,
+        liveBadge: <LiveQueueBadge />,
+      },
+      { label: 'Runbooks', href: '/playbooks', icon: <PlaybookIcon /> },
+      { label: 'Detection Rules', href: '/detection', icon: <EyeIcon /> },
+      { label: 'Settings', href: '/settings', icon: <CogIcon /> },
+    ],
+  },
+  /* [HIDDEN-UI NAV-9 rename Monitor to Navigation, remove Respond/Detect/Admin subheadings, rename Detection to Detection Rules]
+  {
     title: 'Monitor',
     items: [
       { label: 'Dashboards', href: '/dashboards', icon: <ChartBarIcon /> },
@@ -178,6 +195,18 @@ const navSections: NavSection[] = [
       { label: 'Runbooks', href: '/playbooks', icon: <PlaybookIcon /> },
     ],
   },
+  {
+    title: 'Detect',
+    items: [
+      { label: 'Detection', href: '/detection', icon: <EyeIcon /> },
+    ],
+  },
+  {
+    title: 'Admin',
+    items: [{ label: 'Settings', href: '/settings', icon: <CogIcon /> }],
+  },
+  */
+  /* [HIDDEN-UI CHROME-1 hide Hunt from sidebar navigation]
   /* [HIDDEN-UI CHROME-1 hide Hunt from sidebar navigation]
   {
     title: 'Hunt & Detect',
@@ -187,19 +216,6 @@ const navSections: NavSection[] = [
     ],
   },
   */
-  {
-    title: 'Detect',
-    items: [
-      { label: 'Detection', href: '/detection', icon: <EyeIcon /> },
-    ],
-  },
-  {
-    // Only admin-scoped destination left in the rail. Everything that used to
-    // sit under "Platform" is either a tab of /settings, a tab of /dashboards,
-    // or retired — see the NAV-1/NAV-2/NAV-3/NAV-4/NAV-8 entries below.
-    title: 'Admin',
-    items: [{ label: 'Settings', href: '/settings', icon: <CogIcon /> }],
-  },
   // [HIDDEN-UI NAV-8 flat 10-item rail grouped into Monitor / Respond /
   // Hunt & Detect / Admin. Dashboard, SOC Insights, SOC Operations, SLA, Team
   // Analytics, MSSP and Cost are now tabs of /dashboards; Settings carries its

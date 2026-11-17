@@ -177,3 +177,28 @@ Preserved inside `[HIDDEN-UI CHROME-2 ...]` comments:
 - Filtered accessibility check (`vitest run src/test/a11y.test.tsx -t "TopBar|Sidebar"`): **2 passed, 10 skipped (filtered)**.
 - `pnpm --filter @aisoc/web build`: **passed** (exit 0, 108 static pages).
 - `docker compose -p clops-soc up -d --build web`: rebuilt `clops-soc-web:local` and started `clops-soc-web-1` on `0.0.0.0:13000->3000/tcp`; `http://127.0.0.1:13000/login` and `http://127.0.0.1:13000/api/health` both returned HTTP `200`.
+
+---
+
+## 8. Alerts Ordering/Filters, Findings, Correlation, Approvals Bridge & E2E Validation
+
+### 8.1 Stage 2 + PR4 + Compose Commits (`initial-setup` → pushed to `origin/main`)
+- **PR1a (`fede08f27`):** `apps/web/src/lib/api.ts` (`AlertFilters` snake_case params `page_size`, `event_since`, `event_until`, `assigned_to_me`, `search`), `apps/web/src/lib/alertStatus.ts` (all 12 backend statuses grouped `Open` / `In progress` / `Closed`), `apps/web/src/components/alerts/AlertsView.tsx` (Sort `Priority` / `Newest` / `Oldest`, clickable column headers, in-page time window, `event_time` with `ingest` fallback, actor subtitle, `Clear filters` & `SavedViewsBar` preserving `sort`).
+- **PR3 (`d2df44d0d`):** `services/api/app/services/llm_json.py` + `cases.py` (`parse_llm_json_payload` stripping `<think>` blocks and markdown fences, emitting ledger `seq`), `apps/web/src/components/ui/SafeMarkdown.tsx`, and `CaseWorkspace.tsx` (full Recon/Forensic/Responder fields, `"Suggested - not executed"`, `"not measured"`, semantic theme tokens).
+- **PR1b (`e4b0d80c4`):** `services/api/app/services/alert_search.py` + `alerts.py` (parameterized `search` across `title`/`rule_name`/`entities`/`affected_*`, `connector_type` filter, `alert_occurrences` left-join `occurrence_count`), plus UI search input, source `<select>`, and `×N` repeat badge.
+- **PR2 (`2072194f1`):**
+  - Migrations `services/api/migrations/161_alert_correlation_fields.sql` (`alerts.incident_id`, `alerts.fusion_decision`, `idx_alerts_tenant_incident`) and `162_backfill_alerts_case_id.sql` (backfill `alerts.case_id` from `aisoc_cases.alert_ids`).
+  - `services/fusion/app/services/alert_sink.py` persists `incident_id`, `fusion_decision`, and `enrichment_data`.
+  - `services/api/app/api/v1/endpoints/cases.py` syncs `alerts.case_id` on `create_case` and `link_alerts`; `alert_rail.py` updates `_graph_pivot` away from the retired `/graph` redirect; `alerts.py` + `AlertsView.tsx` / `InvestigationRail.tsx` / `AlertDetailView.tsx` render `+N correlated`, siblings, `"Why grouped"`, and `Case` links.
+- **PR4 + TopBar (`8a32bf829`):**
+  - Commented out `<RoleBadge role={userRole} />` in `TopBar.tsx` (`[HIDDEN-UI TOPBAR-2]`).
+  - `services/agents/app/workers/fused_alert_consumer.py` re-persists `proposed_actions` after `_maybe_escalate` with `"action"` key; `approvals.py` adds `case_id` and `alert_id` filters to `GET /api/v1/approvals`.
+  - Wired `"Request Approval"` in `CaseWorkspace.tsx`, staged submission in `AttackStory.tsx`, and `responderApi.runPlaybook` in `AlertDetailView.tsx`.
+- **Unique Compose Naming (`56306a1f9` + duplicate `name:` fix in `docker-compose.yml`):** Updated `docker-compose.yml` (`name: clopsoc`, `clopsoc-*:${TAG:-local}` for all 15 first-party services) and `docker-compose.prod.yml` (`clopsoc-core-api`), and pushed `initial-setup -> main` on `https://github.com/sarathsivankutty-Clops/clops-soc-new.git`.
+
+### 8.2 Runtime Fixes & E2E Validation (`docs/E2E-VALIDATION-REPORT.md`)
+- **Applied migrations `161` & `162`** to `clops-soc-postgres-1` (`UPDATE 11` rows backfilled), resolving the HTTP 500s (`column alerts.incident_id does not exist`) on `/api/v1/alerts`, `/api/v1/alerts/queue`, `/api/v1/cases/{id}/attack-chain`, and `clops-soc-fusion-1` DLQ.
+- **Fixed LiteLLM → AWS Bedrock 403:** Removed the stale Windows User `OPENAI_API_KEY` (`sk-or-v1-...`) override that shadowed `.env` and recreated `clops-soc-litellm-1` (`ABSK...` key); verified `POST http://127.0.0.1:14000/v1/chat/completions` (`model: aisoc-recon`) → **HTTP 200** (`"OK"`).
+- **Post-fix verification (`http://127.0.0.1:13000`):**
+  - All 24 probed core API endpoints returned **HTTP 200** in `5.9–87.0 ms` (login `276.6 ms`).
+  - Playwright walkthrough: `FAILED_500: []`, `PAGE_ERRORS: []`, verified `Priority` / `Newest` / `Oldest` sorting, `High` filter (`3` rows), `Clear filters` preserving `sort=oldest` (`25` rows), `7` `Case` links on `/alerts`, and Investigation Rail rendering.
