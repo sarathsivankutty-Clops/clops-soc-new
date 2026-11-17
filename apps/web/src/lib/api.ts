@@ -6512,9 +6512,11 @@ export const responderApi = {
 
   /** Pending agent approval requests visible to me. */
   listApprovals: (params?: {
-    status?: ApprovalStatus;
+    status?: ApprovalStatus | "";
     mine?: boolean;
     risk_level?: ApprovalRequest["risk_level"];
+    case_id?: string;
+    alert_id?: string;
     page?: number;
     page_size?: number;
   }) =>
@@ -6526,12 +6528,30 @@ export const responderApi = {
       pages: number;
     }>("/api/v1/approvals", {
       params: {
-        status: params?.status ?? "pending",
+        status: params?.status !== undefined ? params.status : "pending",
         ...(params?.mine ? { mine: "true" } : {}),
         ...(params?.risk_level ? { risk_level: params.risk_level } : {}),
+        ...(params?.case_id ? { case_id: params.case_id } : {}),
+        ...(params?.alert_id ? { alert_id: params.alert_id } : {}),
         ...(params?.page ? { page: params.page } : {}),
         ...(params?.page_size ? { page_size: params.page_size } : {}),
       },
+    }),
+
+  /** Submit an action for human approval. */
+  createApproval: (body: {
+    case_id?: string;
+    alert_id?: string;
+    run_id?: string;
+    title: string;
+    summary: string;
+    risk_level?: ApprovalRequest["risk_level"];
+    action?: Record<string, unknown>;
+    requested_by?: string;
+  }) =>
+    request<ApprovalRequest>("/api/v1/approvals", {
+      method: "POST",
+      body: JSON.stringify(body),
     }),
 
   /** Single approval (for the deep-linked notification view). */
@@ -6550,6 +6570,16 @@ export const responderApi = {
       method: "POST",
       body: JSON.stringify({ decision: "deny", comment: reason }),
     }),
+
+  /** Run a playbook against an alert or case. */
+  runPlaybook: (playbookId: string, body: Record<string, unknown>) =>
+    request<{ execution_id?: string; status?: string }>(
+      `/api/v1/playbooks/${encodeURIComponent(playbookId)}/run`,
+      {
+        method: "POST",
+        body: JSON.stringify(body),
+      },
+    ),
 
   /** Snooze an alert for the on-call rotation.
    *

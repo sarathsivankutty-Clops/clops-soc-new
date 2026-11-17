@@ -1011,6 +1011,9 @@ class FusedAlertTriageWorker:
         if escalated:
             with timer.measure("escalate"):
                 await self._maybe_escalate(state, writer=writer)
+            if state.proposed_actions:
+                with timer.measure("persist"):
+                    await self._record(state, tier=tier, verdict=verdict, confidence=confidence, tokens=tokens, cost=cost, writer=writer)
 
         # Queue every action that needs sign-off so a human can actually give
         # it. Until v9.0 proposed actions were persisted as JSON and stopped
@@ -1685,6 +1688,7 @@ class FusedAlertTriageWorker:
         rationale = _rationale_of(state)
         recommendations = [
             {
+                "action": a.description or a.action_type,
                 "action_type": a.action_type,
                 "description": a.description,
                 "risk_level": a.risk_level.value if hasattr(a.risk_level, "value") else str(a.risk_level),

@@ -9,6 +9,7 @@ import {
   alertsApi,
   casesApi,
   ledgerApi,
+  responderApi,
   feedbackApi, computeRedispositionToken,
   type Alert,
   type CaseExternalRef,
@@ -1217,9 +1218,15 @@ export function AlertDetailView({ alertId }: { alertId: string }) {
         open={explainOpen}
         onClose={() => setExplainOpen(false)}
         alert={alert}
-        onRunPlaybook={(pid) => {
-          toast.success(`Queued runbook ${pid}`);
-          setExplainOpen(false);
+        onRunPlaybook={async (pid) => {
+          try {
+            await responderApi.runPlaybook(pid, { alert_id: alert.id, trigger: 'manual' });
+            toast.success(`Dispatched playbook ${pid}`);
+          } catch (err) {
+            toast.error(err instanceof Error ? err.message : `Failed to run playbook ${pid}`);
+          } finally {
+            setExplainOpen(false);
+          }
         }}
       />
 

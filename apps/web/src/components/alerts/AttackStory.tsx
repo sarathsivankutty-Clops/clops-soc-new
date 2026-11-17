@@ -31,12 +31,13 @@
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { clsx } from 'clsx';
-import type {
-  Alert,
-  MiniTimelineEvent,
-  MitreAttack,
-  RecommendedAction,
-  RelatedEntity,
+import {
+  responderApi,
+  type Alert,
+  type MiniTimelineEvent,
+  type MitreAttack,
+  type RecommendedAction,
+  type RelatedEntity,
 } from '@/lib/api';
 
 // ─── Kill-chain ordering ─────────────────────────────────────────────────────
@@ -173,6 +174,8 @@ export function AttackStory({
   showHeader = true,
 }: AttackStoryProps) {
   const [staged, setStaged] = useState<Set<string>>(new Set());
+  const [submitting, setSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<string | null>(null);
 
   const stages = useMemo(() => buildStages(alert.mitreAttack ?? []), [alert.mitreAttack]);
   const sources = useMemo(
@@ -357,6 +360,51 @@ export function AttackStory({
                 ? `${staged.size} action${staged.size === 1 ? '' : 's'} staged. Submitting sends them for approval under the tenant's autonomy policy — nothing executes from this panel.`
                 : 'Selecting an action stages it for approval. Nothing executes from this panel.'}
             </p>
+            {staged.size > 0 && (
+              <div className="mt-2 flex items-center gap-3">
+                <button
+                  type="button"
+                  disabled={submitting}
+                  onClick={async () => {
+                    setSubmitting(true);
+                    setSubmitStatus(null);
+                    try {
+                      const selectedActions = actions.filter((a) => staged.has(a.action));
+                      await Promise.all(
+                        selectedActions.map((a) =>
+                          responderApi.createApproval({
+                            alert_id: alert.id,
+                            case_id: alert.caseId,
+                            title: a.action.slice(0, 200),
+                            summary: a.rationale || a.action,
+                            risk_level:
+                              a.risk === 'critical' || a.risk === 'high' || a.risk === 'low'
+                                ? a.risk
+                                : 'medium',
+                            action: { action: a.action, rationale: a.rationale ?? null },
+                            requested_by: 'analyst',
+                          }),
+                        ),
+                      );
+                      setSubmitStatus(`Submitted ${selectedActions.length} approval request${selectedActions.length === 1 ? '' : 's'}`);
+                      setStaged(new Set());
+                    } catch (err) {
+                      setSubmitStatus(err instanceof Error ? err.message : 'Failed to request approval');
+                    } finally {
+                      setSubmitting(false);
+                    }
+                  }}
+                  className="rounded-control border border-surface-border bg-pill-info-bg px-2.5 py-1 text-xs font-medium text-accent hover:opacity-90 disabled:opacity-50"
+                >
+                  {submitting ? 'Submitting…' : `Request approval (${staged.size})`}
+                </button>
+              </div>
+            )}
+            {submitStatus && (
+              <p className="mt-1.5 text-xs text-fg-secondary" role="status">
+                {submitStatus}
+              </p>
+            )}
           </>
         )}
       </div>

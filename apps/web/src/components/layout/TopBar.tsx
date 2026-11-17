@@ -8,7 +8,9 @@ import { useEffect, useState } from 'react';
 import { TimeWindowSelector } from './TimeWindowSelector';
 import { TenantSwitcher } from './TenantSwitcher';
 */
+/* [HIDDEN-UI TOPBAR-2 role badge already shown in sidebar footer]
 import { RoleBadge } from './RoleBadge';
+*/
 import { useTenant } from './TenantProvider';
 import { BrandLogo } from './BrandLogo';
 /* [HIDDEN-UI THEME-7 retained imports for the commented legacy controls]
@@ -140,7 +142,9 @@ export function TopBar({
   /* [HIDDEN-UI CHROME-1 hide search bar / command palette launcher from TopBar]
   const [shortcut, setShortcut] = useState<'⌘K' | 'Ctrl K'>('⌘K');
   */
+  /* [HIDDEN-UI TOPBAR-2 role badge already shown in sidebar footer]
   const { userRole } = useTenant();
+  */
   const { branding } = useBranding();
 
   /* [HIDDEN-UI CHROME-1 hide search bar / command palette launcher from TopBar]
@@ -295,10 +299,12 @@ export function TopBar({
           <TenantSwitcher />
         </div>
         */}
+        {/* [HIDDEN-UI TOPBAR-2 role badge already shown in sidebar footer]
         <div className="hidden lg:block">
           <RoleBadge role={userRole} />
         </div>
         <div className="hidden sm:block h-6 w-px bg-surface-border" aria-hidden />
+        */}
         {/*
           [HIDDEN-UI THEME-7 legacy TopBar controls retained; theme and user controls are in the Sidebar footer]
           <div className="text-right hidden lg:block">

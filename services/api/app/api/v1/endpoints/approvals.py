@@ -277,6 +277,8 @@ async def list_approvals(
     status_filter: str | None = Query(default="pending", alias="status"),
     mine: bool = Query(default=False),
     risk_level: str | None = Query(default=None),
+    case_id: str | None = Query(default=None),
+    alert_id: uuid.UUID | None = Query(default=None),
 ) -> ApprovalListResponse:
     """List approvals for the current tenant.
 
@@ -296,6 +298,10 @@ async def list_approvals(
         filters.append(AgentApproval.required_user_id == user.user_id)
     if risk_level:
         filters.append(AgentApproval.risk_level == risk_level)
+    if case_id:
+        filters.append(AgentApproval.case_id == case_id)
+    if alert_id is not None:
+        filters.append(AgentApproval.alert_id == alert_id)
 
     count_stmt = select(func.count()).select_from(AgentApproval).where(and_(*filters))
     total = (await db.execute(count_stmt)).scalar_one()

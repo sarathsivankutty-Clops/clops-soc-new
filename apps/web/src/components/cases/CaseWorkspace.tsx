@@ -32,6 +32,8 @@ import {
   type CaseAttackPath,
   type CaseExternalRef,
   casesApi,
+  responderApi,
+  type ApprovalRequest,
   type CaseSeverity,
   type CaseStatus,
   type CaseTask,
@@ -1155,6 +1157,7 @@ export function CaseWorkspace({ caseId }: { caseId: string }) {
       {/* Investigation tab */}
       {activeTab === "investigation" && (
         <InvestigationPanel
+          caseId={caseRecord.id || caseId}
           status={investigationStatus}
           data={investigationData}
           liveSteps={liveSteps}
@@ -1376,6 +1379,7 @@ export function CaseWorkspace({ caseId }: { caseId: string }) {
 type LiveStep = { seq?: number; kind: string; agent: string; summary: string; ts: string };
 
 function InvestigationPanel({
+  caseId,
   status,
   data,
   liveSteps,
@@ -1383,6 +1387,7 @@ function InvestigationPanel({
   onViewReport,
   onViewLedger,
 }: {
+  caseId?: string;
   status: string;
   data: Record<string, unknown> | null;
   liveSteps: LiveStep[];
@@ -1391,6 +1396,24 @@ function InvestigationPanel({
   onViewLedger?: () => void;
 }) {
   const [showAllIocs, setShowAllIocs] = useState(false);
+  const [approvals, setApprovals] = useState<ApprovalRequest[]>([]);
+  const [requestingKey, setRequestingKey] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!caseId || status !== "completed") return;
+    let cancelled = false;
+    responderApi
+      .listApprovals({ case_id: caseId, status: "" })
+      .then((res) => {
+        if (!cancelled && Array.isArray(res?.items)) setApprovals(res.items);
+      })
+      .catch(() => {
+        /* best-effort: action cards remain submittable even if approvals list fails */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [caseId, status]);
 
   if (status === "idle" || status === "starting") {
     return (
@@ -1759,6 +1782,19 @@ function InvestigationPanel({
                   typeof a.confidence === "number"
                     ? `${Math.round(a.confidence * 100)}%`
                     : forensicConfidencePct;
+                const actionKey = `${i}:${text}`;
+                const existingApproval = approvals.find(
+                  (ap) => ap.title === text.slice(0, 200) || ap.action?.action === text,
+                );
+                const dispatchState =
+                  existingApproval?.action &&
+                  typeof existingApproval.action === "object" &&
+                  typeof (existingApproval.action as Record<string, unknown>).dispatch === "object"
+                    ? String(
+                        ((existingApproval.action as Record<string, unknown>).dispatch as Record<string, unknown>)
+                          ?.state ?? "",
+                      )
+                    : "";
                 return (
                   <li key={i} className="rounded-control border border-surface-border bg-surface-elevated p-2 text-xs text-fg-primary space-y-1">
                     <div className="flex items-center justify-between gap-1.5 flex-wrap">
@@ -1782,6 +1818,53 @@ function InvestigationPanel({
                     </p>
                     {a.rationale != null && String(a.rationale).length > 0 && (
                       <p className="text-[11px] text-fg-muted">{String(a.rationale)}</p>
+                    )}
+                    {caseId && (
+                      <div className="pt-1 flex items-center gap-2">
+                        {existingApproval ? (
+                          <span className="inline-flex items-center rounded bg-pill-info-bg px-1.5 py-0.5 text-[10px] font-medium text-accent">
+                            Approval: {dispatchState === "executed" ? "executed" : existingApproval.status}
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            disabled={requestingKey === actionKey}
+                            onClick={async () => {
+                              setRequestingKey(actionKey);
+                              try {
+                                const created = await responderApi.createApproval({
+                                  case_id: caseId,
+                                  run_id: runId ?? undefined,
+                                  title: text.slice(0, 200),
+                                  summary: a.rationale ? String(a.rationale) : text,
+                                  risk_level:
+                                    risk === "critical" || risk === "high" || risk === "low"
+                                      ? risk
+                                      : "medium",
+                                  action: {
+                                    action: text,
+                                    action_type: a.action_type ?? undefined,
+                                    target: a.target ?? undefined,
+                                    dry_run: responder?.dry_run ?? true,
+                                  },
+                                  requested_by: "analyst",
+                                });
+                                setApprovals((prev) => [created, ...prev]);
+                                toast.success("Approval requested");
+                              } catch (err) {
+                                toast.error(
+                                  err instanceof Error ? err.message : "Failed to request approval",
+                                );
+                              } finally {
+                                setRequestingKey(null);
+                              }
+                            }}
+                            className="rounded-control border border-surface-border bg-surface-card px-2 py-0.5 text-[10px] font-medium text-accent hover:bg-surface-hover disabled:opacity-50"
+                          >
+                            {requestingKey === actionKey ? "Requesting…" : "Request Approval"}
+                          </button>
+                        )}
+                      </div>
                     )}
                   </li>
                 );
