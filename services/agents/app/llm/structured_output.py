@@ -45,6 +45,85 @@ class ParseResult:
     error: str = ""
 
 
+def _strip_json_comments_and_trailing_commas(text: str) -> str:
+    """Strip unquoted JS-style ``//`` / ``/* */`` comments and trailing commas.
+
+    String-aware so URLs (``https://...``) and comment-like text inside JSON
+    string literals are preserved untouched.
+    """
+    out: list[str] = []
+    i = 0
+    n = len(text)
+    in_string = False
+    escaped = False
+
+    while i < n:
+        ch = text[i]
+        if in_string:
+            out.append(ch)
+            if escaped:
+                escaped = False
+            elif ch == "\\":
+                escaped = True
+            elif ch == '"':
+                in_string = False
+            i += 1
+            continue
+
+        if ch == '"':
+            in_string = True
+            out.append(ch)
+            i += 1
+            continue
+
+        if ch == "/" and i + 1 < n:
+            nxt = text[i + 1]
+            if nxt == "/":
+                i += 2
+                while i < n and text[i] != "\n":
+                    i += 1
+                continue
+            if nxt == "*":
+                i += 2
+                while i + 1 < n and not (text[i] == "*" and text[i + 1] == "/"):
+                    i += 1
+                i = min(i + 2, n)
+                continue
+
+        out.append(ch)
+        i += 1
+
+    # Second pass (string-aware): remove trailing commas before `}` or `]`.
+    cleaned = "".join(out)
+    final: list[str] = []
+    in_string = False
+    escaped = False
+    m = len(cleaned)
+    for idx, ch in enumerate(cleaned):
+        if in_string:
+            final.append(ch)
+            if escaped:
+                escaped = False
+            elif ch == "\\":
+                escaped = True
+            elif ch == '"':
+                in_string = False
+            continue
+        if ch == '"':
+            in_string = True
+            final.append(ch)
+            continue
+        if ch == ",":
+            j = idx + 1
+            while j < m and cleaned[j] in " \t\r\n":
+                j += 1
+            if j < m and cleaned[j] in ("}", "]"):
+                continue
+        final.append(ch)
+
+    return "".join(final)
+
+
 def extract_json_block(text: str) -> str:
     """Best-effort extraction of a JSON object/array from an LLM reply.
 
@@ -66,6 +145,7 @@ def extract_json_block(text: str) -> str:
     cleaned = _THINK_RE.sub("", text)
     stripped = re.sub(r"(?m)^\s*```(?:json)?\s*$", "", cleaned)
     stripped = _FENCE_RE.sub("", stripped.strip())
+    stripped = _strip_json_comments_and_trailing_commas(stripped)
     starts = [i for i in (stripped.find("{"), stripped.find("[")) if i != -1]
     if not starts:
         return stripped.strip()
@@ -81,6 +161,7 @@ def extract_first_json_object(text: str) -> str:
     cleaned = _THINK_RE.sub("", text)
     stripped = re.sub(r"(?m)^\s*```(?:json)?\s*$", "", cleaned)
     stripped = _FENCE_RE.sub("", stripped.strip()).strip()
+    stripped = _strip_json_comments_and_trailing_commas(stripped)
     start = stripped.find("{")
     if start == -1:
         return ""
