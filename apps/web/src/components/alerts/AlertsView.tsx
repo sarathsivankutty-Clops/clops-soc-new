@@ -17,6 +17,17 @@ import { Badge, type BadgeTone } from '@/components/ui/Badge';
 import { SavedViewsBar } from '@/components/saved-views/SavedViewsBar';
 import { useLocale } from '@/components/i18n/LocaleProvider';
 import { demoFallback } from '@/lib/demoFallback';
+import {
+  ALERT_STATUS_BY_VALUE,
+  ALERT_STATUS_GROUPS,
+  ALERT_STATUS_LIST,
+} from '@/lib/alertStatus';
+import {
+  TIME_WINDOWS,
+  TIME_WINDOW_LONG_LABEL,
+  sinceFor,
+  type TimeWindow,
+} from '@/lib/timeWindow';
 
 // Wave 1 of the AiSOC v6 capability roadmap. The "entities" tab renders the
 // rolled-up Risk-Based Alerting queue — alerts contribute time-decayed risk
@@ -44,6 +55,7 @@ const SEVERITY_CONFIG = {
   info: { label: 'Info', dot: 'bg-severity-dot-info', text: 'text-severity-ink-info', bg: 'bg-severity-bg-info' },
 };
 
+/* [HIDDEN-UI ALERTS-1 replaced 5-status map with shared 12-status alertStatus.ts matching alert_status.py]
 const STATUS_CONFIG = {
   new: { label: 'New', color: 'text-tone-purple bg-pill-purple-bg', dot: 'bg-dot-purple' },
   triaged: { label: 'Triaged', color: 'text-accent bg-pill-info-bg', dot: 'bg-dot-info' },
@@ -51,6 +63,7 @@ const STATUS_CONFIG = {
   resolved: { label: 'Resolved', color: 'text-tone-success bg-pill-success-bg', dot: 'bg-dot-success' },
   false_positive: { label: 'False Positive', color: 'text-fg-muted bg-pill-neutral-bg', dot: 'bg-dot-neutral' },
 };
+*/
 
 // ─── Mock Data ────────────────────────────────────────────────────────────────
 
@@ -210,11 +223,19 @@ function SeverityBadge({ severity }: { severity: string }) {
   );
 }
 
+type AlertsTimeWindow = 'all' | TimeWindow;
+
+const SORT_EXPLANATION: Record<'priority' | 'newest' | 'oldest', string> = {
+  priority: 'Ordered by Priority (Critical → Info, newest within each tier)',
+  newest: 'Ordered by Newest (most recently created alerts first)',
+  oldest: 'Ordered by Oldest (earliest event on current page first)',
+};
+
 function StatusBadge({ status }: { status: string }) {
-  const cfg = STATUS_CONFIG[status as keyof typeof STATUS_CONFIG] || STATUS_CONFIG.new;
+  const cfg = ALERT_STATUS_BY_VALUE[status] ?? ALERT_STATUS_BY_VALUE.new;
   return (
-    <span className={clsx('inline-flex items-center gap-1.5 text-caption font-medium px-2.5 py-0.5 rounded-pill whitespace-nowrap', cfg.color)}>
-      <span aria-hidden="true" className={clsx('w-1.5 h-1.5 rounded-pill shrink-0', cfg.dot)} />
+    <span className={clsx('inline-flex items-center gap-1.5 text-caption font-medium px-2.5 py-0.5 rounded-pill whitespace-nowrap', cfg.colorClass)}>
+      <span aria-hidden="true" className={clsx('w-1.5 h-1.5 rounded-pill shrink-0', cfg.dotClass)} />
       {cfg.label}
     </span>
   );
@@ -222,52 +243,111 @@ function StatusBadge({ status }: { status: string }) {
 
 function FiltersBar({
   filters,
+  timeWindow,
+  onTimeWindowChange,
   onChange,
   total,
 }: {
   filters: AlertFilters;
+  timeWindow: AlertsTimeWindow;
+  onTimeWindowChange: (w: AlertsTimeWindow) => void;
   onChange: (f: AlertFilters) => void;
   total: number;
 }) {
   const severities = ['all', 'critical', 'high', 'medium', 'low', 'info'] as const;
+  const activeSort = filters.sort ?? 'priority';
+  /* [HIDDEN-UI ALERTS-1 replaced 5-status button strip with grouped 12-status select]
   const statuses = ['all', 'new', 'investigating', 'triaged', 'resolved', 'false_positive'] as const;
+  */
 
   return (
-    <div className="flex items-center gap-3 flex-wrap py-3 px-4 bg-surface-card border border-surface-border rounded-container">
-      <div className="flex items-center gap-1 flex-wrap">
-        {severities.map((s) => (
-          <button
-            key={s}
-            onClick={() => onChange({ ...filters, severity: s === 'all' ? undefined : s, page: 1 })}
-            className={clsx(
-              'text-control-sm font-medium px-2.5 py-1 rounded-control transition-colors',
-              (s === 'all' && !filters.severity) || filters.severity === s
-                ? 'bg-pill-info-bg text-accent font-semibold'
-                : 'text-fg-muted hover:text-fg-primary hover:bg-surface-hover'
-            )}
+    <div className="space-y-1.5 py-3 px-4 bg-surface-card border border-surface-border rounded-container">
+      <div className="flex items-center gap-3 flex-wrap">
+        <div className="flex items-center gap-1 flex-wrap">
+          {severities.map((s) => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => onChange({ ...filters, severity: s === 'all' ? undefined : s, page: 1 })}
+              className={clsx(
+                'text-control-sm font-medium px-2.5 py-1 rounded-control transition-colors',
+                (s === 'all' && !filters.severity) || filters.severity === s
+                  ? 'bg-pill-info-bg text-accent font-semibold'
+                  : 'text-fg-muted hover:text-fg-primary hover:bg-surface-hover'
+              )}
+            >
+              {s === 'all' ? 'All severities' : SEVERITY_CONFIG[s].label}
+            </button>
+          ))}
+        </div>
+
+        <div className="w-px h-4 bg-surface-border" />
+
+        <label className="inline-flex items-center gap-1.5 text-control-sm text-fg-muted">
+          <span>Status</span>
+          <select
+            aria-label="Filter by status"
+            value={filters.status ?? ''}
+            onChange={(e) =>
+              onChange({ ...filters, status: e.target.value || undefined, page: 1 })
+            }
+            className="text-control-sm bg-surface-elevated text-fg-primary border border-surface-border rounded-control px-2 py-1 focus:outline-none focus:border-accent"
           >
-            {s === 'all' ? 'All severities' : SEVERITY_CONFIG[s].label}
-          </button>
-        ))}
-      </div>
-      <div className="w-px h-4 bg-surface-border" />
-      <div className="flex items-center gap-1 flex-wrap">
-        {statuses.map((s) => (
-          <button
-            key={s}
-            onClick={() => onChange({ ...filters, status: s === 'all' ? undefined : s, page: 1 })}
-            className={clsx(
-              'text-control-sm font-medium px-2.5 py-1 rounded-control transition-colors',
-              (s === 'all' && !filters.status) || filters.status === s
-                ? 'bg-surface-subtle text-fg-primary font-semibold'
-                : 'text-fg-muted hover:text-fg-primary hover:bg-surface-hover'
-            )}
+            <option value="">All statuses</option>
+            {ALERT_STATUS_GROUPS.map((group) => (
+              <optgroup key={group} label={group}>
+                {ALERT_STATUS_LIST.filter((item) => item.group === group).map((item) => (
+                  <option key={item.value} value={item.value}>
+                    {item.label}
+                  </option>
+                ))}
+              </optgroup>
+            ))}
+          </select>
+        </label>
+
+        <label className="inline-flex items-center gap-1.5 text-control-sm text-fg-muted">
+          <span>Window</span>
+          <select
+            aria-label="Time window"
+            value={timeWindow}
+            onChange={(e) => onTimeWindowChange(e.target.value as AlertsTimeWindow)}
+            className="text-control-sm bg-surface-elevated text-fg-primary border border-surface-border rounded-control px-2 py-1 focus:outline-none focus:border-accent"
           >
-            {s === 'all' ? 'All statuses' : STATUS_CONFIG[s].label}
-          </button>
-        ))}
+            <option value="all">All time</option>
+            {TIME_WINDOWS.map((w) => (
+              <option key={w} value={w}>
+                {TIME_WINDOW_LONG_LABEL[w]}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="inline-flex items-center gap-1.5 text-control-sm text-fg-muted">
+          <span>Sort</span>
+          <select
+            aria-label="Sort alerts"
+            value={activeSort}
+            onChange={(e) =>
+              onChange({
+                ...filters,
+                sort: e.target.value as AlertFilters['sort'],
+                page: 1,
+              })
+            }
+            className="text-control-sm bg-surface-elevated text-fg-primary border border-surface-border rounded-control px-2 py-1 focus:outline-none focus:border-accent"
+          >
+            <option value="priority">Priority</option>
+            <option value="newest">Newest</option>
+            <option value="oldest">Oldest</option>
+          </select>
+        </label>
+
+        <span className="ml-auto text-caption font-mono text-fg-muted">{total} total</span>
       </div>
-      <span className="ml-auto text-caption font-mono text-fg-muted">{total} total</span>
+      <p className="text-caption text-fg-muted" data-testid="alerts-sort-explanation">
+        {SORT_EXPLANATION[activeSort]}
+      </p>
     </div>
   );
 }
@@ -292,6 +372,15 @@ function AlertRow({
   onToggleChecked: (id: string) => void;
 }) {
   const { t } = useLocale();
+  const displayTs = alert.eventTime ?? alert.createdAt;
+  const isIngestFallback = !alert.eventTime;
+  const actor = alert.affectedUsers?.[0]
+    ? `user:${alert.affectedUsers[0]}`
+    : alert.affectedHosts?.[0]
+      ? `host:${alert.affectedHosts[0]}`
+      : alert.affectedIps?.[0]
+        ? `ip:${alert.affectedIps[0]}`
+        : null;
   return (
     <Link
       href={`/alerts/${alert.id}`}
@@ -340,8 +429,16 @@ function AlertRow({
             </Badge>
           )}
         </div>
-        <div className="flex items-center gap-2 mt-0.5">
+        <div className="flex items-center gap-2 mt-0.5 flex-wrap">
           <span className="text-caption text-fg-muted">{alert.source}</span>
+          {actor && (
+            <>
+              <span className="text-fg-subtle">·</span>
+              <span className="text-caption font-mono text-fg-secondary truncate max-w-[14rem]">
+                {actor}
+              </span>
+            </>
+          )}
           {alert.assignee && (
             <>
               <span className="text-fg-subtle">·</span>
@@ -357,8 +454,15 @@ function AlertRow({
         {alert.confidenceLabel && <ConfidencePill label={alert.confidenceLabel} />}
         <SeverityBadge severity={alert.severity} />
         <StatusBadge status={alert.status} />
-        <span className="text-caption font-mono text-fg-muted w-24 text-right" suppressHydrationWarning>
-          {formatDistanceToNow(new Date(alert.createdAt), { addSuffix: true })}
+        <span
+          className="text-caption font-mono text-fg-muted w-28 text-right"
+          title={isIngestFallback ? `Ingest time (event_time missing): ${displayTs}` : `Event time: ${displayTs}`}
+          suppressHydrationWarning
+        >
+          {formatDistanceToNow(new Date(displayTs), { addSuffix: true })}
+          {isIngestFallback && (
+            <span className="block text-[10px] text-fg-subtle">ingest</span>
+          )}
         </span>
       </div>
     </Link>
@@ -535,11 +639,24 @@ function AlertsTable({
   // Switching to the entities tab unmounts this state cleanly, which is
   // what we want — the rail is alert-scoped, not entity-scoped.
   const [selectedAlertId, setSelectedAlertId] = useState<string | null>(null);
+  const [timeWindow, setTimeWindow] = useState<AlertsTimeWindow>('all');
   // Depth 9.3 — bulk selection, separate from the rail's single selection.
   // A Set rather than an array so toggling is O(1) and the "select all on
   // this page" header checkbox does not have to scan.
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
   const { mutate } = useSWRConfig();
+
+  const handleTimeWindowChange = useCallback(
+    (next: AlertsTimeWindow) => {
+      setTimeWindow(next);
+      onFilterChange({
+        ...filters,
+        eventSince: next === 'all' ? undefined : sinceFor(next),
+        page: 1,
+      });
+    },
+    [filters, onFilterChange],
+  );
 
   const toggleChecked = useCallback((id: string) => {
     setCheckedIds((previous) => {
@@ -588,6 +705,7 @@ function AlertsTable({
         filters={filters}
         onApply={(applied) =>
           onFilterChange({
+            sort: filters.sort ?? 'priority',
             ...applied,
             page: 1,
             pageSize: filters.pageSize ?? 25,
@@ -595,7 +713,13 @@ function AlertsTable({
         }
       />
 
-      <FiltersBar filters={filters} onChange={onFilterChange} total={total} />
+      <FiltersBar
+        filters={filters}
+        timeWindow={timeWindow}
+        onTimeWindowChange={handleTimeWindowChange}
+        onChange={onFilterChange}
+        total={total}
+      />
 
       <BulkTriageBar
         selectedIds={[...checkedIds]}
@@ -623,6 +747,7 @@ function AlertsTable({
             selectedAlertId={selectedAlertId}
             onSelect={setSelectedAlertId}
             onFilterChange={onFilterChange}
+            onResetTimeWindow={() => setTimeWindow('all')}
             checkedIds={checkedIds}
             onToggleChecked={toggleChecked}
             onSetChecked={setCheckedIds}
@@ -657,6 +782,7 @@ function AlertsTableGrid({
   selectedAlertId,
   onSelect,
   onFilterChange,
+  onResetTimeWindow,
   checkedIds,
   onToggleChecked,
   onSetChecked,
@@ -668,6 +794,7 @@ function AlertsTableGrid({
   selectedAlertId: string | null;
   onSelect: (id: string) => void;
   onFilterChange: (f: AlertFilters) => void;
+  onResetTimeWindow: () => void;
   checkedIds: Set<string>;
   onToggleChecked: (id: string) => void;
   onSetChecked: (next: Set<string>) => void;
@@ -675,6 +802,8 @@ function AlertsTableGrid({
   const { t } = useLocale();
   const pageIds = alerts.map((a) => a.id);
   const allOnPageChecked = pageIds.length > 0 && pageIds.every((id) => checkedIds.has(id));
+  const activeSort = filters.sort ?? 'priority';
+  const hasActiveFilters = Boolean(filters.severity || filters.status || filters.eventSince || filters.search);
 
   return (
     <div className="bg-surface-card border border-surface-border rounded-container overflow-hidden">
@@ -693,9 +822,35 @@ function AlertsTableGrid({
           className="accent-accent"
         />
         <span className="text-eyebrow font-bold uppercase tracking-wider text-fg-muted flex-1">ALERT</span>
-        <span className="text-eyebrow font-bold uppercase tracking-wider text-fg-muted w-20">{t('alerts.severity')}</span>
+        <button
+          type="button"
+          onClick={() => onFilterChange({ ...filters, sort: 'priority', page: 1 })}
+          className={clsx(
+            'text-eyebrow font-bold uppercase tracking-wider w-20 text-left transition-colors',
+            activeSort === 'priority' ? 'text-accent' : 'text-fg-muted hover:text-fg-primary',
+          )}
+          title="Sort by priority (severity, then newest)"
+        >
+          {t('alerts.severity')} {activeSort === 'priority' ? '↓' : ''}
+        </button>
         <span className="text-eyebrow font-bold uppercase tracking-wider text-fg-muted w-24">{t('alerts.status')}</span>
-        <span className="text-eyebrow font-bold uppercase tracking-wider text-fg-muted w-24 text-end">TIME</span>
+        <button
+          type="button"
+          onClick={() =>
+            onFilterChange({
+              ...filters,
+              sort: activeSort === 'newest' ? 'oldest' : 'newest',
+              page: 1,
+            })
+          }
+          className={clsx(
+            'text-eyebrow font-bold uppercase tracking-wider w-28 text-end transition-colors',
+            activeSort !== 'priority' ? 'text-accent' : 'text-fg-muted hover:text-fg-primary',
+          )}
+          title="Toggle chronological sort (newest / oldest)"
+        >
+          TIME {activeSort === 'newest' ? '↓' : activeSort === 'oldest' ? '↑' : ''}
+        </button>
       </div>
 
       {isLoading ? (
@@ -713,14 +868,22 @@ function AlertsTableGrid({
         </div>
       ) : alerts.length === 0 ? (
         <div className="p-4">
-          {filters.severity || filters.status ? (
+          {hasActiveFilters ? (
             <EmptyState
               icon={EmptyStateIcons.search}
               title="No alerts match these filters"
-              description="Try clearing the severity or status filter to widen the search."
+              description="Try clearing the severity, status, or time window filter to widen the search."
               action={
                 <button
-                  onClick={() => onFilterChange({ page: 1, pageSize: filters.pageSize ?? 25 })}
+                  type="button"
+                  onClick={() => {
+                    onResetTimeWindow();
+                    onFilterChange({
+                      page: 1,
+                      pageSize: filters.pageSize ?? 25,
+                      sort: filters.sort ?? 'priority',
+                    });
+                  }}
                   className="text-control-sm font-medium px-3 py-1.5 rounded-control border border-surface-border bg-surface-card text-accent hover:bg-surface-hover transition-colors"
                 >
                   Clear filters
@@ -772,21 +935,23 @@ function AlertsPagination({
   // earns its place rather than a reason to add one now.
   const count = total === 1 ? t('alerts.countOne') : t('alerts.count', { count: total });
   return (
-    <div className="flex items-center justify-between text-xs text-gray-500">
+    <div className="flex items-center justify-between text-caption text-fg-muted">
       <span>Showing {alerts.length} of {count}</span>
       <div className="flex items-center gap-1">
         <button
+          type="button"
           onClick={() => onFilterChange({ ...filters, page: Math.max(1, (filters.page || 1) - 1) })}
           disabled={(filters.page || 1) <= 1}
-          className="px-2 py-1 rounded bg-gray-800 hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed"
+          className="px-2 py-1 rounded-control border border-surface-border bg-surface-card text-fg-primary hover:bg-surface-hover disabled:opacity-40 disabled:cursor-not-allowed"
         >
           Prev
         </button>
         <span className="px-2">Page {filters.page || 1}</span>
         <button
+          type="button"
           onClick={() => onFilterChange({ ...filters, page: (filters.page || 1) + 1 })}
           disabled={alerts.length < (filters.pageSize || 25)}
-          className="px-2 py-1 rounded bg-gray-800 hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed"
+          className="px-2 py-1 rounded-control border border-surface-border bg-surface-card text-fg-primary hover:bg-surface-hover disabled:opacity-40 disabled:cursor-not-allowed"
         >
           Next
         </button>

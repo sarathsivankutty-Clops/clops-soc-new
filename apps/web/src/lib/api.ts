@@ -1565,8 +1565,10 @@ export const msspApi = {
 
 // ─── Alerts ─────────────────────────────────────────────────────────────────
 
+import type { AlertStatusValue } from "./alertStatus";
+
 export type AlertSeverity = "critical" | "high" | "medium" | "low" | "info";
-export type AlertStatus = "new" | "triaged" | "investigating" | "resolved" | "false_positive";
+export type AlertStatus = AlertStatusValue;
 
 export interface MitreAttack {
   tactic: string;
@@ -1704,9 +1706,14 @@ export interface Alert {
   assignee?: string;
   caseId?: string;
   tags?: string[];
+  eventTime?: string;
   createdAt: string;
   updatedAt: string;
   resolvedAt?: string;
+  affectedUsers?: string[];
+  affectedIps?: string[];
+  affectedHosts?: string[];
+  ruleName?: string;
   confidenceLabel?: ConfidenceLabel;
   /**
    * Fusion detection confidence as an integer 0-100, normalised by
@@ -1995,6 +2002,7 @@ function normalizeAlert(raw: unknown): Alert {
     assignee: pickStr("assignee", "assignee"),
     caseId: pickStr("case_id", "caseId"),
     tags,
+    eventTime: pickStr("event_time", "eventTime"),
     createdAt:
       pickStr("created_at", "createdAt") ??
       pickStr("first_seen", "firstSeen") ??
@@ -2004,6 +2012,10 @@ function normalizeAlert(raw: unknown): Alert {
       pickStr("last_seen", "lastSeen") ??
       new Date().toISOString(),
     resolvedAt: pickStr("resolved_at", "resolvedAt"),
+    affectedUsers: pickArr<string>("affected_users", "affectedUsers"),
+    affectedIps: pickArr<string>("affected_ips", "affectedIps"),
+    affectedHosts: pickArr<string>("affected_hosts", "affectedHosts"),
+    ruleName: pickStr("rule_name", "ruleName"),
     confidenceLabel: (r.confidence_label ?? r.confidenceLabel) as ConfidenceLabel | undefined,
     confidenceScore,
     confidenceRationale,
@@ -2089,20 +2101,24 @@ export interface AlertFilters {
   severity?: string;
   status?: string;
   source?: string;
+  category?: string;
   assignee?: string;
+  assignedToMe?: boolean;
+  hostname?: string;
   startTime?: string;
   endTime?: string;
+  eventSince?: string;
+  eventUntil?: string;
   search?: string;
   page?: number;
   pageSize?: number;
   tenantId?: string;
   /**
-   * `newest` (created_at descending) or `priority` (severity first, then
-   * created_at). The API defaults to `newest` to keep its published contract;
-   * the console asks for `priority` so a noisy low-severity source cannot
-   * push a critical off page one.
+   * `newest` (created_at descending), `priority` (severity first, then
+   * created_at), or `oldest` (chronological ascending — client-side over the
+   * page until backend supports `sort=oldest`).
    */
-  sort?: "newest" | "priority";
+  sort?: "newest" | "priority" | "oldest";
 }
 
 /**
@@ -2131,6 +2147,28 @@ export interface AlertUpdate {
 
 export const alertsApi = {
   list: async (filters: AlertFilters = {}) => {
+    // Map camelCase AlertFilters to the exact snake_case query parameters
+    // accepted by GET /api/v1/alerts (`services/api/app/api/v1/endpoints/alerts.py`).
+    const params: Record<string, string> = {};
+    if (filters.page !== undefined) params.page = String(filters.page);
+    if (filters.pageSize !== undefined) params.page_size = String(filters.pageSize);
+    if (filters.severity) params.severity = filters.severity;
+    if (filters.status) params.status = filters.status;
+    if (filters.category) params.category = filters.category;
+    if (filters.assignedToMe) params.assigned_to_me = "true";
+    if (filters.hostname) params.hostname = filters.hostname;
+    const since = filters.eventSince ?? filters.startTime;
+    const until = filters.eventUntil ?? filters.endTime;
+    if (since) params.event_since = since;
+    if (until) params.event_until = until;
+    if (filters.search) params.search = filters.search;
+    // [TODO-BACKEND: add sort='oldest' (created_at ASC / event_time ASC) to GET /api/v1/alerts]
+    if (filters.sort === "priority") {
+      params.sort = "priority";
+    } else if (filters.sort === "newest" || filters.sort === "oldest") {
+      params.sort = "newest";
+    }
+
     const raw = await request<{
       items?: unknown[];
       alerts?: unknown[];
@@ -2140,7 +2178,7 @@ export const alertsApi = {
       pageSize?: number;
       facets?: unknown;
     }>("/api/v1/alerts", {
-      params: filters as Record<string, string>,
+      params,
     });
     // `AlertListResponse` puts the rows under `items`, not `alerts`
     // (services/api/app/api/v1/endpoints/alerts.py). Reading only `alerts`
@@ -2148,8 +2186,16 @@ export const alertsApi = {
     // the queue rendered "1,247 alerts" above an empty table. `alerts` is
     // still accepted because the mobile responder routes emit that shape.
     const rows = Array.isArray(raw.items) ? raw.items : Array.isArray(raw.alerts) ? raw.alerts : [];
+    const alerts = rows.map(normalizeAlert);
+    if (filters.sort === "oldest") {
+      alerts.sort((a, b) => {
+        const ta = new Date(a.eventTime ?? a.createdAt).getTime();
+        const tb = new Date(b.eventTime ?? b.createdAt).getTime();
+        return ta - tb;
+      });
+    }
     return {
-      alerts: rows.map(normalizeAlert),
+      alerts,
       total: typeof raw.total === "number" ? raw.total : 0,
       page: typeof raw.page === "number" ? raw.page : 1,
       pageSize:
