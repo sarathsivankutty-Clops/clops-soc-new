@@ -12,6 +12,7 @@
  */
 
 import { useState } from 'react';
+import Link from 'next/link';
 import useSWR from 'swr';
 import { clsx } from 'clsx';
 import { formatDistanceToNow } from 'date-fns';
@@ -470,45 +471,55 @@ function EntityDetailDrawer({
           )}
 
           <div>
-            <h3 className="text-xs uppercase tracking-wider text-gray-500 mb-2">
-              Contributing alerts
-            </h3>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-xs uppercase tracking-wider text-fg-muted">
+                Contributing alerts
+              </h3>
+              <Link
+                href={`/alerts?search=${encodeURIComponent(record.entity_value)}`}
+                className="text-xs font-medium text-accent hover:underline"
+              >
+                View alerts →
+              </Link>
+            </div>
             {contributions.length === 0 ? (
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-fg-muted">
                 No contributions in the current decay window.
               </p>
             ) : (
               <ol className="space-y-1.5">
                 {contributions.map((c) => (
-                  <li
-                    key={c.alert_id}
-                    className="flex items-start gap-2 text-sm border border-gray-800/60 bg-gray-900/40 rounded-lg px-3 py-2"
-                  >
-                    <span
-                      className={clsx(
-                        'w-1.5 h-1.5 rounded-full mt-1.5 shrink-0',
-                        SEVERITY_DOT[c.severity] ?? SEVERITY_DOT.info,
-                      )}
-                    />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="text-gray-200 truncate">
-                          {c.title ?? c.alert_id}
-                        </span>
-                        <span className="text-[10px] text-gray-500 shrink-0">
-                          +{Math.round(c.raw_points)}
-                        </span>
+                  <li key={c.alert_id}>
+                    <Link
+                      href={`/alerts/${c.alert_id}`}
+                      className="flex items-start gap-2 text-sm border border-surface-border bg-surface-elevated hover:bg-surface-hover rounded-lg px-3 py-2 transition-colors"
+                    >
+                      <span
+                        className={clsx(
+                          'w-1.5 h-1.5 rounded-full mt-1.5 shrink-0',
+                          SEVERITY_DOT[c.severity] ?? SEVERITY_DOT.info,
+                        )}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-fg-primary truncate font-medium">
+                            {c.title ?? c.alert_id}
+                          </span>
+                          <span className="text-[10px] text-fg-muted shrink-0">
+                            +{Math.round(c.raw_points)}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 mt-0.5 text-[11px] text-fg-muted">
+                          {c.source && <span>{c.source}</span>}
+                          {c.source && <span className="text-fg-subtle">·</span>}
+                          <span suppressHydrationWarning>
+                            {formatDistanceToNow(parseDateSafe(c.observed_at), {
+                              addSuffix: true,
+                            })}
+                          </span>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2 mt-0.5 text-[11px] text-gray-500">
-                        {c.source && <span>{c.source}</span>}
-                        {c.source && <span className="text-gray-700">·</span>}
-                        <span suppressHydrationWarning>
-                          {formatDistanceToNow(parseDateSafe(c.observed_at), {
-                            addSuffix: true,
-                          })}
-                        </span>
-                      </div>
-                    </div>
+                    </Link>
                   </li>
                 ))}
               </ol>

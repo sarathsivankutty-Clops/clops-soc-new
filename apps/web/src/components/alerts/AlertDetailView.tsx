@@ -894,6 +894,8 @@ export function AlertDetailView({ alertId }: { alertId: string }) {
   const [activeTab, setActiveTab] = useState<'overview' | 'timeline' | 'raw'>('overview');
   */
   const [status, setStatus] = useState<Alert['status']>('new');
+  const [assigneeInput, setAssigneeInput] = useState('');
+  const [assigning, setAssigning] = useState(false);
   // Side drawer for the "Explain this alert" structured walkthrough
   // (`POST /api/v1/explain`). Kept local to the detail view because it
   // only makes sense while a single alert is on screen.
@@ -916,6 +918,20 @@ export function AlertDetailView({ alertId }: { alertId: string }) {
       mutate();
     } catch {
       // handled gracefully
+    }
+  };
+
+  const handleAssign = async (nextAssignee: string | null) => {
+    setAssigning(true);
+    try {
+      await alertsApi.update(alertId, { assignee: nextAssignee });
+      toast.success(nextAssignee ? `Assigned to ${nextAssignee}` : 'Alert unassigned');
+      setAssigneeInput('');
+      mutate();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to update assignee');
+    } finally {
+      setAssigning(false);
     }
   };
 
@@ -1123,6 +1139,16 @@ export function AlertDetailView({ alertId }: { alertId: string }) {
                 )}
               </div>
             )}
+            {alert.aiSummary && (
+              <div className="mb-3 rounded-control border border-surface-border bg-surface-elevated p-3">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-fg-muted mb-1">
+                  AI Triage Summary
+                </p>
+                <p className="text-xs leading-relaxed text-fg-primary whitespace-pre-wrap">
+                  {alert.aiSummary}
+                </p>
+              </div>
+            )}
             <pre className="text-control-sm text-fg-secondary font-mono bg-surface-base border border-surface-border rounded-control p-4 overflow-x-auto whitespace-pre-wrap break-words">
               {JSON.stringify(alert.rawEvent || { message: 'Raw event data not available for this alert.' }, null, 2)}
             </pre>
@@ -1137,6 +1163,34 @@ export function AlertDetailView({ alertId }: { alertId: string }) {
               <Field label="Source Ref" value={alert.sourceRef || '—'} />
               <Field label="Tenant" value={alert.tenantId} />
               <Field label="Assignee" value={alert.assignee || <span className="text-fg-muted">Unassigned</span>} />
+              <div className="flex items-center gap-1.5 py-1.5 border-b border-surface-border">
+                <input
+                  type="text"
+                  aria-label="Assign alert to user"
+                  placeholder="Assign email or user…"
+                  value={assigneeInput}
+                  onChange={(e) => setAssigneeInput(e.target.value)}
+                  className="flex-1 min-w-0 rounded-control border border-surface-border bg-surface-elevated px-2 py-1 text-xs text-fg-primary placeholder:text-fg-subtle focus:outline-none focus:border-accent"
+                />
+                <button
+                  type="button"
+                  disabled={assigning || !assigneeInput.trim()}
+                  onClick={() => void handleAssign(assigneeInput.trim())}
+                  className="rounded-control border border-surface-border bg-surface-card px-2 py-1 text-xs font-medium text-accent hover:bg-surface-hover disabled:opacity-50"
+                >
+                  Assign
+                </button>
+                {alert.assignee && (
+                  <button
+                    type="button"
+                    disabled={assigning}
+                    onClick={() => void handleAssign(null)}
+                    className="rounded-control border border-surface-border bg-surface-card px-2 py-1 text-xs text-fg-muted hover:text-fg-primary disabled:opacity-50"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
               <Field label="Created" value={<span className="font-mono" suppressHydrationWarning>{format(new Date(alert.createdAt), 'MMM d, yyyy HH:mm:ss')}</span>} />
               {alert.resolvedAt && (
                 <Field label="Resolved" value={<span className="font-mono" suppressHydrationWarning>{format(new Date(alert.resolvedAt), 'MMM d, yyyy HH:mm:ss')}</span>} />
