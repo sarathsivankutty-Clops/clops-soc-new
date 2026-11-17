@@ -343,6 +343,39 @@ function FiltersBar({
           </select>
         </label>
 
+        <label className="inline-flex items-center gap-1.5 text-control-sm text-fg-muted">
+          <span>Source</span>
+          <select
+            aria-label="Filter by source"
+            value={filters.connectorType ?? ''}
+            onChange={(e) =>
+              onChange({ ...filters, connectorType: e.target.value || undefined, page: 1 })
+            }
+            className="text-control-sm bg-surface-elevated text-fg-primary border border-surface-border rounded-control px-2 py-1 focus:outline-none focus:border-accent"
+          >
+            <option value="">All sources</option>
+            <option value="aws_cloudtrail">AWS CloudTrail</option>
+            <option value="wazuh">Wazuh</option>
+            <option value="okta">Okta</option>
+            <option value="crowdstrike">CrowdStrike</option>
+            <option value="sentinelone">SentinelOne</option>
+            <option value="suricata">Suricata</option>
+            <option value="syslog">Syslog</option>
+            <option value="webhook">Webhook</option>
+          </select>
+        </label>
+
+        <input
+          type="search"
+          aria-label="Search alerts"
+          placeholder="Search title, rule, entity..."
+          value={filters.search ?? ''}
+          onChange={(e) =>
+            onChange({ ...filters, search: e.target.value || undefined, page: 1 })
+          }
+          className="text-control-sm bg-surface-elevated text-fg-primary placeholder:text-fg-subtle border border-surface-border rounded-control px-2.5 py-1 w-48 focus:outline-none focus:border-accent"
+        />
+
         <span className="ml-auto text-caption font-mono text-fg-muted">{total} total</span>
       </div>
       <p className="text-caption text-fg-muted" data-testid="alerts-sort-explanation">
@@ -423,6 +456,14 @@ function AlertRow({
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <p className="text-body font-medium text-fg-primary truncate">{alert.title}</p>
+          {(alert.occurrenceCount ?? 1) > 1 && (
+            <span
+              className="inline-flex items-center rounded-pill border border-surface-border bg-surface-elevated px-1.5 py-0.5 text-[10px] font-mono font-semibold text-fg-secondary shrink-0"
+              title={`${alert.occurrenceCount} repeated occurrences folded`}
+            >
+              ×{alert.occurrenceCount}
+            </span>
+          )}
           {alert.mitreAttack && alert.mitreAttack.length > 0 && (
             <Badge tone="severity-high" dot={false}>
               {alert.mitreAttack[0].techniqueId}
@@ -803,7 +844,13 @@ function AlertsTableGrid({
   const pageIds = alerts.map((a) => a.id);
   const allOnPageChecked = pageIds.length > 0 && pageIds.every((id) => checkedIds.has(id));
   const activeSort = filters.sort ?? 'priority';
-  const hasActiveFilters = Boolean(filters.severity || filters.status || filters.eventSince || filters.search);
+  const hasActiveFilters = Boolean(
+    filters.severity ||
+      filters.status ||
+      filters.connectorType ||
+      filters.eventSince ||
+      filters.search,
+  );
 
   return (
     <div className="bg-surface-card border border-surface-border rounded-container overflow-hidden">

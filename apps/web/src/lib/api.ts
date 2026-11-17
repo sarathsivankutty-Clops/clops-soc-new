@@ -1714,6 +1714,7 @@ export interface Alert {
   affectedIps?: string[];
   affectedHosts?: string[];
   ruleName?: string;
+  occurrenceCount?: number;
   confidenceLabel?: ConfidenceLabel;
   /**
    * Fusion detection confidence as an integer 0-100, normalised by
@@ -2016,6 +2017,7 @@ function normalizeAlert(raw: unknown): Alert {
     affectedIps: pickArr<string>("affected_ips", "affectedIps"),
     affectedHosts: pickArr<string>("affected_hosts", "affectedHosts"),
     ruleName: pickStr("rule_name", "ruleName"),
+    occurrenceCount: pickNum("occurrence_count", "occurrenceCount") ?? 1,
     confidenceLabel: (r.confidence_label ?? r.confidenceLabel) as ConfidenceLabel | undefined,
     confidenceScore,
     confidenceRationale,
@@ -2101,6 +2103,7 @@ export interface AlertFilters {
   severity?: string;
   status?: string;
   source?: string;
+  connectorType?: string;
   category?: string;
   assignee?: string;
   assignedToMe?: boolean;
@@ -2155,6 +2158,8 @@ export const alertsApi = {
     if (filters.severity) params.severity = filters.severity;
     if (filters.status) params.status = filters.status;
     if (filters.category) params.category = filters.category;
+    const connectorType = filters.connectorType ?? filters.source;
+    if (connectorType) params.connector_type = connectorType;
     if (filters.assignedToMe) params.assigned_to_me = "true";
     if (filters.hostname) params.hostname = filters.hostname;
     const since = filters.eventSince ?? filters.startTime;

@@ -68,4 +68,25 @@ describe('alertsApi.list snake_case query param mapping', () => {
     expect(url.searchParams.get('sort')).toBe('newest');
     expect(res.alerts.map((a) => a.id)).toEqual(['older', 'newer']);
   });
+
+  it('sends connector_type and search and normalizes occurrence_count', async () => {
+    fetchMock.mockResolvedValue(
+      jsonResponse({
+        items: [
+          { id: 'a1', title: 'Repeat', severity: 'high', status: 'new', occurrence_count: 14, created_at: '2026-11-17T10:00:00Z' },
+          { id: 'a2', title: 'Single', severity: 'low', status: 'new', created_at: '2026-11-17T09:00:00Z' },
+        ],
+        total: 2,
+        page: 1,
+        page_size: 25,
+      }),
+    );
+
+    const res = await alertsApi.list({ connectorType: 'aws_cloudtrail', search: 'bucket' });
+    const url = new URL(String(fetchMock.mock.calls[0][0]), 'http://localhost');
+    expect(url.searchParams.get('connector_type')).toBe('aws_cloudtrail');
+    expect(url.searchParams.get('search')).toBe('bucket');
+    expect(res.alerts[0].occurrenceCount).toBe(14);
+    expect(res.alerts[1].occurrenceCount).toBe(1);
+  });
 });

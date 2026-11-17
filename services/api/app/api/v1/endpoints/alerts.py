@@ -9,7 +9,7 @@ from typing import Annotated, Any, Literal
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, status
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, model_validator
-from sqlalchemy import and_, func, or_, select, update
+from sqlalchemy import String, and_, cast, column, func, or_, select, table, update
 from sqlalchemy.exc import IntegrityError
 
 from app.api.v1.deps import AuthUser, DBSession, require_permission
@@ -36,6 +36,7 @@ from app.services.alert_rail import (
     RelatedEntity,
     build_rail_envelope,
 )
+from app.services.alert_search import build_ilike_pattern, normalize_occurrence_count
 from app.services.alert_status import is_resolved, is_unresolved, unresolved_filter
 from app.services.audit import emit_audit
 from app.services.event_sanitiser import (
@@ -115,10 +116,19 @@ class AlertResponse(BaseModel):
     last_seen: datetime
     snoozed_until: datetime | None = None
     snoozed_by_id: uuid.UUID | None = None
+    occurrence_count: int = 1
     created_at: datetime
     updated_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+_alert_occurrences_tbl = table(
+    "alert_occurrences",
+    column("tenant_id"),
+    column("alert_id"),
+    column("occurrence_count"),
+)
 
 
 class AlertDetailResponse(AlertResponse):
@@ -802,6 +812,7 @@ async def list_alerts(
     severity: str | None = Query(default=None),
     status: str | None = Query(default=None),
     category: str | None = Query(default=None),
+    connector_type: str | None = Query(default=None),
     assigned_to_me: bool = Query(default=False),
     search: str | None = Query(default=None),
     min_confidence: int | None = Query(default=None, ge=0, le=100),
@@ -873,6 +884,20 @@ async def list_alerts(
         filters.append(Alert.status == status)
     if category:
         filters.append(Alert.category == category)
+    if connector_type:
+        filters.append(Alert.connector_type == connector_type)
+    search_pattern = build_ilike_pattern(search)
+    if search_pattern is not None:
+        filters.append(
+            or_(
+                Alert.title.ilike(search_pattern, escape="\\"),
+                Alert.rule_name.ilike(search_pattern, escape="\\"),
+                cast(Alert.entities, String).ilike(search_pattern, escape="\\"),
+                cast(Alert.affected_users, String).ilike(search_pattern, escape="\\"),
+                cast(Alert.affected_ips, String).ilike(search_pattern, escape="\\"),
+                cast(Alert.affected_hosts, String).ilike(search_pattern, escape="\\"),
+            )
+        )
     if assigned_to_me:
         filters.append(Alert.assigned_to_id == current_user.user_id)
     if min_confidence is not None:
@@ -915,11 +940,30 @@ async def list_alerts(
         order_by.insert(0, severity_rank_expr().asc())
 
     offset = (page - 1) * page_size
-    result = await db.execute(select(Alert).where(and_(*filters)).order_by(*order_by).offset(offset).limit(page_size))
-    alerts = result.scalars().all()
+    occ_col = func.coalesce(_alert_occurrences_tbl.c.occurrence_count, 1).label("occurrence_count")
+    result = await db.execute(
+        select(Alert, occ_col)
+        .outerjoin(
+            _alert_occurrences_tbl,
+            and_(
+                _alert_occurrences_tbl.c.tenant_id == Alert.tenant_id,
+                _alert_occurrences_tbl.c.alert_id == Alert.id,
+            ),
+        )
+        .where(and_(*filters))
+        .order_by(*order_by)
+        .offset(offset)
+        .limit(page_size)
+    )
+    rows = result.all()
 
     return AlertListResponse(
-        items=[AlertResponse.model_validate(a) for a in alerts],
+        items=[
+            AlertResponse.model_validate(a).model_copy(
+                update={"occurrence_count": normalize_occurrence_count(occ)}
+            )
+            for a, occ in rows
+        ],
         total=total,
         page=page,
         page_size=page_size,
@@ -1049,6 +1093,14 @@ async def get_alert(
                 exc_info=True,
             )
 
+    occ_res = await db.execute(
+        select(_alert_occurrences_tbl.c.occurrence_count).where(
+            _alert_occurrences_tbl.c.tenant_id == current_user.tenant_id,
+            _alert_occurrences_tbl.c.alert_id == alert.id,
+        )
+    )
+    occ_count = normalize_occurrence_count(occ_res.scalar_one_or_none())
+
     envelope = await build_rail_envelope(db, alert)
 
     # ``model_validate`` against the parent class to inherit field
@@ -1059,6 +1111,7 @@ async def get_alert(
     raw_event = alert.raw_event if isinstance(alert.raw_event, dict) else {}
     return payload.model_copy(
         update={
+            "occurrence_count": occ_count,
             "raw_event": raw_event,
             "wazuh_locator": _build_wazuh_locator(raw_event),
             "narrative": alert.narrative,
