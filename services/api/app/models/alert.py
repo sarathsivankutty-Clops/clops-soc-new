@@ -105,6 +105,8 @@ class Alert(Base):
     # Mobile responder PWA: temporarily defer this alert from the queue.
     snoozed_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     snoozed_by_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
+    incident_id: Mapped[str | None] = mapped_column(Text, nullable=True)
+    fusion_decision: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Raw data
     raw_event: Mapped[dict] = mapped_column(JSONB, default=dict)

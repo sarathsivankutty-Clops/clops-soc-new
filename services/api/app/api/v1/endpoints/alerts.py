@@ -36,6 +36,7 @@ from app.services.alert_rail import (
     RelatedEntity,
     build_rail_envelope,
 )
+from app.services.alert_correlation import derive_correlation_reasons, shared_entity_labels
 from app.services.alert_search import build_ilike_pattern, normalize_occurrence_count
 from app.services.alert_status import is_resolved, is_unresolved, unresolved_filter
 from app.services.audit import emit_audit
@@ -117,10 +118,24 @@ class AlertResponse(BaseModel):
     snoozed_until: datetime | None = None
     snoozed_by_id: uuid.UUID | None = None
     occurrence_count: int = 1
+    incident_id: str | None = None
+    fusion_decision: str | None = None
+    correlated_count: int = 0
+    correlation_reasons: list[str] = Field(default_factory=list)
     created_at: datetime
     updated_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+class CorrelatedAlertSummary(BaseModel):
+    id: uuid.UUID
+    title: str
+    severity: str
+    status: str
+    event_time: datetime
+    rule_name: str | None = None
+    shared_entities: list[str] = Field(default_factory=list)
 
 
 _alert_occurrences_tbl = table(
@@ -161,6 +176,7 @@ class AlertDetailResponse(AlertResponse):
     # Parsed source-HIDS location info (rule id, agent, original alert id) so an
     # analyst can find the SAME event in the source console.
     wazuh_locator: dict = {}
+    correlated_alerts: list[CorrelatedAlertSummary] = []
 
 
 def _mapping_section(source: dict[str, Any], key: str) -> dict[str, Any]:
@@ -957,13 +973,52 @@ async def list_alerts(
     )
     rows = result.all()
 
-    return AlertListResponse(
-        items=[
-            AlertResponse.model_validate(a).model_copy(
-                update={"occurrence_count": normalize_occurrence_count(occ)}
+    incident_ids = {a.incident_id for a, _ in rows if getattr(a, "incident_id", None)}
+    case_ids = {a.case_id for a, _ in rows if a.case_id is not None}
+    incident_counts: dict[str, int] = {}
+    case_counts: dict[uuid.UUID, int] = {}
+    if incident_ids:
+        inc_rows = (
+            await db.execute(
+                select(Alert.incident_id, func.count())
+                .where(Alert.tenant_id == current_user.tenant_id, Alert.incident_id.in_(incident_ids))
+                .group_by(Alert.incident_id)
             )
-            for a, occ in rows
-        ],
+        ).all()
+        incident_counts = {str(k): int(v) for k, v in inc_rows if k is not None}
+    if case_ids:
+        case_rows = (
+            await db.execute(
+                select(Alert.case_id, func.count())
+                .where(Alert.tenant_id == current_user.tenant_id, Alert.case_id.in_(case_ids))
+                .group_by(Alert.case_id)
+            )
+        ).all()
+        case_counts = {k: int(v) for k, v in case_rows if k is not None}
+
+    items: list[AlertResponse] = []
+    for a, occ in rows:
+        inc_total = incident_counts.get(a.incident_id, 0) if getattr(a, "incident_id", None) else 0
+        case_total = case_counts.get(a.case_id, 0) if a.case_id is not None else 0
+        sib_count = max(max(inc_total, case_total) - 1, 0)
+        reasons = derive_correlation_reasons(
+            incident_id=getattr(a, "incident_id", None),
+            case_id=a.case_id,
+            fusion_decision=getattr(a, "fusion_decision", None),
+            enrichment_data=a.enrichment_data if isinstance(a.enrichment_data, dict) else None,
+        )
+        items.append(
+            AlertResponse.model_validate(a).model_copy(
+                update={
+                    "occurrence_count": normalize_occurrence_count(occ),
+                    "correlated_count": sib_count,
+                    "correlation_reasons": reasons,
+                }
+            )
+        )
+
+    return AlertListResponse(
+        items=items,
         total=total,
         page=page,
         page_size=page_size,
@@ -1101,6 +1156,57 @@ async def get_alert(
     )
     occ_count = normalize_occurrence_count(occ_res.scalar_one_or_none())
 
+    sibling_clauses = []
+    if getattr(alert, "incident_id", None):
+        sibling_clauses.append(Alert.incident_id == alert.incident_id)
+    if alert.case_id is not None:
+        sibling_clauses.append(Alert.case_id == alert.case_id)
+
+    correlated_alerts: list[CorrelatedAlertSummary] = []
+    all_shared: list[str] = []
+    if sibling_clauses:
+        sib_res = await db.execute(
+            select(Alert)
+            .where(
+                Alert.tenant_id == current_user.tenant_id,
+                Alert.id != alert.id,
+                or_(*sibling_clauses),
+            )
+            .order_by(Alert.event_time.desc())
+            .limit(20)
+        )
+        for sib in sib_res.scalars().all():
+            shared = shared_entity_labels(
+                alert.affected_users,
+                alert.affected_ips,
+                alert.affected_hosts,
+                sib.affected_users,
+                sib.affected_ips,
+                sib.affected_hosts,
+            )
+            for s in shared:
+                if s not in all_shared:
+                    all_shared.append(s)
+            correlated_alerts.append(
+                CorrelatedAlertSummary(
+                    id=sib.id,
+                    title=sib.title,
+                    severity=sib.severity,
+                    status=sib.status,
+                    event_time=sib.event_time,
+                    rule_name=sib.rule_name,
+                    shared_entities=shared,
+                )
+            )
+
+    reasons = derive_correlation_reasons(
+        incident_id=getattr(alert, "incident_id", None),
+        case_id=alert.case_id,
+        fusion_decision=getattr(alert, "fusion_decision", None),
+        enrichment_data=alert.enrichment_data if isinstance(alert.enrichment_data, dict) else None,
+        shared_entities=all_shared,
+    )
+
     envelope = await build_rail_envelope(db, alert)
 
     # ``model_validate`` against the parent class to inherit field
@@ -1112,6 +1218,9 @@ async def get_alert(
     return payload.model_copy(
         update={
             "occurrence_count": occ_count,
+            "correlated_count": len(correlated_alerts),
+            "correlation_reasons": reasons,
+            "correlated_alerts": correlated_alerts,
             "raw_event": raw_event,
             "wazuh_locator": _build_wazuh_locator(raw_event),
             "narrative": alert.narrative,

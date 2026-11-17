@@ -597,6 +597,20 @@ async def create_case(
         row = (await db.execute(q)).fetchone()
         if row is None:
             raise HTTPException(status_code=503, detail="Database error: INSERT returned no row")
+        if body.alert_ids:
+            await db.execute(
+                text("""
+                    UPDATE alerts
+                    SET case_id = :case_id, updated_at = :now
+                    WHERE tenant_id = :tenant_id
+                      AND id = ANY(CAST(:alert_ids AS UUID[]))
+                """).bindparams(
+                    case_id=case_id,
+                    now=now,
+                    tenant_id=user.tenant_id,
+                    alert_ids=list(map(str, body.alert_ids)),
+                )
+            )
         await db.commit()
     except Exception as exc:
         await db.rollback()
@@ -1103,6 +1117,19 @@ async def add_alerts(
         row = (await db.execute(q)).fetchone()
         if not row:
             raise HTTPException(status_code=404, detail="Case not found.")
+        if ids_str:
+            await db.execute(
+                text("""
+                    UPDATE alerts
+                    SET case_id = :case_id, updated_at = now()
+                    WHERE tenant_id = :tenant_id
+                      AND id = ANY(CAST(:alert_ids AS UUID[]))
+                """).bindparams(
+                    case_id=cid,
+                    tenant_id=user.tenant_id,
+                    alert_ids=ids_str,
+                )
+            )
         await _append_custody(
             db,
             case_id=cid,
@@ -1209,6 +1236,20 @@ async def add_comment(
         row = (await db.execute(q)).fetchone()
         if row is None:
             raise HTTPException(status_code=503, detail="Database error: INSERT returned no row")
+        if body.alert_ids:
+            await db.execute(
+                text("""
+                    UPDATE alerts
+                    SET case_id = :case_id, updated_at = :now
+                    WHERE tenant_id = :tenant_id
+                      AND id = ANY(CAST(:alert_ids AS UUID[]))
+                """).bindparams(
+                    case_id=case_id,
+                    now=now,
+                    tenant_id=user.tenant_id,
+                    alert_ids=list(map(str, body.alert_ids)),
+                )
+            )
         await db.commit()
         return CommentResponse(
             id=row.id,

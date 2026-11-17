@@ -188,21 +188,15 @@ class _EntityBucket:
         self.entities.append(RelatedEntity(group=group, kind=kind, value=v, label=label, pivot=pivot))
 
 
-def _graph_pivot(kind: str, value: str) -> str:
-    """Deep-link into the entity graph with the node pre-selected.
+def _graph_pivot(kind: str, value: str, case_id: Any = None) -> str:
+    """Pivot link for an entity chip without hitting the retired /graph redirect.
 
-    The route is ``/graph`` — ``apps/web/src/app/(app)/graph/page.tsx``. There
-    has never been an ``/attack-graph`` route, so the earlier prefix 404'd
-    before the query string mattered; ``tests/test_pivot_routes_resolve.py``
-    now checks this against the routes the console actually defines.
-
-    The value is encoded exactly as the federated-search helper encodes it
-    (``apps/web/src/components/federated/pivot.ts``), because an asset named
-    ``Finance & Legal`` otherwise truncates at the ampersand and pivots to a
-    different entity while looking like it worked. ``AttackGraphView`` splits
-    on the first colon after Next has decoded the parameter.
+    When the alert is already attached to a case, deep-link into the case's
+    Attack Path tab; otherwise search /alerts for the entity value.
     """
-    return f"/graph?entity={quote(f'{kind}:{value}', safe='')}"
+    if case_id:
+        return f"/cases/{case_id}?tab=attack-path&entity={quote(f'{kind}:{value}', safe='')}"
+    return f"/alerts?search={quote(value, safe='')}"
 
 
 # Entity kinds the rail files under "network" rather than "principal".
@@ -285,28 +279,28 @@ def build_related_entities(alert: Alert) -> list[RelatedEntity]:
             group="network" if kind in _NETWORK_KINDS else "principal",
             kind=kind,
             value=value,
-            pivot=_graph_pivot(kind, value),
+            pivot=_graph_pivot(kind, value, alert.case_id),
         )
     for host in _dedup_strs(alert.affected_hosts or ()):
         bucket.add(
             group="principal",
             kind="host",
             value=host,
-            pivot=_graph_pivot("host", host),
+            pivot=_graph_pivot("host", host, alert.case_id),
         )
     for user in _dedup_strs(alert.affected_users or ()):
         bucket.add(
             group="principal",
             kind="user",
             value=user,
-            pivot=_graph_pivot("user", user),
+            pivot=_graph_pivot("user", user, alert.case_id),
         )
     for asset in _dedup_strs(alert.affected_assets or ()):
         bucket.add(
             group="principal",
             kind="asset",
             value=asset,
-            pivot=_graph_pivot("asset", asset),
+            pivot=_graph_pivot("asset", asset, alert.case_id),
         )
 
     # ── Network ─────────────────────────────────────────────────────────
@@ -315,7 +309,7 @@ def build_related_entities(alert: Alert) -> list[RelatedEntity]:
             group="network",
             kind="ip",
             value=ip,
-            pivot=_graph_pivot("ip", ip),
+            pivot=_graph_pivot("ip", ip, alert.case_id),
         )
     dst_ip = _from_blob(raw_event, ("dst_ip", "destination_ip", "remote_ip"))
     if dst_ip:
@@ -324,7 +318,7 @@ def build_related_entities(alert: Alert) -> list[RelatedEntity]:
             kind="ip",
             value=dst_ip,
             label="destination",
-            pivot=_graph_pivot("ip", dst_ip),
+            pivot=_graph_pivot("ip", dst_ip, alert.case_id),
         )
     domain = _from_blob(raw_event, ("domain", "target_domain", "host_domain"))
     if domain:
@@ -332,7 +326,7 @@ def build_related_entities(alert: Alert) -> list[RelatedEntity]:
             group="network",
             kind="domain",
             value=domain,
-            pivot=_graph_pivot("domain", domain),
+            pivot=_graph_pivot("domain", domain, alert.case_id),
         )
     url = _from_blob(raw_event, ("url", "request_url", "uri"))
     if url:

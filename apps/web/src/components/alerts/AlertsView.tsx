@@ -415,24 +415,27 @@ function AlertRow({
         ? `ip:${alert.affectedIps[0]}`
         : null;
   return (
-    <Link
-      href={`/alerts/${alert.id}`}
-      onClick={(e) => {
-        // Modifier or middle-click → keep the native Link behaviour so
-        // analysts can open the alert in a new tab/window. Only a plain
-        // left-click is hijacked for in-pane selection.
-        if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button === 1) return;
-        e.preventDefault();
-        onSelect(alert.id);
-      }}
-      aria-current={selected ? 'true' : undefined}
+    <div
       className={clsx(
-        'flex items-center gap-4 px-4 py-3 transition-colors border-b border-surface-divider last:border-0 border-l-2',
+        'flex items-center transition-colors border-b border-surface-divider last:border-0 border-l-2',
         selected
           ? 'border-l-accent bg-nav-active-bg'
           : 'border-l-transparent hover:bg-surface-elevated',
       )}
     >
+      <Link
+        href={`/alerts/${alert.id}`}
+        onClick={(e) => {
+          // Modifier or middle-click → keep the native Link behaviour so
+          // analysts can open the alert in a new tab/window. Only a plain
+          // left-click is hijacked for in-pane selection.
+          if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button === 1) return;
+          e.preventDefault();
+          onSelect(alert.id);
+        }}
+        aria-current={selected ? 'true' : undefined}
+        className="flex flex-1 min-w-0 items-center gap-4 px-4 py-3"
+      >
       {/*
         Depth 9.3. The row is a Link, so the checkbox has to stop the event
         before it reaches it — otherwise ticking a box navigates to the
@@ -462,6 +465,14 @@ function AlertRow({
               title={`${alert.occurrenceCount} repeated occurrences folded`}
             >
               ×{alert.occurrenceCount}
+            </span>
+          )}
+          {(alert.correlatedCount ?? 0) > 0 && (
+            <span
+              className="inline-flex items-center rounded-pill border border-surface-border bg-pill-purple-bg px-1.5 py-0.5 text-[10px] font-mono font-semibold text-tone-purple shrink-0"
+              title={(alert.correlationReasons ?? []).join(' · ') || 'Correlated alerts'}
+            >
+              +{alert.correlatedCount} correlated
             </span>
           )}
           {alert.mitreAttack && alert.mitreAttack.length > 0 && (
@@ -506,7 +517,17 @@ function AlertRow({
           )}
         </span>
       </div>
-    </Link>
+      </Link>
+      {alert.caseId && (
+        <Link
+          href={`/cases/${alert.caseId}`}
+          className="mr-3 shrink-0 rounded-control border border-surface-border bg-surface-elevated px-2 py-0.5 text-[11px] font-medium text-accent hover:bg-surface-hover"
+          title="Open linked case"
+        >
+          Case
+        </Link>
+      )}
+    </div>
   );
 }
 

@@ -134,7 +134,8 @@ INSERT INTO alerts (
     rule_id, rule_name, external_id,
     affected_hosts, affected_users, affected_ips,
     session_id, session_key_kind, originating_human,
-    src_ip_class, src_ip_class_dataset_version
+    src_ip_class, src_ip_class_dataset_version,
+    incident_id, fusion_decision, enrichment_data
 )
 SELECT
     $1, $2, $3, $4, $5, 'new',
@@ -145,7 +146,8 @@ SELECT
     $22, $23, $24,
     $25::jsonb, $26::jsonb, $27::jsonb,
     $28, $29, $30,
-    $31, $32
+    $31, $32,
+    $33::text, $34::text, $35::jsonb
 WHERE NOT EXISTS (
     SELECT 1 FROM alerts WHERE tenant_id = $2 AND dedup_hash = $11::text
 )
@@ -623,6 +625,9 @@ def _insert_args(fused: FusedAlert) -> tuple[Any, ...]:
         fused.originating_human,
         alert.src_ip_class,
         alert.src_ip_class_dataset_version,
+        str(fused.incident_id) if fused.incident_id is not None else None,
+        fused.fusion_decision.value if hasattr(fused.fusion_decision, "value") else (str(fused.fusion_decision) if fused.fusion_decision is not None else None),
+        json.dumps(fused.enrichments or {}, default=str),
     )
 
 

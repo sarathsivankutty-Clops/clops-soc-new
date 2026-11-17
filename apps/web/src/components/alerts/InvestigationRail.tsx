@@ -224,14 +224,16 @@ export function InvestigationRail({ alertId, onClose, onNavigate }: Investigatio
          */}
         <ViewToggle view={view} onChange={setView} />
         {view === 'story' ? (
-          <div className="p-4">
+          <div className="p-4 space-y-4">
             <AttackStory alert={alert} showHeader={false} />
+            <CorrelatedAlertsSection alert={alert} />
           </div>
         ) : (
           <>
             <AutomatedTriageSection alert={alert} />
             <SourceAddressClassSection alert={alert} />
             <BusinessContextSection ctx={alert.businessContext ?? null} />
+            <CorrelatedAlertsSection alert={alert} />
             <NarrativeSection narrative={alert.narrative ?? null} />
             <RelatedEntitiesSection entities={alert.relatedEntities ?? []} />
             <MiniTimelineSection events={alert.miniTimeline ?? []} />
@@ -364,6 +366,58 @@ function RailLoading({ onClose }: { onClose: () => void }) {
         </div>
       </div>
     </RailShell>
+  );
+}
+
+function CorrelatedAlertsSection({ alert }: { alert: Alert }) {
+  const siblings = alert.correlatedAlerts ?? [];
+  const reasons = alert.correlationReasons ?? [];
+  if (siblings.length === 0 && reasons.length === 0 && !alert.caseId && !alert.incidentId) {
+    return null;
+  }
+
+  return (
+    <section
+      className="px-4 py-3 border-b border-surface-border space-y-2"
+      aria-label="Correlated alerts"
+    >
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="text-[11px] font-semibold uppercase tracking-wide text-fg-muted">
+          Correlated alerts {siblings.length > 0 ? `(${siblings.length})` : ''}
+        </h3>
+        {alert.caseId && (
+          <Link
+            href={`/cases/${alert.caseId}`}
+            className="text-[11px] font-medium text-accent hover:underline"
+          >
+            Open case →
+          </Link>
+        )}
+      </div>
+      {reasons.length > 0 && (
+        <div className="text-[11px] text-fg-secondary">
+          <span className="font-medium text-fg-primary">Why grouped: </span>
+          {reasons.join(' · ')}
+        </div>
+      )}
+      {siblings.length > 0 && (
+        <ul className="space-y-1.5">
+          {siblings.map((sib) => (
+            <li key={sib.id}>
+              <Link
+                href={`/alerts/${sib.id}`}
+                className="flex items-center justify-between gap-2 rounded-control border border-surface-border bg-surface-elevated px-2.5 py-1.5 text-xs hover:bg-surface-hover transition-colors"
+              >
+                <span className="truncate font-medium text-fg-primary">{sib.title}</span>
+                <span className="shrink-0 font-mono text-[10px] text-fg-muted uppercase">
+                  {sib.severity}
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   );
 }
 

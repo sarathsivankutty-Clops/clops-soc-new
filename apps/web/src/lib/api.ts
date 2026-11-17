@@ -1685,6 +1685,16 @@ export interface BusinessContextRail {
   impactCitations: string[];
 }
 
+export interface CorrelatedAlertSummary {
+  id: string;
+  title: string;
+  severity: AlertSeverity;
+  status: AlertStatus;
+  eventTime: string;
+  ruleName?: string;
+  sharedEntities?: string[];
+}
+
 export interface Alert {
   id: string;
   title: string;
@@ -1715,6 +1725,11 @@ export interface Alert {
   affectedHosts?: string[];
   ruleName?: string;
   occurrenceCount?: number;
+  incidentId?: string;
+  fusionDecision?: string;
+  correlatedCount?: number;
+  correlationReasons?: string[];
+  correlatedAlerts?: CorrelatedAlertSummary[];
   confidenceLabel?: ConfidenceLabel;
   /**
    * Fusion detection confidence as an integer 0-100, normalised by
@@ -2018,6 +2033,28 @@ function normalizeAlert(raw: unknown): Alert {
     affectedHosts: pickArr<string>("affected_hosts", "affectedHosts"),
     ruleName: pickStr("rule_name", "ruleName"),
     occurrenceCount: pickNum("occurrence_count", "occurrenceCount") ?? 1,
+    incidentId: pickStr("incident_id", "incidentId"),
+    fusionDecision: pickStr("fusion_decision", "fusionDecision"),
+    correlatedCount: pickNum("correlated_count", "correlatedCount") ?? 0,
+    correlationReasons: pickArr<string>("correlation_reasons", "correlationReasons"),
+    correlatedAlerts: Array.isArray(r.correlated_alerts ?? r.correlatedAlerts)
+      ? ((r.correlated_alerts ?? r.correlatedAlerts) as Array<Record<string, unknown>>).map(
+          (item) => ({
+            id: String(item.id ?? ""),
+            title: String(item.title ?? ""),
+            severity: (item.severity ?? "info") as AlertSeverity,
+            status: (item.status ?? "new") as AlertStatus,
+            eventTime: String(item.event_time ?? item.eventTime ?? ""),
+            ruleName:
+              typeof (item.rule_name ?? item.ruleName) === "string"
+                ? ((item.rule_name ?? item.ruleName) as string)
+                : undefined,
+            sharedEntities: Array.isArray(item.shared_entities ?? item.sharedEntities)
+              ? ((item.shared_entities ?? item.sharedEntities) as string[])
+              : [],
+          }),
+        )
+      : [],
     confidenceLabel: (r.confidence_label ?? r.confidenceLabel) as ConfidenceLabel | undefined,
     confidenceScore,
     confidenceRationale,

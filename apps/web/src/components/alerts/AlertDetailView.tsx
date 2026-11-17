@@ -461,15 +461,25 @@ function AIInvestigation({
         {isRunning ? 'Starting investigation...' : 'Start AI investigation'}
       </Button>
       */}
-      <Button
-        variant="primary"
-        size="sm"
-        onClick={startInvestigation}
-        disabled={isRunning}
-        loading={isRunning}
-      >
-        {isRunning ? 'Starting investigation...' : 'Start AI investigation'}
-      </Button>
+      <div className="flex flex-wrap items-center gap-2">
+        <Button
+          variant="primary"
+          size="sm"
+          onClick={startInvestigation}
+          disabled={isRunning}
+          loading={isRunning}
+        >
+          {isRunning ? 'Starting investigation...' : 'Start AI investigation'}
+        </Button>
+        {caseId && (
+          <Link
+            href={`/cases/${caseId}`}
+            className="text-xs font-medium text-accent hover:underline"
+          >
+            Open case →
+          </Link>
+        )}
+      </div>
     </div>
   );
 }
@@ -1141,6 +1151,47 @@ export function AlertDetailView({ alertId }: { alertId: string }) {
               )}
             </div>
           </Section>
+
+          {((alert.correlatedAlerts?.length ?? 0) > 0 ||
+            (alert.correlationReasons?.length ?? 0) > 0 ||
+            Boolean(alert.caseId) ||
+            Boolean(alert.incidentId)) && (
+            <Section title={`Correlated alerts${alert.correlatedAlerts?.length ? ` (${alert.correlatedAlerts.length})` : ''}`}>
+              <div className="space-y-2 text-xs">
+                {alert.correlationReasons && alert.correlationReasons.length > 0 && (
+                  <p className="text-fg-secondary">
+                    <span className="font-medium text-fg-primary">Why grouped: </span>
+                    {alert.correlationReasons.join(' · ')}
+                  </p>
+                )}
+                {alert.correlatedAlerts && alert.correlatedAlerts.length > 0 && (
+                  <ul className="space-y-1.5">
+                    {alert.correlatedAlerts.map((sib) => (
+                      <li key={sib.id}>
+                        <Link
+                          href={`/alerts/${sib.id}`}
+                          className="flex items-center justify-between gap-2 rounded-control border border-surface-border bg-surface-elevated px-2.5 py-1.5 hover:bg-surface-hover transition-colors"
+                        >
+                          <span className="truncate font-medium text-fg-primary">{sib.title}</span>
+                          <span className="shrink-0 font-mono text-[10px] text-fg-muted uppercase">
+                            {sib.severity}
+                          </span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {alert.caseId && (
+                  <Link
+                    href={`/cases/${alert.caseId}`}
+                    className="inline-block text-xs font-medium text-accent hover:underline"
+                  >
+                    Open case →
+                  </Link>
+                )}
+              </div>
+            </Section>
+          )}
 
           <Section title="AI Investigation">
             <AIInvestigation
