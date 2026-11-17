@@ -73,7 +73,7 @@ services:
   # exists that the preflight never sees.
   # ---------------------------------------------------------------------------
   preflight-secrets:
-    image: ghcr.io/beenuar/aisoc-core-api:${AISOC_VERSION:-latest}
+    image: clopsoc-core-api:${AISOC_VERSION:-latest}
     pull_policy: missing
     restart: "no"
     entrypoint: ["python3", "/repo/scripts/check_published_secrets.py", "--check-env"]

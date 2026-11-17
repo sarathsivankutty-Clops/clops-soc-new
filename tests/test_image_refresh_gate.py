@@ -56,7 +56,7 @@ def _first_party(services: dict) -> dict[str, dict]:
         name: service
         for name, service in services.items()
         if "ghcr.io/beenuar/aisoc-" in str((service or {}).get("image", ""))
-        or str((service or {}).get("image", "")).startswith("clops-soc-")
+        or str((service or {}).get("image", "")).startswith(("clops-soc-", "clopsoc-"))
     }
 
 
@@ -72,7 +72,10 @@ class TestEveryFirstPartyImageCanBeRefreshed:
             name: service.get("pull_policy")
             for name, service in _first_party(_services(path)).items()
             if service.get("pull_policy") != EXPECTED_POLICY
-            and not (path.name == "docker-compose.yml" and str(service.get("image", "")).startswith("clops-soc-"))
+            and not (
+                path.name == "docker-compose.yml"
+                and str(service.get("image", "")).startswith(("clops-soc-", "clopsoc-"))
+            )
         }
         assert not hardcoded, (
             f"these cannot be refreshed on a moving tag or held back on an air-gapped host: {hardcoded}. "
