@@ -24,13 +24,18 @@ export const DEFAULT_BRANDING: Branding = {
   sender_name: 'ClopsSOC',
   footer_text: 'ClopsSOC — open-source AI Security Operations Center.',
   */
+  /* [HIDDEN-UI CHROME-3 rename product to SOC]
   product_name: 'ClopSOC',
+  sender_name: 'ClopSOC',
+  footer_text: 'ClopSOC — open-source AI Security Operations Center.',
+  */
+  product_name: 'SOC',
   primary_color: '#2563EB',
   accent_color: '#7C3AED',
   support_email: null,
   support_url: null,
-  sender_name: 'ClopSOC',
-  footer_text: 'ClopSOC — open-source AI Security Operations Center.',
+  sender_name: 'SOC',
+  footer_text: 'SOC — AI Security Operations Center.',
   logo_url: null,
   org_id: null,
   is_white_labelled: false,

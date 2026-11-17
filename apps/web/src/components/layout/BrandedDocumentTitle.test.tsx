@@ -35,13 +35,14 @@ const { state } = vi.hoisted(() => ({
     response: {
       /* [HIDDEN-UI THEME-2 default product_name updated to ClopsSOC] product_name: 'AiSOC', */
       /* [HIDDEN-UI CHROME-1 rename product to ClopSOC] product_name: 'ClopsSOC', sender_name: 'ClopsSOC', footer_text: 'ClopsSOC', */
-      product_name: 'ClopSOC',
+      /* [HIDDEN-UI CHROME-3 rename product to SOC] product_name: 'ClopSOC', sender_name: 'ClopSOC', footer_text: 'ClopSOC', */
+      product_name: 'SOC',
       primary_color: '#2563EB',
       accent_color: '#7C3AED',
       support_email: null,
       support_url: null,
-      sender_name: 'ClopSOC',
-      footer_text: 'ClopSOC',
+      sender_name: 'SOC',
+      footer_text: 'SOC',
       logo_url: null,
       org_id: null,
       is_white_labelled: false,
@@ -81,7 +82,8 @@ describe('the console tab title', () => {
     state.response = { ...state.response, product_name: 'Acme Shield', is_white_labelled: true };
     /* [HIDDEN-UI THEME-2 default product_name updated to ClopsSOC] document.title = 'Honeytokens | AiSOC'; */
     /* [HIDDEN-UI CHROME-1 rename product to ClopSOC] document.title = 'Honeytokens | ClopsSOC'; */
-    document.title = 'Honeytokens | ClopSOC';
+    /* [HIDDEN-UI CHROME-3 rename product to SOC] document.title = 'Honeytokens | ClopSOC'; */
+    document.title = 'Honeytokens | SOC';
 
     mountConsole();
 
@@ -99,13 +101,17 @@ describe('the console tab title', () => {
     state.response = { ...state.response, product_name: 'ClopsSOC', is_white_labelled: false };
     document.title = 'Honeytokens | ClopsSOC';
     */
+    /* [HIDDEN-UI CHROME-3 rename product to SOC]
     state.response = { ...state.response, product_name: 'ClopSOC', is_white_labelled: false };
     document.title = 'Honeytokens | ClopSOC';
+    */
+    state.response = { ...state.response, product_name: 'SOC', is_white_labelled: false };
+    document.title = 'Honeytokens | SOC';
 
     mountConsole();
 
     // The negative control. Rewriting unconditionally would be invisible
     // today and a silent corruption the moment the platform default moves.
-    await waitFor(() => expect(document.title).toBe('Honeytokens | ClopSOC'));
+    await waitFor(() => expect(document.title).toBe('Honeytokens | SOC'));
   });
 });

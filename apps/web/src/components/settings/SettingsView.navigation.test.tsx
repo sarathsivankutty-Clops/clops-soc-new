@@ -73,7 +73,8 @@ describe('Settings URL navigation', () => {
     ['audit', 'Audit log'],
     // [HIDDEN-UI THEME-5 product name updated to ClopsSOC] ['about', 'About AiSOC'],
     // [HIDDEN-UI CHROME-1 rename product to ClopSOC] ['about', 'About ClopsSOC'],
-    ['about', 'About ClopSOC'],
+    // [HIDDEN-UI CHROME-3 rename product to SOC] ['about', 'About ClopSOC'],
+    ['about', 'About SOC'],
   ])('selects the %s section from its ?section= URL', (section, heading) => {
     window.history.replaceState(null, '', `/settings?section=${section}`);
     renderSettings();

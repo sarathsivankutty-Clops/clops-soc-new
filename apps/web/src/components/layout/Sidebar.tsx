@@ -413,7 +413,18 @@ export function Sidebar({ collapsed = false }: SidebarProps = {}) {
               {/* [HIDDEN-UI CHROME-1 rename product to ClopSOC]
               <span className="text-fg-primary font-bold text-base tracking-tight">ClopsSOC</span>
               */}
+              {/* [HIDDEN-UI CHROME-3 rename product to SOC with mono display styling]
               <span className="text-fg-primary font-bold text-base tracking-tight">ClopSOC</span>
+              */}
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-page-title font-extrabold tracking-widest uppercase text-fg-primary">
+                  SOC
+                </span>
+                <span
+                  aria-hidden="true"
+                  className="inline-block h-2 w-2 rounded-pill bg-accent ring-2 ring-accent/25"
+                />
+              </div>
             </>
           )}
         </div>

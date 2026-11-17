@@ -2655,7 +2655,8 @@ function AboutPanel() {
     <div>
       <PanelHeader
         /* [HIDDEN-UI CHROME-1 rename product to ClopSOC] title="About ClopsSOC" */
-        title="About ClopSOC"
+        /* [HIDDEN-UI CHROME-3 rename product to SOC] title="About ClopSOC" */
+        title="About SOC"
         description="Open-source SOC platform — community-built, MIT licensed."
       />
       <div className="grid gap-4 px-6 py-5 sm:grid-cols-2">

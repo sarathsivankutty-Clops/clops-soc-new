@@ -33,17 +33,28 @@ export const metadata: Metadata = {
   description:
     'ClopsSOC is a free, self-hostable AI-powered Security Operations Center (SOC). Real-time threat detection, alert fusion, purple-team exercises, MITRE ATT&CK-aware autonomous investigation, and detection-as-code — MIT-licensed and community-driven.',
   */
+  /* [HIDDEN-UI CHROME-3 rename product to SOC]
   applicationName: 'ClopSOC',
   title: {
     default: 'ClopSOC — AI Security Operations Center',
     template: '%s | ClopSOC',
   },
+  */
+  applicationName: 'SOC',
+  title: {
+    default: 'SOC — AI Security Operations Center',
+    template: '%s | SOC',
+  },
   /* [HIDDEN-UI THEME-7 prior metadata copy used the AiSOC product name]
   description:
     'AiSOC is a free, self-hostable AI-powered Security Operations Center (SOC). Real-time threat detection, alert fusion, purple-team exercises, MITRE ATT&CK-aware autonomous investigation, and detection-as-code — MIT-licensed and community-driven.',
   */
+  /* [HIDDEN-UI CHROME-3 rename product to SOC]
   description:
     'ClopSOC is a free, self-hostable AI-powered Security Operations Center (SOC). Real-time threat detection, alert fusion, purple-team exercises, MITRE ATT&CK-aware autonomous investigation, and detection-as-code — MIT-licensed and community-driven.',
+  */
+  description:
+    'SOC — AI-powered Security Operations Center. Real-time threat detection, alert fusion, purple-team exercises, MITRE ATT&CK-aware autonomous investigation, and detection-as-code.',
   keywords: [...DISCOVERY_KEYWORDS],
   /* [HIDDEN-UI THEME-7 prior publisher labels: AiSOC Community and AiSOC]
   authors: [{ name: 'AiSOC Community', url: 'https://github.com/beenuar/AiSOC' }],
@@ -55,21 +66,28 @@ export const metadata: Metadata = {
   creator: 'ClopsSOC Community',
   publisher: 'ClopsSOC',
   */
+  /* [HIDDEN-UI CHROME-3 rename product to SOC]
   authors: [{ name: 'ClopSOC Community', url: 'https://github.com/beenuar/AiSOC' }],
   creator: 'ClopSOC Community',
   publisher: 'ClopSOC',
+  */
+  authors: [{ name: 'SOC Community', url: 'https://github.com/beenuar/AiSOC' }],
+  creator: 'SOC Community',
+  publisher: 'SOC',
   category: 'cybersecurity',
   classification: 'Security Software',
   openGraph: {
     /* [HIDDEN-UI THEME-7 prior social title used AiSOC] */
     /* [HIDDEN-UI CHROME-1 rename product to ClopSOC] title: 'ClopsSOC — Free, Open-Source AI Security Operations Center', */
-    title: 'ClopSOC — Free, Open-Source AI Security Operations Center',
+    /* [HIDDEN-UI CHROME-3 rename product to SOC] title: 'ClopSOC — Free, Open-Source AI Security Operations Center', */
+    title: 'SOC — AI Security Operations Center',
     description:
       'Self-hostable AI SOC with real-time threat detection, alert fusion, purple-team drills, MITRE ATT&CK investigation, and detection-as-code. MIT-licensed.',
     type: 'website',
     /* [HIDDEN-UI THEME-7 prior social site name: AiSOC] */
     /* [HIDDEN-UI CHROME-1 rename product to ClopSOC] siteName: 'ClopsSOC', */
-    siteName: 'ClopSOC',
+    /* [HIDDEN-UI CHROME-3 rename product to SOC] siteName: 'ClopSOC', */
+    siteName: 'SOC',
     url: siteUrl,
     locale: 'en_US',
     images: [
@@ -79,7 +97,8 @@ export const metadata: Metadata = {
         height: 630,
         /* [HIDDEN-UI THEME-7 prior social image label: AiSOC] */
         /* [HIDDEN-UI CHROME-1 rename product to ClopSOC] alt: 'ClopsSOC — open-source AI SOC platform for security operations teams', */
-        alt: 'ClopSOC — open-source AI SOC platform for security operations teams',
+        /* [HIDDEN-UI CHROME-3 rename product to SOC] alt: 'ClopSOC — open-source AI SOC platform for security operations teams', */
+        alt: 'SOC — AI SOC platform for security operations teams',
         type: 'image/png',
       },
     ],
@@ -88,7 +107,8 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     /* [HIDDEN-UI THEME-7 prior social title used AiSOC] */
     /* [HIDDEN-UI CHROME-1 rename product to ClopSOC] title: 'ClopsSOC — Free Open-Source AI SOC Platform', */
-    title: 'ClopSOC — Free Open-Source AI SOC Platform',
+    /* [HIDDEN-UI CHROME-3 rename product to SOC] title: 'ClopSOC — Free Open-Source AI SOC Platform', */
+    title: 'SOC — AI SOC Platform',
     description:
       'AI-powered SOC: threat detection, alert fusion, purple team, MITRE ATT&CK mapping, detection-as-code, and eval harness in CI. Self-host for free.',
     site: '@aisoc_dev',

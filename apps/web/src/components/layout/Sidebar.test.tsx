@@ -27,13 +27,15 @@ vi.mock('next/link', () => ({
 import { Sidebar } from './Sidebar';
 
 describe('Sidebar', () => {
-  it('renders the ClopSOC mark and the 4 grouped sections', () => {
+  it('renders the SOC mark and the 4 grouped sections', () => {
     render(<Sidebar />);
 
     // Brand — [HIDDEN-UI THEME-2 visible product name changed from Ai/SOC to ClopsSOC]
     // [HIDDEN-UI CHROME-1 rename product to ClopSOC]
     // expect(screen.getByText('ClopsSOC')).toBeInTheDocument();
-    expect(screen.getByText('ClopSOC')).toBeInTheDocument();
+    // [HIDDEN-UI CHROME-3 rename product to SOC]
+    // expect(screen.getByText('ClopSOC')).toBeInTheDocument();
+    expect(screen.getByText('SOC')).toBeInTheDocument();
 
     // NAV-8 / CHROME-1: 4 labelled sections, 6 destinations (Hunt hidden).
     // [HIDDEN-UI CHROME-1 hide Hunt from sidebar navigation]

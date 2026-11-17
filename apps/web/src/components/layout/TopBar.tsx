@@ -170,7 +170,8 @@ export function TopBar({
           .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
           .join(' ')
       /* [HIDDEN-UI CHROME-1 rename product to ClopSOC] : 'ClopsSOC'; */
-      : 'ClopSOC';
+      /* [HIDDEN-UI CHROME-3 rename product to SOC] : 'ClopSOC'; */
+      : 'SOC';
     return { title, description: '' };
   })();
 

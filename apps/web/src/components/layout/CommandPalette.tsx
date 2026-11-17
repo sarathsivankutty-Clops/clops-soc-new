@@ -280,7 +280,8 @@ export function CommandPalette() {
           >
             <Command
               /* [HIDDEN-UI CHROME-1 rename product to ClopSOC] label="ClopsSOC command palette" */
-              label="ClopSOC command palette"
+              /* [HIDDEN-UI CHROME-3 rename product to SOC] label="ClopSOC command palette" */
+              label="SOC command palette"
               loop
               className="flex flex-col"
             >
@@ -373,7 +374,8 @@ export function CommandPalette() {
                   </span>
                 </div>
                 {/* [HIDDEN-UI CHROME-1 rename product to ClopSOC] <span className="hidden sm:inline">ClopsSOC · ⌘K to toggle</span> */}
-                <span className="hidden sm:inline">ClopSOC · ⌘K to toggle</span>
+                {/* [HIDDEN-UI CHROME-3 rename product to SOC] <span className="hidden sm:inline">ClopSOC · ⌘K to toggle</span> */}
+                <span className="hidden sm:inline">SOC · ⌘K to toggle</span>
               </div>
             </Command>
           </motion.div>
