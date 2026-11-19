@@ -63,23 +63,24 @@ import { Skeleton } from '@/components/ui/Skeleton';
  * pivots on (who did it / who was hit). "tenant" is last because it's
  * the broadest-context grouping.
  */
+/* [HIDDEN-UI RAIL-TOKENS-3 raw palette classes replaced with semantic design tokens] */
 const ENTITY_KIND_CONFIG: Record<
   RelatedEntity['kind'],
   { label: string; tone: string }
 > = {
-  principal: { label: 'Principals', tone: 'text-blue-300' },
-  network: { label: 'Network', tone: 'text-cyan-300' },
-  workflow: { label: 'Workflow', tone: 'text-purple-300' },
-  tenant: { label: 'Tenant', tone: 'text-gray-300' },
+  principal: { label: 'Principals', tone: 'text-accent' },
+  network: { label: 'Network', tone: 'text-tone-info' },
+  workflow: { label: 'Workflow', tone: 'text-tone-purple' },
+  tenant: { label: 'Tenant', tone: 'text-fg-secondary' },
 };
 
 /** Tone map for the priority chip on a recommended action. */
 const PRIORITY_TONE: Record<RecommendedAction['priority'], string> = {
-  critical: 'border-red-500/40 bg-red-500/10 text-red-300',
-  high: 'border-orange-500/40 bg-orange-500/10 text-orange-300',
-  medium: 'border-yellow-500/40 bg-yellow-500/10 text-yellow-300',
-  low: 'border-blue-500/40 bg-blue-500/10 text-blue-300',
-  info: 'border-gray-500/40 bg-gray-500/10 text-gray-300',
+  critical: 'border-surface-border bg-severity-bg-critical text-severity-ink-critical',
+  high: 'border-surface-border bg-severity-bg-high text-severity-ink-high',
+  medium: 'border-surface-border bg-severity-bg-medium text-severity-ink-medium',
+  low: 'border-surface-border bg-severity-bg-low text-severity-ink-low',
+  info: 'border-surface-border bg-severity-bg-info text-severity-ink-info',
 };
 
 // ─── Props ───────────────────────────────────────────────────────────────────
