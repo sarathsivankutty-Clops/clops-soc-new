@@ -1546,221 +1546,277 @@ function InvestigationPanel({
   const isDryRun = responder?.dry_run !== false;
 
   /* [HIDDEN-UI ALERTS-3 truncated 5-IOC / 4-action / slate-900 cards replaced with full semantic-token findings] */
+  /* [HIDDEN-UI CASE-INV-2 equal lg:grid-cols-3 narrow columns replaced with Executive Verdict Strip + 7/5 Evidence/Response workbench] */
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-pill-success-bg px-2.5 py-0.5 text-xs font-medium text-tone-success">
-          Investigation complete
-        </span>
-        <button
-          type="button"
-          onClick={onViewReport}
-          className="rounded-control border border-surface-border bg-surface-card px-3 py-1.5 text-xs font-medium text-fg-primary hover:bg-surface-hover transition-colors"
-        >
-          View full report
-        </button>
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        {/* Recon */}
-        <div className="rounded-container border border-surface-border bg-surface-card p-4 space-y-3">
-          <div className="flex items-center justify-between gap-2">
-            <h4 className="text-xs font-semibold uppercase tracking-wide text-accent">Recon</h4>
-            {reconSeq !== null && onViewLedger && (
-              <button
-                type="button"
-                onClick={onViewLedger}
-                className="font-mono text-[10px] text-accent hover:underline"
-                title="Inspect Recon step in Ledger"
-              >
-                ledger #{reconSeq}
-              </button>
-            )}
-          </div>
-          {recon?.summary != null && (
-            <p className="text-xs leading-relaxed text-fg-secondary">{String(recon.summary)}</p>
-          )}
-          <div>
-            <p className="text-[11px] font-medium text-fg-muted mb-1">IOCs ({iocs.length}):</p>
-            {iocs.length === 0 ? (
-              <p className="text-xs text-fg-muted">None extracted</p>
-            ) : (
-              <>
-                <ul className="space-y-1">
-                  {visibleIocs.map((rawIoc, idx) => {
-                    const iocType = typeof rawIoc === "string" ? "ioc" : String(rawIoc.type ?? "ioc");
-                    const iocVal = typeof rawIoc === "string" ? rawIoc : String(rawIoc.value ?? "");
-                    const evSeq = findEvidenceSeq(iocVal);
-                    return (
-                      <li key={`${iocVal}-${idx}`} className="flex items-center justify-between gap-2 text-[11px] font-mono text-fg-primary">
-                        <span className="truncate">
-                          <span className="text-fg-muted">[{iocType}]</span> {iocVal}
-                        </span>
-                        {evSeq !== null && onViewLedger && (
-                          <button
-                            type="button"
-                            onClick={onViewLedger}
-                            className="shrink-0 text-[10px] text-accent hover:underline"
-                          >
-                            #{evSeq}
-                          </button>
-                        )}
-                      </li>
-                    );
-                  })}
-                </ul>
-                {iocs.length > 5 && (
-                  <button
-                    type="button"
-                    onClick={() => setShowAllIocs((v) => !v)}
-                    className="mt-1 text-[11px] font-medium text-accent hover:underline"
-                  >
-                    {showAllIocs ? "Show fewer" : `Show all ${iocs.length}`}
-                  </button>
+      {/* Executive Verdict Strip */}
+      <div className="rounded-container border border-surface-border bg-surface-card p-5 space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 rounded-pill bg-pill-success-bg px-3 py-1 text-caption font-semibold text-tone-success">
+              Investigation complete
+            </span>
+            {responder?.risk_level != null && (
+              <span
+                className={clsx(
+                  "inline-flex rounded-pill px-2.5 py-0.5 text-caption font-semibold uppercase",
+                  responder.risk_level === "high"
+                    ? "bg-severity-bg-high text-severity-ink-high"
+                    : responder.risk_level === "medium"
+                      ? "bg-severity-bg-medium text-severity-ink-medium"
+                      : "bg-pill-success-bg text-tone-success"
                 )}
-              </>
+              >
+                {String(responder.risk_level)} risk
+              </span>
             )}
           </div>
-          {Array.isArray(recon?.mitre_techniques) && recon.mitre_techniques.length > 0 && (
-            <div className="flex flex-wrap gap-1">
-              {(recon.mitre_techniques as string[]).map((t) => {
-                const evSeq = findEvidenceSeq(t);
-                return (
-                  <span
-                    key={t}
-                    className="inline-flex items-center gap-1 rounded bg-severity-bg-high px-1.5 py-0.5 text-[10px] font-mono text-severity-ink-high"
-                  >
-                    {t}
-                    {evSeq !== null && onViewLedger && (
-                      <button
-                        type="button"
-                        onClick={onViewLedger}
-                        className="underline opacity-80 hover:opacity-100"
-                      >
-                        #{evSeq}
-                      </button>
-                    )}
-                  </span>
-                );
-              })}
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2">
+              <div className="rounded-control border border-surface-border bg-surface-elevated px-3 py-1.5 text-caption">
+                <span className="text-fg-muted mr-1.5">Confidence</span>
+                <span className="font-mono font-semibold text-fg-primary">{forensicConfidencePct}</span>
+              </div>
+              <div className="rounded-control border border-surface-border bg-surface-elevated px-3 py-1.5 text-caption">
+                <span className="text-fg-muted mr-1.5">Groundedness</span>
+                <span className="font-mono font-semibold text-fg-primary">{groundednessPct}</span>
+              </div>
+              <span className="font-mono text-caption text-fg-muted">Est. effort: {effortHours}</span>
             </div>
-          )}
-          <div className="space-y-1 border-t border-surface-border pt-2 text-[11px]">
-            <p className="text-fg-muted">
-              Threat actors:{" "}
-              <span className="text-fg-secondary">
-                {threatActors.length > 0 ? threatActors.join(", ") : "not measured"}
-              </span>
-            </p>
-            <p className="text-fg-muted">
-              Related incidents:{" "}
-              <span className="text-fg-secondary">
-                {relatedIncidents.length > 0 ? relatedIncidents.join(", ") : "none"}
-              </span>
-            </p>
-            <p className="text-fg-muted">
-              Attack surface:{" "}
-              <span className="text-fg-secondary">
-                {attackSurface
-                  ? [
-                      Array.isArray(attackSurface.affected_systems) && attackSurface.affected_systems.length > 0
-                        ? (attackSurface.affected_systems as unknown[]).map(String).join(", ")
-                        : null,
-                      attackSurface.data_at_risk ? String(attackSurface.data_at_risk) : null,
-                    ]
-                      .filter(Boolean)
-                      .join(" — ") || "not measured"
-                  : "not measured"}
-              </span>
-            </p>
+            <button
+              type="button"
+              onClick={onViewReport}
+              className="rounded-control border border-surface-border bg-surface-elevated px-3 py-1.5 text-caption font-medium text-fg-primary hover:bg-surface-hover transition-colors"
+            >
+              View full report
+            </button>
           </div>
         </div>
 
-        {/* Forensic */}
-        <div className="rounded-container border border-surface-border bg-surface-card p-4 space-y-3">
-          <div className="flex items-center justify-between gap-2">
-            <h4 className="text-xs font-semibold uppercase tracking-wide text-tone-purple">Forensic</h4>
-            {forensicSeq !== null && onViewLedger && (
-              <button
-                type="button"
-                onClick={onViewLedger}
-                className="font-mono text-[10px] text-accent hover:underline"
-                title="Inspect Forensic step in Ledger"
-              >
-                ledger #{forensicSeq}
-              </button>
-            )}
-          </div>
-          {forensic?.summary != null && (
-            <p className="text-xs leading-relaxed text-fg-secondary">{String(forensic.summary)}</p>
-          )}
-          <div>
-            <p className="text-[11px] font-medium text-fg-muted">Root cause hypothesis:</p>
-            <p className="text-xs text-fg-primary">
+        <div className="grid grid-cols-1 gap-4 border-t border-surface-border pt-4 md:grid-cols-12">
+          <div className="md:col-span-7 space-y-1">
+            <p className="text-eyebrow font-semibold uppercase tracking-wider text-fg-muted">
+              Root cause hypothesis
+            </p>
+            <p className="text-body font-medium leading-relaxed text-fg-primary break-words">
               {forensic?.root_cause_hypothesis ? String(forensic.root_cause_hypothesis) : "not measured"}
             </p>
           </div>
-          <div>
-            <p className="text-[11px] font-medium text-fg-muted">Blast radius:</p>
-            <p className="text-xs text-fg-secondary">
+          <div className="md:col-span-5 space-y-1 md:border-l md:border-surface-border md:pl-4">
+            <p className="text-eyebrow font-semibold uppercase tracking-wider text-fg-muted">
+              Blast radius
+            </p>
+            <p className="text-body leading-relaxed text-fg-secondary break-words">
               {forensic?.blast_radius ? String(forensic.blast_radius) : "not measured"}
             </p>
           </div>
-          <div className="grid grid-cols-2 gap-2 text-[11px]">
-            <div className="rounded-control border border-surface-border bg-surface-elevated px-2.5 py-1.5">
-              <span className="block text-fg-muted">Confidence</span>
-              <span className="font-mono font-semibold text-fg-primary">{forensicConfidencePct}</span>
+        </div>
+      </div>
+
+      {/* 7 / 5 Asymmetric Investigation Workbench */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-12 items-start">
+        {/* Left 7 cols — Evidence & Analysis (Recon + Forensic) */}
+        <div className="lg:col-span-7 space-y-4">
+          {/* Recon */}
+          <div className="rounded-container border border-surface-border bg-surface-card p-5 space-y-4">
+            <div className="flex items-center justify-between gap-2">
+              <h4 className="text-eyebrow font-semibold uppercase tracking-wider text-accent">Recon</h4>
+              {reconSeq !== null && onViewLedger && (
+                <button
+                  type="button"
+                  onClick={onViewLedger}
+                  className="font-mono text-caption text-accent hover:underline"
+                  title="Inspect Recon step in Ledger"
+                >
+                  ledger #{reconSeq}
+                </button>
+              )}
             </div>
-            <div className="rounded-control border border-surface-border bg-surface-elevated px-2.5 py-1.5">
-              <span className="block text-fg-muted">Groundedness</span>
-              <span className="font-mono font-semibold text-fg-primary">{groundednessPct}</span>
+
+            {recon?.summary != null && (
+              <p className="text-body leading-relaxed text-fg-secondary break-words">{String(recon.summary)}</p>
+            )}
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="rounded-control border border-surface-border bg-surface-elevated p-3 space-y-2">
+                <p className="text-caption font-semibold text-fg-muted">IOCs ({iocs.length}):</p>
+                {iocs.length === 0 ? (
+                  <p className="text-caption text-fg-muted">None extracted</p>
+                ) : (
+                  <>
+                    <ul className="space-y-1.5">
+                      {visibleIocs.map((rawIoc, idx) => {
+                        const iocType = typeof rawIoc === "string" ? "ioc" : String(rawIoc.type ?? "ioc");
+                        const iocVal = typeof rawIoc === "string" ? rawIoc : String(rawIoc.value ?? "");
+                        const evSeq = findEvidenceSeq(iocVal);
+                        return (
+                          <li key={`${iocVal}-${idx}`} className="flex items-center justify-between gap-2 text-caption font-mono text-fg-primary">
+                            <span className="break-all">
+                              <span className="text-fg-muted">[{iocType}]</span> {iocVal}
+                            </span>
+                            {evSeq !== null && onViewLedger && (
+                              <button
+                                type="button"
+                                onClick={onViewLedger}
+                                className="shrink-0 text-caption text-accent hover:underline"
+                              >
+                                #{evSeq}
+                              </button>
+                            )}
+                          </li>
+                        );
+                      })}
+                    </ul>
+                    {iocs.length > 5 && (
+                      <button
+                        type="button"
+                        onClick={() => setShowAllIocs((v) => !v)}
+                        className="mt-1 text-caption font-medium text-accent hover:underline"
+                      >
+                        {showAllIocs ? "Show fewer" : `Show all ${iocs.length}`}
+                      </button>
+                    )}
+                  </>
+                )}
+              </div>
+
+              <div className="rounded-control border border-surface-border bg-surface-elevated p-3 space-y-2">
+                <p className="text-caption font-semibold text-fg-muted">MITRE ATT&amp;CK</p>
+                {Array.isArray(recon?.mitre_techniques) && recon.mitre_techniques.length > 0 ? (
+                  <div className="flex flex-wrap gap-1.5">
+                    {(recon.mitre_techniques as string[]).map((t) => {
+                      const evSeq = findEvidenceSeq(t);
+                      return (
+                        <span
+                          key={t}
+                          className="inline-flex items-center gap-1 rounded-control bg-severity-bg-high px-2 py-0.5 text-caption font-mono text-severity-ink-high"
+                        >
+                          {t}
+                          {evSeq !== null && onViewLedger && (
+                            <button
+                              type="button"
+                              onClick={onViewLedger}
+                              className="underline opacity-80 hover:opacity-100"
+                            >
+                              #{evSeq}
+                            </button>
+                          )}
+                        </span>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-caption text-fg-muted">None mapped</p>
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-2 border-t border-surface-border pt-3 text-caption sm:grid-cols-3">
+              <div>
+                <span className="block text-fg-muted">Threat actors</span>
+                <span className="text-fg-secondary break-words">
+                  {threatActors.length > 0 ? threatActors.join(", ") : "not measured"}
+                </span>
+              </div>
+              <div>
+                <span className="block text-fg-muted">Related incidents</span>
+                <span className="text-fg-secondary break-words">
+                  {relatedIncidents.length > 0 ? relatedIncidents.join(", ") : "none"}
+                </span>
+              </div>
+              <div>
+                <span className="block text-fg-muted">Attack surface</span>
+                <span className="text-fg-secondary break-words">
+                  {attackSurface
+                    ? [
+                        Array.isArray(attackSurface.affected_systems) && attackSurface.affected_systems.length > 0
+                          ? (attackSurface.affected_systems as unknown[]).map(String).join(", ")
+                          : null,
+                        attackSurface.data_at_risk ? String(attackSurface.data_at_risk) : null,
+                      ]
+                        .filter(Boolean)
+                        .join(" — ") || "not measured"
+                    : "not measured"}
+                </span>
+              </div>
             </div>
           </div>
-          <div>
-            <p className="text-[11px] font-medium text-fg-muted mb-1">Artefacts ({artefacts.length}):</p>
-            {artefacts.length === 0 ? (
-              <p className="text-xs text-fg-muted">not measured</p>
-            ) : (
-              <ul className="space-y-0.5">
-                {artefacts.map((art, i) => (
-                  <li key={`${art}-${i}`} className="text-[11px] font-mono text-fg-primary truncate">
-                    {art}
-                  </li>
-                ))}
-              </ul>
+
+          {/* Forensic */}
+          <div className="rounded-container border border-surface-border bg-surface-card p-5 space-y-4">
+            <div className="flex items-center justify-between gap-2">
+              <h4 className="text-eyebrow font-semibold uppercase tracking-wider text-tone-purple">Forensic</h4>
+              {forensicSeq !== null && onViewLedger && (
+                <button
+                  type="button"
+                  onClick={onViewLedger}
+                  className="font-mono text-caption text-accent hover:underline"
+                  title="Inspect Forensic step in Ledger"
+                >
+                  ledger #{forensicSeq}
+                </button>
+              )}
+            </div>
+
+            {forensic?.summary != null && (
+              <p className="text-body leading-relaxed text-fg-secondary break-words">{String(forensic.summary)}</p>
             )}
-          </div>
-          <div>
-            <p className="text-[11px] font-medium text-fg-muted mb-1">Timeline ({timeline.length}):</p>
-            {timeline.length === 0 ? (
-              <p className="text-xs text-fg-muted">not measured</p>
-            ) : (
-              <ul className="space-y-1">
-                {timeline.map((ev, i) => (
-                  <li key={i} className="rounded-control border border-surface-border bg-surface-elevated px-2 py-1 text-[11px]">
-                    <span className="font-mono text-fg-muted">{ev.ts ?? "—"}</span>{" "}
-                    {ev.src && <span className="text-accent">[{ev.src}]</span>}{" "}
-                    <span className="text-fg-primary">{ev.event ?? ""}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
+
+            <div className="space-y-1.5">
+              <p className="text-caption font-semibold text-fg-muted">Artefacts ({artefacts.length}):</p>
+              {artefacts.length === 0 ? (
+                <p className="text-caption text-fg-muted">not measured</p>
+              ) : (
+                <ul className="space-y-1">
+                  {artefacts.map((art, i) => (
+                    <li
+                      key={`${art}-${i}`}
+                      className="rounded-control border border-surface-border bg-surface-elevated px-2.5 py-1.5 text-caption font-mono text-fg-primary break-all"
+                    >
+                      {art}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            <div className="space-y-1.5">
+              <p className="text-caption font-semibold text-fg-muted">Timeline ({timeline.length}):</p>
+              {timeline.length === 0 ? (
+                <p className="text-caption text-fg-muted">not measured</p>
+              ) : (
+                <ul className="space-y-1.5">
+                  {timeline.map((ev, i) => (
+                    <li
+                      key={i}
+                      className="rounded-control border border-surface-border bg-surface-elevated px-3 py-2 text-caption space-y-0.5"
+                    >
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-mono text-fg-muted">{ev.ts ?? "—"}</span>
+                        {ev.src && <span className="font-mono text-accent">[{ev.src}]</span>}
+                      </div>
+                      <p className="text-fg-primary break-words">{ev.event ?? ""}</p>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Responder */}
-        <div className="rounded-container border border-surface-border bg-surface-card p-4 space-y-3">
-          <div className="flex items-center justify-between gap-2">
-            <h4 className="text-xs font-semibold uppercase tracking-wide text-tone-warning">Response</h4>
+        {/* Right 5 cols — Response Plan */}
+        <div className="lg:col-span-5 rounded-container border border-surface-border bg-surface-card p-5 space-y-4">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <h4 className="text-eyebrow font-semibold uppercase tracking-wider text-tone-warning">Response</h4>
             <div className="flex items-center gap-2">
-              <span className="rounded bg-surface-subtle px-1.5 py-0.5 text-[10px] font-mono text-fg-muted border border-surface-border">
+              <span className="rounded-control bg-surface-elevated px-2 py-0.5 text-caption font-mono text-fg-muted border border-surface-border">
                 {isDryRun ? "dry-run" : "live"}
               </span>
               {responderSeq !== null && onViewLedger && (
                 <button
                   type="button"
                   onClick={onViewLedger}
-                  className="font-mono text-[10px] text-accent hover:underline"
+                  className="font-mono text-caption text-accent hover:underline"
                   title="Inspect Responder step in Ledger"
                 >
                   ledger #{responderSeq}
@@ -1768,11 +1824,20 @@ function InvestigationPanel({
               )}
             </div>
           </div>
-          {responder?.summary != null && (
-            <p className="text-xs leading-relaxed text-fg-secondary">{String(responder.summary)}</p>
-          )}
+
           {recActions.length > 0 && (
-            <ul className="space-y-2">
+            <div className="flex items-center justify-between gap-2 rounded-control bg-pill-warning-bg px-3 py-1.5 text-caption font-medium text-tone-warning">
+              <span>Suggested - not executed</span>
+              <span className="font-mono">{recActions.length} action{recActions.length === 1 ? "" : "s"}</span>
+            </div>
+          )}
+
+          {responder?.summary != null && (
+            <p className="text-body leading-relaxed text-fg-secondary break-words">{String(responder.summary)}</p>
+          )}
+
+          {recActions.length > 0 && (
+            <ul className="space-y-3">
               {recActions.map((raw, i) => {
                 const a = (raw ?? {}) as Record<string, unknown>;
                 const text = typeof raw === "string" ? raw : String(a.action ?? "");
@@ -1796,33 +1861,34 @@ function InvestigationPanel({
                       )
                     : "";
                 return (
-                  <li key={i} className="rounded-control border border-surface-border bg-surface-elevated p-2 text-xs text-fg-primary space-y-1">
-                    <div className="flex items-center justify-between gap-1.5 flex-wrap">
-                      <span className="inline-flex items-center rounded bg-pill-warning-bg px-1.5 py-0.5 text-[10px] font-semibold text-tone-warning">
-                        Suggested - not executed
-                      </span>
-                      <span className="text-[10px] font-mono text-fg-muted">
+                  <li key={i} className="rounded-control border border-surface-border bg-surface-elevated p-3 space-y-2">
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <div className="flex items-center gap-1.5">
+                        {prio != null && (
+                          <span className="rounded-control bg-pill-warning-bg px-1.5 py-0.5 text-caption font-mono font-semibold text-tone-warning">
+                            P{prio}
+                          </span>
+                        )}
+                        {risk != null && risk.toLowerCase() !== "low" && (
+                          <span className="rounded-control bg-severity-bg-high px-1.5 py-0.5 text-caption font-semibold uppercase text-severity-ink-high">
+                            {risk}
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-caption font-mono text-fg-muted">
                         conf: {actionConf}
                       </span>
                     </div>
-                    <p>
-                      {prio != null && (
-                        <span className="mr-1 text-[10px] font-semibold text-tone-warning">P{prio}</span>
-                      )}
+                    <p className="text-body font-medium text-fg-primary leading-snug break-words">
                       {text}
-                      {risk != null && risk.toLowerCase() !== "low" && (
-                        <span className="ml-1 rounded bg-severity-bg-high px-1 py-0.5 text-[9px] uppercase text-severity-ink-high">
-                          {risk}
-                        </span>
-                      )}
                     </p>
                     {a.rationale != null && String(a.rationale).length > 0 && (
-                      <p className="text-[11px] text-fg-muted">{String(a.rationale)}</p>
+                      <p className="text-caption leading-relaxed text-fg-muted break-words">{String(a.rationale)}</p>
                     )}
                     {caseId && (
                       <div className="pt-1 flex items-center gap-2">
                         {existingApproval ? (
-                          <span className="inline-flex items-center rounded bg-pill-info-bg px-1.5 py-0.5 text-[10px] font-medium text-accent">
+                          <span className="inline-flex items-center rounded-control bg-pill-info-bg px-2 py-0.5 text-caption font-medium text-accent">
                             Approval: {dispatchState === "executed" ? "executed" : existingApproval.status}
                           </span>
                         ) : (
@@ -1859,7 +1925,7 @@ function InvestigationPanel({
                                 setRequestingKey(null);
                               }
                             }}
-                            className="rounded-control border border-surface-border bg-surface-card px-2 py-0.5 text-[10px] font-medium text-accent hover:bg-surface-hover disabled:opacity-50"
+                            className="rounded-control border border-surface-border bg-surface-card px-2.5 py-1 text-caption font-medium text-accent hover:bg-surface-hover disabled:opacity-50 transition-colors"
                           >
                             {requestingKey === actionKey ? "Requesting…" : "Request Approval"}
                           </button>
@@ -1871,40 +1937,26 @@ function InvestigationPanel({
               })}
             </ul>
           )}
-          {[
-            { label: "Containment", steps: containmentSteps },
-            { label: "Eradication", steps: eradicationSteps },
-            { label: "Recovery", steps: recoverySteps },
-          ].map(({ label, steps }) => (
-            <div key={label} className="text-[11px]">
-              <p className="font-medium text-fg-muted">{label} steps:</p>
-              {steps.length === 0 ? (
-                <p className="text-fg-muted">not measured</p>
-              ) : (
-                <ul className="list-disc pl-4 space-y-0.5 text-fg-secondary">
-                  {steps.map((s, idx) => (
-                    <li key={idx}>{s}</li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          ))}
-          <div className="flex items-center justify-between gap-2 pt-1 border-t border-surface-border text-[11px]">
-            {responder?.risk_level != null && (
-              <span
-                className={clsx(
-                  "inline-flex rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase",
-                  responder.risk_level === "high"
-                    ? "bg-severity-bg-high text-severity-ink-high"
-                    : responder.risk_level === "medium"
-                      ? "bg-severity-bg-medium text-severity-ink-medium"
-                      : "bg-pill-success-bg text-tone-success"
+
+          <div className="space-y-3 border-t border-surface-border pt-3">
+            {[
+              { label: "Containment", steps: containmentSteps },
+              { label: "Eradication", steps: eradicationSteps },
+              { label: "Recovery", steps: recoverySteps },
+            ].map(({ label, steps }) => (
+              <div key={label} className="text-caption space-y-1">
+                <p className="font-semibold text-fg-muted">{label} steps:</p>
+                {steps.length === 0 ? (
+                  <p className="text-fg-muted">not measured</p>
+                ) : (
+                  <ul className="list-disc pl-4 space-y-1 text-fg-secondary">
+                    {steps.map((s, idx) => (
+                      <li key={idx} className="break-words">{s}</li>
+                    ))}
+                  </ul>
                 )}
-              >
-                {String(responder.risk_level)} risk
-              </span>
-            )}
-            <span className="font-mono text-fg-muted">Est. effort: {effortHours}</span>
+              </div>
+            ))}
           </div>
         </div>
       </div>
