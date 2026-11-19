@@ -399,12 +399,14 @@ function FiltersBar({
 function AlertRow({
   alert,
   selected,
+  compact,
   onSelect,
   checked,
   onToggleChecked,
 }: {
   alert: Alert;
   selected: boolean;
+  compact: boolean;
   onSelect: (id: string) => void;
   checked: boolean;
   onToggleChecked: (id: string) => void;
@@ -439,7 +441,10 @@ function AlertRow({
           onSelect(alert.id);
         }}
         aria-current={selected ? 'true' : undefined}
-        className="flex flex-1 min-w-0 items-center gap-4 px-4 py-3"
+        className={clsx(
+          'flex flex-1 min-w-0 px-4 py-3',
+          compact ? 'items-start gap-3' : 'items-center gap-4',
+        )}
       >
       {/*
         Depth 9.3. The row is a Link, so the checkbox has to stop the event
@@ -456,77 +461,107 @@ function AlertRow({
           e.stopPropagation();
           onToggleChecked(alert.id);
         }}
-        className="accent-accent shrink-0"
+        className={clsx('accent-accent shrink-0', compact && 'mt-1')}
       />
 
-      <SeverityDot severity={alert.severity} />
+      <div className={clsx('shrink-0', compact && 'mt-1.5')}>
+        <SeverityDot severity={alert.severity} />
+      </div>
 
+      {/* [HIDDEN-UI ALERTS-WRAP-1 single-line truncate crushed title & host into [S... / hos... when right rail or Case pill was open] */}
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <p className="text-body font-medium text-fg-primary truncate">{alert.title}</p>
-          {(alert.occurrenceCount ?? 1) > 1 && (
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-1.5 min-w-0 flex-1">
+            <p className="text-body font-medium text-fg-primary line-clamp-2 break-words leading-snug">
+              {alert.title}
+            </p>
+            {(alert.occurrenceCount ?? 1) > 1 && (
+              <span
+                className="inline-flex items-center rounded-pill border border-surface-border bg-surface-elevated px-1.5 py-0.5 text-caption font-mono font-semibold text-fg-secondary shrink-0"
+                title={`${alert.occurrenceCount} repeated occurrences folded`}
+              >
+                ×{alert.occurrenceCount}
+              </span>
+            )}
+            {(alert.correlatedCount ?? 0) > 0 && (
+              <span
+                className="inline-flex items-center rounded-pill border border-surface-border bg-pill-purple-bg px-1.5 py-0.5 text-caption font-mono font-semibold text-tone-purple shrink-0"
+                title={(alert.correlationReasons ?? []).join(' · ') || 'Correlated alerts'}
+              >
+                +{alert.correlatedCount} correlated
+              </span>
+            )}
+            {alert.mitreAttack && alert.mitreAttack.length > 0 && (
+              <Badge tone="severity-high" dot={false}>
+                {alert.mitreAttack[0].techniqueId}
+              </Badge>
+            )}
+          </div>
+          {compact && (
             <span
-              className="inline-flex items-center rounded-pill border border-surface-border bg-surface-elevated px-1.5 py-0.5 text-[10px] font-mono font-semibold text-fg-secondary shrink-0"
-              title={`${alert.occurrenceCount} repeated occurrences folded`}
+              className="text-caption font-mono text-fg-muted shrink-0 text-right whitespace-nowrap"
+              title={isIngestFallback ? `Ingest time (event_time missing): ${displayTs}` : `Event time: ${displayTs}`}
+              suppressHydrationWarning
             >
-              ×{alert.occurrenceCount}
+              {formatDistanceToNow(new Date(displayTs), { addSuffix: true })}
+              {isIngestFallback && (
+                <span className="block text-caption text-fg-subtle">ingest</span>
+              )}
             </span>
-          )}
-          {(alert.correlatedCount ?? 0) > 0 && (
-            <span
-              className="inline-flex items-center rounded-pill border border-surface-border bg-pill-purple-bg px-1.5 py-0.5 text-[10px] font-mono font-semibold text-tone-purple shrink-0"
-              title={(alert.correlationReasons ?? []).join(' · ') || 'Correlated alerts'}
-            >
-              +{alert.correlatedCount} correlated
-            </span>
-          )}
-          {alert.mitreAttack && alert.mitreAttack.length > 0 && (
-            <Badge tone="severity-high" dot={false}>
-              {alert.mitreAttack[0].techniqueId}
-            </Badge>
           )}
         </div>
-        <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-          <span className="text-caption text-fg-muted">{alert.source}</span>
-          {actor && (
-            <>
-              <span className="text-fg-subtle">·</span>
-              <span className="text-caption font-mono text-fg-secondary truncate max-w-[14rem]">
-                {actor}
-              </span>
-            </>
-          )}
-          {alert.assignee && (
-            <>
-              <span className="text-fg-subtle">·</span>
-              <span className="text-caption text-fg-muted" title={t('alerts.assignee')}>
-                {alert.assignee}
-              </span>
-            </>
+        <div className="flex items-center justify-between gap-2 mt-1 flex-wrap">
+          <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+            <span className="text-caption text-fg-muted shrink-0">{alert.source}</span>
+            {actor && (
+              <>
+                <span className="text-fg-subtle">·</span>
+                <span className="text-caption font-mono text-fg-secondary break-all sm:truncate sm:max-w-xs">
+                  {actor}
+                </span>
+              </>
+            )}
+            {alert.assignee && (
+              <>
+                <span className="text-fg-subtle">·</span>
+                <span className="text-caption text-fg-muted" title={t('alerts.assignee')}>
+                  {alert.assignee}
+                </span>
+              </>
+            )}
+          </div>
+          {compact && (
+            <div className="flex items-center gap-1.5 flex-wrap shrink-0">
+              {alert.confidenceLabel && <ConfidencePill label={alert.confidenceLabel} />}
+              <SeverityBadge severity={alert.severity} />
+              <StatusBadge status={alert.status} />
+            </div>
           )}
         </div>
       </div>
 
-      <div className="flex items-center gap-2 shrink-0">
-        {alert.confidenceLabel && <ConfidencePill label={alert.confidenceLabel} />}
-        <SeverityBadge severity={alert.severity} />
-        <StatusBadge status={alert.status} />
-        <span
-          className="text-caption font-mono text-fg-muted w-28 text-right"
-          title={isIngestFallback ? `Ingest time (event_time missing): ${displayTs}` : `Event time: ${displayTs}`}
-          suppressHydrationWarning
-        >
-          {formatDistanceToNow(new Date(displayTs), { addSuffix: true })}
-          {isIngestFallback && (
-            <span className="block text-[10px] text-fg-subtle">ingest</span>
-          )}
-        </span>
-      </div>
+      {!compact && (
+        <div className="flex items-center gap-2 shrink-0">
+          {alert.confidenceLabel && <ConfidencePill label={alert.confidenceLabel} />}
+          <SeverityBadge severity={alert.severity} />
+          <StatusBadge status={alert.status} />
+          <span
+            className="text-caption font-mono text-fg-muted w-28 text-right"
+            title={isIngestFallback ? `Ingest time (event_time missing): ${displayTs}` : `Event time: ${displayTs}`}
+            suppressHydrationWarning
+          >
+            {formatDistanceToNow(new Date(displayTs), { addSuffix: true })}
+            {isIngestFallback && (
+              <span className="block text-caption text-fg-subtle">ingest</span>
+            )}
+          </span>
+        </div>
+      )}
       </Link>
       {alert.caseId && (
         <Link
           href={`/cases/${alert.caseId}`}
-          className="mr-3 shrink-0 rounded-control border border-surface-border bg-surface-elevated px-2 py-0.5 text-[11px] font-medium text-accent hover:bg-surface-hover"
+          className="mr-3 shrink-0 rounded-control border border-surface-border bg-surface-elevated px-2 py-0.5 text-caption font-medium text-accent hover:bg-surface-hover"
           title="Open linked case"
         >
           Case
@@ -809,8 +844,9 @@ function AlertsTable({
         squeezing the columns into illegibility. The rail is `sticky` so it
         stays in view while the analyst scrolls the queue.
       */}
+      {/* [HIDDEN-UI ALERTS-WRAP-1 always-on xl:col-span-7 / xl:col-span-5 split hid 42% width when no alert was selected] */}
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-4">
-        <div className="xl:col-span-7 space-y-4">
+        <div className={clsx('space-y-4', selectedAlertId ? 'xl:col-span-7' : 'xl:col-span-12')}>
           <AlertsTableGrid
             alerts={alerts}
             isLoading={isLoading}
@@ -831,14 +867,16 @@ function AlertsTable({
             onFilterChange={onFilterChange}
           />
         </div>
-        <div className="xl:col-span-5">
-          <div className="xl:sticky xl:top-4 xl:max-h-[calc(100vh-7rem)] xl:overflow-hidden xl:flex xl:flex-col">
-            <InvestigationRail
-              alertId={selectedAlertId}
-              onClose={() => setSelectedAlertId(null)}
-            />
+        {selectedAlertId && (
+          <div className="xl:col-span-5">
+            <div className="xl:sticky xl:top-4 xl:max-h-[calc(100vh-7rem)] xl:overflow-hidden xl:flex xl:flex-col">
+              <InvestigationRail
+                alertId={selectedAlertId}
+                onClose={() => setSelectedAlertId(null)}
+              />
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
@@ -900,18 +938,22 @@ function AlertsTableGrid({
           className="accent-accent"
         />
         <span className="text-eyebrow font-bold uppercase tracking-wider text-fg-muted flex-1">ALERT</span>
-        <button
-          type="button"
-          onClick={() => onFilterChange({ ...filters, sort: 'priority', page: 1 })}
-          className={clsx(
-            'text-eyebrow font-bold uppercase tracking-wider w-20 text-left transition-colors',
-            activeSort === 'priority' ? 'text-accent' : 'text-fg-muted hover:text-fg-primary',
-          )}
-          title="Sort by priority (severity, then newest)"
-        >
-          {t('alerts.severity')} {activeSort === 'priority' ? '↓' : ''}
-        </button>
-        <span className="text-eyebrow font-bold uppercase tracking-wider text-fg-muted w-24">{t('alerts.status')}</span>
+        {!selectedAlertId && (
+          <>
+            <button
+              type="button"
+              onClick={() => onFilterChange({ ...filters, sort: 'priority', page: 1 })}
+              className={clsx(
+                'text-eyebrow font-bold uppercase tracking-wider w-20 text-left transition-colors',
+                activeSort === 'priority' ? 'text-accent' : 'text-fg-muted hover:text-fg-primary',
+              )}
+              title="Sort by priority (severity, then newest)"
+            >
+              {t('alerts.severity')} {activeSort === 'priority' ? '↓' : ''}
+            </button>
+            <span className="text-eyebrow font-bold uppercase tracking-wider text-fg-muted w-24">{t('alerts.status')}</span>
+          </>
+        )}
         <button
           type="button"
           onClick={() =>
@@ -983,6 +1025,7 @@ function AlertsTableGrid({
               key={alert.id}
               alert={alert}
               selected={selectedAlertId === alert.id}
+              compact={Boolean(selectedAlertId)}
               onSelect={onSelect}
               checked={checkedIds.has(alert.id)}
               onToggleChecked={onToggleChecked}
