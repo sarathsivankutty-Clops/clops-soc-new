@@ -14,7 +14,12 @@ import { ErrorState } from '@/components/ui/ErrorState';
 import { KpiStrip } from '@/components/ui/KpiStrip';
 import { PageHead } from '@/components/ui/PageHead';
 import { Badge, type BadgeTone } from '@/components/ui/Badge';
-import { SavedViewsBar } from '@/components/saved-views/SavedViewsBar';
+// [HIDDEN-UI R6 saved-views] The Saved views bar is no longer rendered on this
+// surface: with no presets saved it was a full-width row reading "None yet",
+// which looked like an unfinished feature and pushed the filters down. The
+// component and `savedViewsApi` are untouched, so restoring it is uncommenting
+// this import and the element in the render below.
+// import { SavedViewsBar } from '@/components/saved-views/SavedViewsBar';
 import { useLocale } from '@/components/i18n/LocaleProvider';
 import { demoFallback } from '@/lib/demoFallback';
 import {
@@ -757,11 +762,15 @@ function AlertsTable({
       </div>
 
       {/*
-        WS-F3 — saved views. The bar reads/writes filters straight through
-        ``onFilterChange`` so we don't need a parallel state path. We reset
-        ``page`` to 1 when applying a preset because saved pagination would
-        be confusing — analysts expect to start from the top.
+        [HIDDEN-UI R6 saved-views] Not rendered. The row occupied a full-width
+        band above the filters and, until an analyst had saved something, said
+        only "None yet". The wiring below is kept verbatim: `viewType`,
+        `filters` and `onApply` are the whole contract with the component, and
+        reconstructing them from memory is how a restore goes subtly wrong.
+        Reset `page` to 1 on apply, because a saved page number is not a state
+        an analyst expects to come back to.
       */}
+      {/*
       <SavedViewsBar<AlertFilters>
         viewType="alerts"
         filters={filters}
@@ -774,6 +783,7 @@ function AlertsTable({
           })
         }
       />
+      */}
 
       <FiltersBar
         filters={filters}

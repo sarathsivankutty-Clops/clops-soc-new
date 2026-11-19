@@ -9,7 +9,10 @@ import { casesApi, type Case, type CasesResponse } from "@/lib/api";
 import { clsx } from "clsx";
 import { format } from "date-fns";
 import { EmptyState, EmptyStateIcons } from "@/components/ui/EmptyState";
-import { SavedViewsBar } from "@/components/saved-views/SavedViewsBar";
+// [HIDDEN-UI R6 saved-views] Not rendered here, and the snapshot type below is
+// commented with it. Component and API kept; restore by uncommenting all
+// three (this import, the type, the element before the filter row).
+// import { SavedViewsBar } from "@/components/saved-views/SavedViewsBar";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { demoFallback } from "@/lib/demoFallback";
 
@@ -17,11 +20,16 @@ import { demoFallback } from "@/lib/demoFallback";
 // flatten the three filter slices Cases tracks today into a single shape the
 // bar can snapshot and replay. Nothing else in the view consumes this — it's
 // purely the wire format between the bar and the local state setters.
+// [HIDDEN-UI R6 saved-views] Kept, not deleted: this is the wire format between
+// the (now unrendered) bar and the three filter setters. Restore it together
+// with the element in the render.
+/*
 type CaseFilterSnapshot = {
   status: Case["status"] | "all";
   severity: Case["severity"] | "all";
   search: string;
 };
+*/
 
 // ─── Mock Data ────────────────────────────────────────────────────────────────
 
@@ -327,11 +335,12 @@ export function CasesView() {
       </div>
 
       {/*
-        WS-F3 — saved views. Cases keeps three slices of filter state, so we
-        synthesize a single object for the bar and unpack it on apply. We
-        spread defaults to be defensive against older saved-view payloads
-        that might be missing newer keys.
+        [HIDDEN-UI R6 saved-views] Not rendered, for the same reason as the
+        Alerts surface: an empty "None yet" row above the filters. Kept
+        verbatim - the snapshot shape and the unpacking below are the only
+        description of how a preset maps back onto the three filter slices.
       */}
+      {/*
       <SavedViewsBar<CaseFilterSnapshot>
         viewType="cases"
         filters={{
@@ -345,6 +354,7 @@ export function CasesView() {
           setSearch(applied.search ?? "");
         }}
       />
+      */}
 
       {/* Filters */}
       <div className="flex items-center gap-3">

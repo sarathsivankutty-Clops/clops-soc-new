@@ -22,7 +22,9 @@ import { PlaybooksGallery, type PlaybookGalleryFilters } from './PlaybooksGaller
 import { EmptyState, EmptyStateIcons } from '@/components/ui/EmptyState';
 import { PageHead } from '@/components/ui/PageHead';
 import { Button } from '@/components/ui/Button';
-import { SavedViewsBar } from '@/components/saved-views/SavedViewsBar';
+// [HIDDEN-UI R6 saved-views] Not rendered on this surface; component and API
+// kept. Restore together with the state/handler pair below.
+// import { SavedViewsBar } from '@/components/saved-views/SavedViewsBar';
 import { DraftFromPromptDialog } from './DraftFromPromptDialog';
 import { demoFallback } from '@/lib/demoFallback';
 import { FailureBanner } from '@/components/ui/FailureBanner';
@@ -434,21 +436,29 @@ export function PlaybooksView() {
     fallbackData: demoFallback(MOCK_PLAYBOOKS),
   });
 
-  // WS-F3: track the active filter snapshot so SavedViewsBar can capture it,
-  // and force-remount PlaybooksGallery when a preset is applied so the gallery
-  // picks up the new initial state without requiring full controlled-prop surgery.
-  const [galleryFilters, setGalleryFilters] = useState<PlaybookFilterSnapshot>(DEFAULT_PLAYBOOK_FILTERS);
-  const [galleryKey, setGalleryKey] = useState(0);
+  // [HIDDEN-UI R6 saved-views] The snapshot state and its setter existed so the
+  // bar could capture the gallery's filters and re-seed it on apply. The bar is
+  // not rendered, so only the read side is kept: it still seeds the gallery on
+  // first mount. Restore the setter (and the `setGalleryKey` below) with the
+  // handler when uncommenting the SavedViewsBar element.
+  const [galleryFilters] = useState<PlaybookFilterSnapshot>(DEFAULT_PLAYBOOK_FILTERS);
+  const [galleryKey] = useState(0);
 
   // T3.7 — controls the NL → playbook drafter modal. The modal posts to
   // /api/v1/playbooks/draft-from-nl, parks the draft in sessionStorage,
   // then routes to /playbooks/new where the editor picks it up.
   const [nlDialogOpen, setNlDialogOpen] = useState(false);
 
+  // [HIDDEN-UI R6 saved-views] The only caller was the SavedViewsBar element
+  // below. Kept as the reference for how a preset re-seeds the gallery:
+  // replacing `galleryFilters` and bumping the remount key. Restore with the
+  // setters in the state above.
+  /*
   function handleApplyView(filters: PlaybookFilterSnapshot) {
     setGalleryFilters(filters);
     setGalleryKey((k) => k + 1);
   }
+  */
 
   return (
     <div className="space-y-6">
@@ -512,12 +522,15 @@ export function PlaybooksView() {
       {/* Playbooks list */}
       {tab === 'playbooks' && (
         <>
-          {/* WS-F3: saved-view presets for the playbooks list */}
+          {/* [HIDDEN-UI R6 saved-views] Not rendered. Kept verbatim: the three
+              props are the entire contract with the component. */}
+          {/*
           <SavedViewsBar<PlaybookFilterSnapshot>
             viewType="playbooks"
             filters={galleryFilters}
             onApply={handleApplyView}
           />
+          */}
 
           {isLoading && <div className="text-fg-muted text-body">Loading runbooks…</div>}
 
