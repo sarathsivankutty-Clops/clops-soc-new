@@ -182,6 +182,16 @@ terminal has already scrolled away, mint a new one:
 make bootstrap ARGS=--reset-password
 ```
 
+`docker compose up` creates the administrator as well, through the one-shot
+`bootstrap` service, as soon as the API is healthy. That path uses
+`AISOC_ADMIN_PASSWORD` from `.env` — set it to choose the password a stack
+started without `make` will have. If the variable is empty, the service
+declines instead of minting one, because its stdout is the container's log and
+a generated password written there would be stored on disk; run `make bootstrap`
+in that case and the password is printed once, nowhere else. An
+existing administrator is never rewritten by either path — `--reset-password`
+is what replaces a password.
+
 To choose the address, or supply your own password instead:
 
 ```bash
@@ -254,7 +264,7 @@ does not.
 
 | Profile | Services |
 | --- | --- |
-| *(default — CORE)* | **postgres** · **redis** · **zookeeper** · **kafka** · **qdrant** (16333) · **litellm** (14000, LLM gateway) · **ollama** (21434, local model) · **ollama-pull** (one-shot model fetch) · **ingest-worker** (18081, Go) · **fusion** (18003) · **api** (18000) · **agents** (18001) · **threatintel** (18005) · **realtime** (18086) · **web** (13000) · **connectors** (18088) · **actions** (18002) |
+| *(default — CORE)* | **postgres** · **redis** · **zookeeper** · **kafka** · **qdrant** (16333) · **litellm** (14000, LLM gateway) · **ollama** (21434, local model) · **ollama-pull** (one-shot model fetch) · **bootstrap** (one-shot first administrator) · **ingest-worker** (18081, Go) · **fusion** (18003) · **api** (18000) · **agents** (18001) · **threatintel** (18005) · **realtime** (18086) · **web** (13000) · **connectors** (18088) · **actions** (18002) |
 | `full` | **clickhouse** (18123/19000) · **neo4j** (17474/17687) · **opensearch** (19200) · **ueba** (18007) · **enrichment** (18080, Go) · **kafka-ui** (18090) |
 | `extras` | **honeytokens** (18008) · **purple-team** (18006) |
 | `chatops` | **slack-bot** (18009) · **teams-bot** (18010) |
@@ -263,8 +273,11 @@ does not.
 | `mcp` | **mcp** (18096, streamable-HTTP MCP server, off by default) |
 | `escalations` | **escalations** (ack-clock bridge: Teams cards for unacknowledged CRITICAL/HIGH cases; off by default, needs `AISOC_ESCALATION_TEAMS_URL`) |
 
-CORE is 16 long-running services, or 17 counting `ollama-pull`, which fetches
-the model once and exits, and `full` is 22. `connectors` and `actions` moved
+CORE is 16 long-running services, or 18 counting `ollama-pull`, which fetches
+the model once and exits, and `bootstrap`, which creates the first administrator
+and exits - both run again on the next `docker compose up`, and both are no-ops
+when there is nothing to do (for `bootstrap`, that includes a stack with no
+`AISOC_ADMIN_PASSWORD` set). `full` is 22. `connectors` and `actions` moved
 into CORE because the API service in CORE already pointed at both and
 federated search defaults on, so the capability was enabled and aimed at a
 hostname that does not resolve; the measured cost of moving them is 124.8 MiB

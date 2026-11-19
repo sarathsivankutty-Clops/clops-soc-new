@@ -371,7 +371,11 @@ services:
         condition: service_healthy
     ports:
       - "${AISOC_BIND_ADDR:-127.0.0.1}:${API_PORT:-18000}:8000"
-    environment:
+    # Anchored because `bootstrap` below runs the same image and must see the
+    # same database URL, secrets and feature flags. Copying the block is how
+    # the two drift: a variable added here and not there is a bootstrap that
+    # signs in to a different database or boots with a missing secret.
+    environment: &api-env
       # Two roles, on purpose. DATABASE_URL is the runtime role: DML only, and
       # row-level security applies to it. DATABASE_MIGRATION_URL is the owner,
       # used by `app.scripts.run_migrations` for DDL and nothing else. Running
@@ -599,6 +603,59 @@ services:
     networks:
       - clops-soc
     restart: unless-stopped
+
+  # First administrator, on every `docker compose up`.
+  #
+  # Compose starts an exited container again on the next `up`, so a plain
+  # service whose command exits is the mechanism - no restart policy, no
+  # wrapper. `bootstrap_admin` is idempotent (an existing administrator makes
+  # it print "An administrator already exists" and exit 0 without touching
+  # the hash), so a restart is a no-op rather than a password reset.
+  #
+  # The password is AISOC_ADMIN_PASSWORD from `.env`. The script never echoes
+  # a password it was given - but when that variable is empty it *generates*
+  # one and prints it, and here stdout is this container's log, which Docker
+  # keeps on disk. A generated password in a log is a secret in a log, so the
+  # guard below declines to run without one and points at the foreground
+  # command instead (`make bootstrap`), where the generated password is
+  # printed once and stored nowhere. Changing an existing administrator still
+  # needs `make bootstrap ARGS=--reset-password`; this service deliberately
+  # never resets one.
+  #
+  # `service_healthy` on api, not `service_started`: the schema has to be
+  # up before the first INSERT, and /readyz is what certifies that. A
+  # non-zero exit here is reported by `make up` (`_wait` treats an exited
+  # container with a non-zero code as broken) and by `make doctor`'s
+  # "Containers that exited" section. Plain `docker compose up -d` returns 0
+  # regardless, so `docker compose ps -a` is where that failure is visible.
+  #
+  # CORE on purpose: a deployment started without this service has no account
+  # to sign in with when the operator supplied a password, which is the state
+  # this service exists to end.
+  bootstrap:
+    image: clopsoc-api:${TAG:-local}
+    # The image is built here; a pull would replace it with a tag nobody
+    # published.
+    pull_policy: never
+    command:
+      - sh
+      - -c
+      - |
+        if [ -z "$$AISOC_ADMIN_PASSWORD" ]; then
+          echo "aisoc: AISOC_ADMIN_PASSWORD is empty, so no administrator was created here."
+          echo "aisoc: a generated password would have been written to this container's log."
+          echo "aisoc: run 'make bootstrap' (or 'docker compose run --rm -T api python -m app.scripts.bootstrap_admin')"
+          echo "aisoc: to create one and have the password printed once, or set AISOC_ADMIN_PASSWORD in .env."
+          exit 0
+        fi
+        exec python -m app.scripts.bootstrap_admin
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: "no"
+    environment: *api-env
+    networks:
+      - clops-soc
 
   ingest-worker:
     build:

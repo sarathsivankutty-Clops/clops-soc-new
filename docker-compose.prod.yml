@@ -338,6 +338,19 @@ services:
       preflight-secrets:
         condition: service_completed_successfully
 
+  # The first-administrator one-shot from the base file. Like `ollama-pull` it
+  # is a `depends_on`-only entry, and for the same reason: a service that
+  # starts ahead of the credential check is the hole the check exists to
+  # close. It matters more here than for most - this is the one container that
+  # writes an administrator, so it must not do so before the preflight has
+  # refused a secret that was published in the repository. Its `depends_on`
+  # merges with the base file's `api: service_healthy`, so the schema is still
+  # up before the first INSERT.
+  bootstrap:
+    depends_on:
+      preflight-secrets:
+        condition: service_completed_successfully
+
   # The MCP server (depth 9.1), a `--profile mcp` opt-in that is off by
   # default. It publishes 8096 in the base file for local clients; in
   # production it is unpublished like every other upstream, because the

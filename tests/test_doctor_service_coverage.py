@@ -42,7 +42,7 @@ COMPOSE = REPO / "docker-compose.yml"
 #: accounted for, and `ollama-pull` additionally gets the "Local model"
 #: section, which asks whether the model is there rather than whether the
 #: container succeeded.
-ONE_SHOTS = frozenset({"ollama-pull"})
+ONE_SHOTS = frozenset({"ollama-pull", "bootstrap"})
 
 
 def _core_services() -> set[str]:
