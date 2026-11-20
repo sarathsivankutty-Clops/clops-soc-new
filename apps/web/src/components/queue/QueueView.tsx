@@ -278,16 +278,17 @@ function SlaCountdown({
   );
 }
 
+/* [HIDDEN-UI QUEUE-WRAP-4 max-w-56 truncate clipped suggested actions] */
 function SuggestedActionBadge({ item }: { item: QueueItem }) {
   if (!item.suggested_action) return null;
   const cfg = RISK_CONFIG[item.suggested_action.risk];
   return (
     <span
-      className="inline-flex items-center gap-1.5 text-eyebrow text-fg-muted bg-pill-neutral-bg px-2 py-0.5 rounded-pill"
+      className="inline-flex items-center gap-1.5 max-w-full text-eyebrow text-fg-muted bg-pill-neutral-bg px-2 py-0.5 rounded-pill"
       title={`Suggested next action (risk: ${item.suggested_action.risk})`}
     >
-      <span className={clsx('w-1.5 h-1.5 rounded-pill', cfg.dot)} aria-hidden />
-      <span className="truncate max-w-56">→ {item.suggested_action.action}</span>
+      <span className={clsx('w-1.5 h-1.5 rounded-pill shrink-0', cfg.dot)} aria-hidden />
+      <span className="line-clamp-1 break-words max-w-md">→ {item.suggested_action.action}</span>
     </span>
   );
 }
@@ -447,13 +448,14 @@ function QueueRow({ item, generatedAt, isMine, busyAction, onClaim, onRelease, o
           )}
         </div>
 
-        <p className="text-body font-medium text-fg-primary mt-1.5 truncate">
+        {/* [HIDDEN-UI QUEUE-WRAP-4 single-line truncate clipped long alert titles in Investigation Queue] */}
+        <p className="text-body font-medium text-fg-primary mt-1.5 line-clamp-2 break-words leading-snug">
           {item.title}
         </p>
 
         <div className="flex items-center gap-2 mt-1 text-caption text-fg-muted flex-wrap">
           {item.asset && (
-            <span className="font-mono text-fg-secondary" title={item.asset.kind}>
+            <span className="font-mono text-fg-secondary break-all" title={item.asset.kind}>
               {item.asset.label ?? item.asset.value}
             </span>
           )}
