@@ -54,6 +54,7 @@ Severity bucketing:
 
 from __future__ import annotations
 
+import asyncio
 import ipaddress
 import json
 from datetime import UTC, datetime, timedelta
@@ -64,6 +65,34 @@ import structlog
 from app.connectors.base import BaseConnector, Capability, ConnectorSchema, Field
 
 logger = structlog.get_logger()
+
+# CloudTrail indexing lag can take 5–15 minutes before an event appears in
+# LookupEvents. Using at least a 20-minute lookback window ensures delayed
+# events are not missed between 5-minute polls while `apply_checkpoint()`
+# suppresses any event already ingested on a previous poll.
+_MIN_CLOUDTRAIL_LOOKBACK_SECONDS = 1200
+
+# Threshold above which `fetch_alerts` switches from 1-call-per-EventName to
+# 1 batched `ReadOnly=false` lookup + explicit lookups only for read-only/auth
+# event names. This keeps small custom allow-lists on direct EventName queries
+# while cutting the default 78-event allow-list from 78 API calls down to 7
+# (well inside AWS CloudTrail's 2 TPS LookupEvents rate limit).
+_BATCH_READONLY_FALSE_THRESHOLD = 10
+
+# Events in DEFAULT_EVENT_NAMES where CloudTrail records `readOnly: true` (or
+# sign-in events where `readOnly` may not be `"false"`). These are queried by
+# `EventName` individually when batch mode is active.
+_READONLY_OR_AUTH_EVENTS = frozenset(
+    {
+        "AssumeRole",
+        "ConsoleLogin",
+        "GetAccountAuthorizationDetails",
+        "GetAccountSummary",
+        "GetObject",
+        "GetSecretValue",
+        "ListAccessKeys",
+    }
+)
 
 
 # Critical-severity events: irreversible-or-incident-grade actions
@@ -323,8 +352,12 @@ class AWSCloudTrailConnector(BaseConnector):
     def _get_client(self):
         try:
             import boto3
+            from botocore.config import Config
 
-            kwargs: dict[str, Any] = {"region_name": self._region}
+            kwargs: dict[str, Any] = {
+                "region_name": self._region,
+                "config": Config(retries={"max_attempts": 10, "mode": "adaptive"}),
+            }
             if self._access_key and self._secret_key:
                 kwargs["aws_access_key_id"] = self._access_key
                 kwargs["aws_secret_access_key"] = self._secret_key
@@ -340,7 +373,7 @@ class AWSCloudTrailConnector(BaseConnector):
             # ``lookup_events`` works against the management-events
             # history even when no trail is configured — but if the auth
             # is wrong, this call will surface it.
-            client.describe_trails()
+            await asyncio.to_thread(client.describe_trails)
             return {
                 "success": True,
                 "connector": self.connector_id,
@@ -360,7 +393,8 @@ class AWSCloudTrailConnector(BaseConnector):
             logger.warning("cloudtrail.client_init_failed", error=str(exc))
             return []
 
-        start_time = datetime.now(UTC) - timedelta(seconds=since_seconds)
+        lookback_seconds = max(since_seconds, _MIN_CLOUDTRAIL_LOOKBACK_SECONDS)
+        start_time = datetime.now(UTC) - timedelta(seconds=lookback_seconds)
         end_time = datetime.now(UTC)
 
         all_events: list[dict[str, Any]] = []
@@ -368,12 +402,67 @@ class AWSCloudTrailConnector(BaseConnector):
         if self._event_names is None:
             # Firehose mode — pull every event in the window. Operators
             # who set ``event_names=*`` explicitly opted in.
-            all_events.extend(self._lookup_for_attribute(client, attribute=None, start=start_time, end=end_time))
+            all_events.extend(
+                await asyncio.to_thread(
+                    self._lookup_for_attribute,
+                    client,
+                    attribute=None,
+                    start=start_time,
+                    end=end_time,
+                )
+            )
+        elif len(self._event_names) > _BATCH_READONLY_FALSE_THRESHOLD:
+            # Batched allow-list mode: instead of issuing 78 separate
+            # LookupEvents calls (which hits AWS CloudTrail's 2 TPS limit),
+            # fetch all mutating management events (`ReadOnly=false`) in a
+            # single paginated query and filter against the allow-list in
+            # memory, then query only the read-only/auth event names
+            # individually (~7 total API calls instead of 78).
+            allowed_set = frozenset(self._event_names)
+            try:
+                write_events = await asyncio.to_thread(
+                    self._lookup_for_attribute,
+                    client,
+                    attribute=("ReadOnly", "false"),
+                    start=start_time,
+                    end=end_time,
+                    max_items=500,
+                )
+                for ev in write_events:
+                    ev_name = ev.get("EventName")
+                    if ev_name in allowed_set:
+                        all_events.append(ev)
+            except Exception as exc:
+                logger.warning(
+                    "cloudtrail.lookup_failed",
+                    event_name="ReadOnly=false",
+                    error=str(exc),
+                )
+
+            for event_name in sorted(allowed_set & _READONLY_OR_AUTH_EVENTS):
+                try:
+                    all_events.extend(
+                        await asyncio.to_thread(
+                            self._lookup_for_attribute,
+                            client,
+                            attribute=("EventName", event_name),
+                            start=start_time,
+                            end=end_time,
+                        )
+                    )
+                except Exception as exc:
+                    logger.warning(
+                        "cloudtrail.lookup_failed",
+                        event_name=event_name,
+                        error=str(exc),
+                    )
+                    continue
         else:
             for event_name in self._event_names:
                 try:
                     all_events.extend(
-                        self._lookup_for_attribute(
+                        await asyncio.to_thread(
+                            self._lookup_for_attribute,
                             client,
                             attribute=("EventName", event_name),
                             start=start_time,
@@ -389,11 +478,23 @@ class AWSCloudTrailConnector(BaseConnector):
                     )
                     continue
 
+        # De-duplicate by EventId within a single poll (e.g. ConsoleLogin
+        # appearing in both ReadOnly=false and explicit EventName lookup).
+        deduped_events: list[dict[str, Any]] = []
+        seen_ids: set[str] = set()
+        for ev in all_events:
+            ev_id = ev.get("EventId")
+            if isinstance(ev_id, str) and ev_id:
+                if ev_id in seen_ids:
+                    continue
+                seen_ids.add(ev_id)
+            deduped_events.append(ev)
+
         # Once, over the aggregate: the lookup helper runs per event name,
         # so a cursor applied there would order and de-duplicate each name's
         # page against the others' and advance the checkpoint several times
         # per poll.
-        return [self.normalize(e) for e in self.apply_checkpoint(all_events)]
+        return [self.normalize(e) for e in self.apply_checkpoint(deduped_events)]
 
     @staticmethod
     def _lookup_for_attribute(
@@ -401,6 +502,7 @@ class AWSCloudTrailConnector(BaseConnector):
         attribute: tuple[str, str] | None,
         start: datetime,
         end: datetime,
+        max_items: int = 100,
     ) -> list[dict[str, Any]]:
         kwargs: dict[str, Any] = {
             "StartTime": start,
@@ -413,10 +515,9 @@ class AWSCloudTrailConnector(BaseConnector):
 
         events: list[dict[str, Any]] = []
         paginator = client.get_paginator("lookup_events")
-        # Cap each event-name at 100 hits per poll. If a single event
-        # is firing more than 100 times in 5 minutes the operator
-        # already has a different problem.
-        pages = paginator.paginate(**kwargs, PaginationConfig={"MaxItems": 100, "PageSize": 50})
+        # Cap each event-name at 100 hits per poll (or 500 for batched
+        # ReadOnly=false lookups).
+        pages = paginator.paginate(**kwargs, PaginationConfig={"MaxItems": max_items, "PageSize": 50})
         for page in pages:
             events.extend(page.get("Events", []))
         return events

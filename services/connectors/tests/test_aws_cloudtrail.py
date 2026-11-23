@@ -462,3 +462,86 @@ async def test_fetch_alerts_client_init_failure_returns_empty_not_raise():
     ):
         result = await connector.fetch_alerts()
     assert result == []
+
+
+@pytest.mark.asyncio
+async def test_fetch_alerts_default_allow_list_batches_write_events_via_readonly_false():
+    """Default 78-event allow-list uses 1 batched ReadOnly=false lookup plus
+    explicit lookups only for read-only/auth event names (7 calls instead of 78),
+    avoiding AWS CloudTrail's 2 TPS LookupEvents throttle."""
+    connector = AWSCloudTrailConnector(region="us-east-1")
+    mock_client = MagicMock()
+
+    def make_paginator(events):
+        p = MagicMock()
+        p.paginate.return_value = iter([{"Events": events}])
+        return p
+
+    # First call is ReadOnly=false; return one allowed write event, one noisy
+    # non-allow-listed write event, and ConsoleLogin (also queried explicitly)
+    # to verify EventId deduplication.
+    readonly_false_paginator = make_paginator(
+        [
+            {
+                "EventId": "run-1",
+                "EventName": "RunInstances",
+                "EventTime": datetime(2026, 5, 10, 12, 0, 0, tzinfo=UTC),
+                "CloudTrailEvent": json.dumps({"eventName": "RunInstances"}),
+            },
+            {
+                "EventId": "noise-1",
+                "EventName": "PutMetricData",
+                "EventTime": datetime(2026, 5, 10, 12, 0, 0, tzinfo=UTC),
+                "CloudTrailEvent": json.dumps({"eventName": "PutMetricData"}),
+            },
+            {
+                "EventId": "login-dup",
+                "EventName": "ConsoleLogin",
+                "EventTime": datetime(2026, 5, 10, 12, 0, 0, tzinfo=UTC),
+                "CloudTrailEvent": json.dumps({"eventName": "ConsoleLogin"}),
+            },
+        ]
+    )
+    assume_role_paginator = make_paginator(
+        [
+            {
+                "EventId": "assume-1",
+                "EventName": "AssumeRole",
+                "EventTime": datetime(2026, 5, 10, 12, 0, 0, tzinfo=UTC),
+                "CloudTrailEvent": json.dumps({"eventName": "AssumeRole"}),
+            }
+        ]
+    )
+    console_login_paginator = make_paginator(
+        [
+            {
+                "EventId": "login-dup",
+                "EventName": "ConsoleLogin",
+                "EventTime": datetime(2026, 5, 10, 12, 0, 0, tzinfo=UTC),
+                "CloudTrailEvent": json.dumps({"eventName": "ConsoleLogin"}),
+            }
+        ]
+    )
+    empty_paginator = make_paginator([])
+
+    mock_client.get_paginator.side_effect = [
+        readonly_false_paginator,
+        assume_role_paginator,
+        console_login_paginator,
+        empty_paginator,
+        empty_paginator,
+        empty_paginator,
+        empty_paginator,
+    ]
+
+    with patch.object(connector, "_get_client", return_value=mock_client):
+        results = await connector.fetch_alerts(since_seconds=300)
+
+    # 1 batched ReadOnly=false call + 6 read-only/auth EventName calls = 7 calls (not 78)
+    assert mock_client.get_paginator.call_count == 7
+    first_kwargs = readonly_false_paginator.paginate.call_args.kwargs
+    assert first_kwargs["LookupAttributes"] == [{"AttributeKey": "ReadOnly", "AttributeValue": "false"}]
+    # PutMetricData filtered out; ConsoleLogin deduplicated; RunInstances + AssumeRole + ConsoleLogin kept
+    assert len(results) == 3
+    assert {r["external_id"] for r in results} == {"run-1", "login-dup", "assume-1"}
+
