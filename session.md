@@ -255,3 +255,20 @@ Preserved inside `[HIDDEN-UI CHROME-2 ...]` comments:
 - Gates after the change: posture 0 (38 services), published_images 0, published_secrets `--check`/`--check-env` 0, env_placeholders 0, hosted_hostname 0, service_token_wiring 0, runtime_db_role 0. `sh -n` + shellcheck on `preflight.sh` 0.
 - Still red, as before: `check_profile_service_counts.py` (now says 18 long-running vs the published 16 — it was already 17 vs 16) and `check_deployment_completeness.py` (now also flags that the Helm chart renders no workload for `nginx`; `bootstrap` was already flagged). Adding a Helm workload is deliberately out of this compose-only phase.
 - Not verified: no EC2, no DNS record, no certificate, no security-group change, and no browser WebSocket run — the runbook's steps 1–11 are the verification path on the instance.
+
+---
+
+## 11. Keycloak Production Identity Provider (`deploy/keycloak`)
+
+### 11.1 Services & Secrets (`docker-compose.yml`, `.env.secrets.example`, `.gitignore`)
+- Reused the exact digest-pinned image from `.github/workflows/sso-live.yml:191`:
+  `quay.io/keycloak/keycloak:26.8@sha256:b0f60d489d51c5d113390bdf5461d4c06e6051be026c05549f2e1e10ec352bcc`.
+- Added dedicated `keycloak-db` (`postgres:16-alpine`) with its own named volume `clops_soc_keycloak_db_data` and mandatory `KEYCLOAK_DB_PASSWORD`.
+- Added `keycloak` running production `start --import-realm --hostname=https://${KEYCLOAK_HOSTNAME:-auth.cloudifyops.com} --hostname-admin=http://127.0.0.1:${KEYCLOAK_ADMIN_PORT:-18080} --proxy-headers=xforwarded --http-enabled=true --health-enabled=true`, `mem_limit: 1024m`, `mem_reservation: 512m`, `restart: unless-stopped`, loopback admin binding `127.0.0.1:${KEYCLOAK_ADMIN_PORT:-18080}:8080`, and a bash `/dev/tcp/127.0.0.1/9000` healthcheck against `/health/ready` (`curl` and `wget` are absent in the ubi9-micro image).
+- Verified all CLI flags against `kc.sh start --help` inside the pinned image container.
+- All secrets (`KEYCLOAK_DB_PASSWORD`, `KEYCLOAK_ADMIN_USER`, `KEYCLOAK_ADMIN_PASSWORD`, `OIDC_CLIENT_SECRET`) have no defaults in `docker-compose.yml` and are read from `.env.secrets` (gitignored, template in `.env.secrets.example`).
+
+### 11.2 Nginx & Realm Export (`infra/nginx/tls/30-auth.conf`, `infra/keycloak/realm-clopssoc.json`, `docs/DEPLOY-KEYCLOAK.md`)
+- Activated `infra/nginx/tls/30-auth.conf` (and added the HTTP-01 challenge server block for `auth.cloudifyops.com` to `infra/nginx/bootstrap/default.conf`), blocking `/admin`, `/admin/*`, `/realms/master`, and `/realms/master/*` with `403`, and rate-limiting `/realms/*/login-actions/` (`aisoc_login`) and `/realms/*/protocol/openid-connect/(auth|token|registrations)` (`aisoc_auth`).
+- Created `infra/keycloak/realm-clopssoc.json`: realm `clopssoc`, confidential client `clopssoc-console` (`standardFlowEnabled: true`, `implicitFlowEnabled: false`, `directAccessGrantsEnabled: false`, `pkce.code.challenge.method: S256`, redirect URI `https://soc.cloudifyops.com/auth/oidc/callback`, web origin & post-logout redirect `https://soc.cloudifyops.com`, placeholder secret), `oidc-group-membership-mapper` emitting `groups` (`full.path: false`), groups `soc-analysts` and `soc-admins`, `verifyEmail: true`, `registrationAllowed: false`, `bruteForceProtected: true`, `passwordPolicy: "length(12) and notUsername and notEmail"`, no test users, and no Google IdP secret.
+- Documented full EC2 runbook, manual Google IdP steps (`Hosted Domain: cloudifyops.com`, verified email), app env vars, `POST /api/v1/sso-connections` creation, MFA policy verification (`GET/PUT /api/v1/auth/mfa/policy`), rollback, and test checklist in `docs/DEPLOY-KEYCLOAK.md`.

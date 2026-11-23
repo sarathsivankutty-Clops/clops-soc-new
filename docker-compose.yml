@@ -136,6 +136,10 @@ volumes:
   # issuance). Read by `nginx` and written by the `certbot` profile.
   clops_soc_letsencrypt:
   clops_soc_acme_webroot:
+  # Dedicated database volume for Keycloak (keycloak-db). Separate from
+  # `postgres_data` so the identity provider never shares a database or a
+  # volume with the application tables.
+  clops_soc_keycloak_db_data:
 
 services:
 
@@ -456,11 +460,14 @@ services:
       # Enterprise SSO (feature-flagged). Values come from .env; the repo
       # never carries an issuer, client id or secret literal.
       SSO_ENABLED: ${SSO_ENABLED:-false}
+      SSO_PROVIDER: ${SSO_PROVIDER:-oidc}
+      SSO_LOCAL_ADMIN_ONLY: ${SSO_LOCAL_ADMIN_ONLY:-false}
       OIDC_ISSUER: ${OIDC_ISSUER:-}
       OIDC_CLIENT_ID: ${OIDC_CLIENT_ID:-}
-      OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET:-}
+      OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET}
       OIDC_REDIRECT_URI: ${OIDC_REDIRECT_URI:-}
       OIDC_SCOPES: ${OIDC_SCOPES:-openid email profile groups}
+      OIDC_PKCE: ${OIDC_PKCE:-true}
       SSO_GROUPS_CLAIM: ${SSO_GROUPS_CLAIM:-}
       SSO_LOGIN_LABEL: ${SSO_LOGIN_LABEL:-Continue with SSO}
       REALTIME_INTERNAL_TOKEN: ${REALTIME_INTERNAL_TOKEN:-}
@@ -1969,6 +1976,66 @@ services:
     networks:
       - clops-soc
     restart: unless-stopped
+
+  # ─── Identity Provider (Keycloak) ───────────────────────────────────────────
+
+  keycloak-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: ${KEYCLOAK_DB_PASSWORD:?set KEYCLOAK_DB_PASSWORD in .env.secrets}
+    volumes:
+      - clops_soc_keycloak_db_data:/var/lib/postgresql/data
+    networks:
+      - clops-soc
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keycloak -d keycloak"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.8@sha256:b0f60d489d51c5d113390bdf5461d4c06e6051be026c05549f2e1e10ec352bcc
+    command:
+      - start
+      - --import-realm
+      - --hostname=https://${KEYCLOAK_HOSTNAME:-auth.cloudifyops.com}
+      - --hostname-admin=http://127.0.0.1:${KEYCLOAK_ADMIN_PORT:-18080}
+      - --proxy-headers=xforwarded
+      - --http-enabled=true
+      - --health-enabled=true
+    depends_on:
+      keycloak-db:
+        condition: service_healthy
+    environment:
+      KC_DB: postgres
+      KC_DB_URL_HOST: keycloak-db
+      KC_DB_URL_PORT: "5432"
+      KC_DB_URL_DATABASE: keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:?set KEYCLOAK_DB_PASSWORD in .env.secrets}
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USER:?set KEYCLOAK_ADMIN_USER in .env.secrets}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?set KEYCLOAK_ADMIN_PASSWORD in .env.secrets}
+    volumes:
+      - ./infra/keycloak/realm-clopssoc.json:/opt/keycloak/data/import/realm-clopssoc.json:ro
+    ports:
+      # Hardcoded to 127.0.0.1 (never AISOC_BIND_ADDR) so the admin console is
+      # reachable only through an SSH tunnel, while nginx blocks /admin and
+      # /realms/master on the public TLS listener.
+      - "127.0.0.1:${KEYCLOAK_ADMIN_PORT:-18080}:8080"
+    mem_limit: 1024m
+    mem_reservation: 512m
+    networks:
+      - clops-soc
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/9000 && printf 'GET /health/ready HTTP/1.0\\r\\nHost: 127.0.0.1\\r\\n\\r\\n' >&3 && grep -q '200 OK' <&3"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
 
   # ─── TLS edge ───────────────────────────────────────────────────────────────
 
