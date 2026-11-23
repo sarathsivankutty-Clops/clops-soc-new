@@ -466,10 +466,11 @@ services:
       OIDC_CLIENT_ID: ${OIDC_CLIENT_ID:-}
       OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET}
       OIDC_REDIRECT_URI: ${OIDC_REDIRECT_URI:-}
-      OIDC_SCOPES: ${OIDC_SCOPES:-openid email profile groups}
+      OIDC_SCOPES: ${OIDC_SCOPES:-openid email profile}
       OIDC_PKCE: ${OIDC_PKCE:-true}
+      OIDC_IDP_HINT: ${OIDC_IDP_HINT:-google}
       SSO_GROUPS_CLAIM: ${SSO_GROUPS_CLAIM:-}
-      SSO_LOGIN_LABEL: ${SSO_LOGIN_LABEL:-Continue with SSO}
+      SSO_LOGIN_LABEL: ${SSO_LOGIN_LABEL:-Sign in with Google}
       REALTIME_INTERNAL_TOKEN: ${REALTIME_INTERNAL_TOKEN:-}
       # Depth 5.2. Where a pending approval is offered besides the console.
       # Both are empty by default: an unset URL means that channel reports
@@ -2001,8 +2002,9 @@ services:
     command:
       - start
       - --import-realm
-      - --hostname=https://${KEYCLOAK_HOSTNAME:-auth.cloudifyops.com}
-      - --hostname-admin=http://127.0.0.1:${KEYCLOAK_ADMIN_PORT:-18080}
+      - --hostname=https://${KEYCLOAK_HOSTNAME:-${PUBLIC_HOST:-soc.cloudifyops.com}}
+      - --hostname-admin=http://127.0.0.1:${KEYCLOAK_ADMIN_PORT:-18091}
+      - --hostname-backchannel-dynamic=true
       - --proxy-headers=xforwarded
       - --http-enabled=true
       - --health-enabled=true
@@ -2023,8 +2025,9 @@ services:
     ports:
       # Hardcoded to 127.0.0.1 (never AISOC_BIND_ADDR) so the admin console is
       # reachable only through an SSH tunnel, while nginx blocks /admin and
-      # /realms/master on the public TLS listener.
-      - "127.0.0.1:${KEYCLOAK_ADMIN_PORT:-18080}:8080"
+      # /realms/master on the public TLS listener. (18091 avoids colliding with
+      # enrichment's 18080.)
+      - "127.0.0.1:${KEYCLOAK_ADMIN_PORT:-18091}:8080"
     mem_limit: 1024m
     mem_reservation: 512m
     networks:
@@ -2070,6 +2073,8 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
+    networks:
+      - clops-soc
     restart: unless-stopped
 
   # One-shot certificate issue/renew. Behind the `certbot` profile so a normal

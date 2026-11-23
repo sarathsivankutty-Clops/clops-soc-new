@@ -215,6 +215,8 @@ async def _pop_state(state: str) -> dict[str, str] | None:
 _SAFE_REDIRECT_RE = re.compile(r"^/[\w\-./]*$")
 # Characters allowed in a safe relative redirect path.
 _SAFE_PATH_CHARS_RE = re.compile(r"[^\w\-./]")
+# Characters allowed in an IdP hint alias (e.g. "google").
+_SAFE_IDP_HINT_RE = re.compile(r"^[a-zA-Z0-9._-]{1,64}$")
 
 
 def _sso_feature_enabled() -> bool:
@@ -251,7 +253,11 @@ def _safe_redirect(url: str) -> str:
 
 
 @router.get("/login")
-async def oidc_login(request: Request, redirect: str = "/") -> Response:
+async def oidc_login(
+    request: Request,
+    redirect: str = "/",
+    idp_hint: str | None = Query(None),
+) -> Response:
     """Initiate OIDC authorization code flow."""
     _require_sso_enabled()
     issuer = os.getenv("OIDC_ISSUER")
@@ -291,6 +297,10 @@ async def oidc_login(request: Request, redirect: str = "/") -> Response:
         "nonce": nonce,
     }
 
+    hint = (idp_hint if idp_hint is not None else os.getenv("OIDC_IDP_HINT", "")).strip()
+    if hint and _SAFE_IDP_HINT_RE.match(hint):
+        params["kc_idp_hint"] = hint
+
     if use_pkce:
         verifier = secrets.token_urlsafe(64)
         challenge = hashlib.sha256(verifier.encode()).digest()
@@ -305,7 +315,11 @@ async def oidc_login(request: Request, redirect: str = "/") -> Response:
 
     auth_url = provider["authorization_endpoint"] + "?" + urlencode(params)
     response = RedirectResponse(url=auth_url)
-    response.set_cookie("oidc_state", state, httponly=True, samesite="lax", max_age=600)
+    is_https = (
+        request.url.scheme == "https"
+        or request.headers.get("x-forwarded-proto", "").split(",")[0].strip().lower() == "https"
+    )
+    response.set_cookie("oidc_state", state, httponly=True, samesite="lax", secure=is_https, max_age=600)
     return response
 
 
