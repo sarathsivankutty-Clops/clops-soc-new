@@ -218,3 +218,40 @@ Preserved inside `[HIDDEN-UI CHROME-2 ...]` comments:
 - **Playbooks** (`components/playbooks/PlaybooksView.tsx`): same, plus `handleApplyView` (its only caller) commented out. `setGalleryFilters` and `setGalleryKey` were dropped from the two `useState` destructures because that handler was their only writer; `galleryFilters` is still read to seed `PlaybooksGallery`, and `galleryKey` still keys it. The restore note names both setters.
 - **Deliberately untouched:** `components/saved-views/SavedViewsBar.tsx` and its ~12 tests, `savedViewsApi` in `lib/api.ts`, the backend endpoints and the saved-view rows already stored. No API, data-model or auth change.
 - **Gates:** `tsc --noEmit` 0; `eslint` 0 errors / 94 warnings (baseline); `vitest run` 3 files failed / 136 passed, 5 failed / 1290 passed — the same five known failures (`a11y` AlertsView timeout, `MitrePanelWording` CRLF ×2, `ThreatIntelLookupHonesty` ×2), which pass when those files run alone; `next build` 0. No test asserts the bar's presence, so no test needed editing.
+
+---
+
+## 10. HTTPS edge — nginx TLS termination (`deploy/https`, in progress)
+
+### 10.1 Branch state
+- `test-push` held the whole tree as untracked (75 entries); `git checkout main` refused to overwrite them. Every path tracked in `main` matched the working tree byte-for-byte except `apps/web/next-env.d.ts` (generated) and `services/agents/tests/eval_data/cicids_micro.csv`, so `git checkout -f main` was a content no-op. Branched `deploy/https` from `ac33d5766`. Untouched: the running laptop stack, `.env`, and the untracked audit docs.
+
+### 10.2 Baseline measured before editing (laptop, read-only)
+- `scripts/check_deployment_auth_posture.py` → 0 (21 vars / 36 services).
+- `check_published_images.py` → 0; `check_env_placeholders.py` → 0; `check_hosted_hostname.py` → 0; `check_service_token_wiring.py` → 0; `check_runtime_db_role.py` → 0; `check_published_secrets.py --check/--check-env` → 0.
+- **Already red before this phase:** `check_profile_service_counts.py` (publishes 16, compose has 17) and `check_deployment_completeness.py` (bootstrap has no Helm workload). Left as found; adding `nginx` moves the count figure by one and is reported, not hidden.
+
+### 10.3 How the browser gets live updates (verified)
+- WS URL = `wsOrigin()` + `/ws/<channel>?token=` (`apps/web/src/lib/api.ts:7887`); `wsOrigin()` returns `NEXT_PUBLIC_WS_URL` verbatim when set, else derives `ws|wss://` from `window.location` (`api.ts:67-74`).
+- SSE URL = `REALTIME_BASE` + `/sse?token=` (`api.ts:7894-7897`), `REALTIME_BASE` from `NEXT_PUBLIC_REALTIME_URL`.
+- Compose bakes `NEXT_PUBLIC_WS_URL=ws://host:18086` / `NEXT_PUBLIC_REALTIME_URL=http://host:18086` as **build args** (`docker-compose.yml:1884-1885`), so today the browser talks to realtime on 18086 directly.
+- `next.config.js:193-200` rewrites `/ws/:path*` and `/sse` to realtime, but Next rewrites do not carry the WebSocket upgrade — so nginx routes `/ws/` and `/sse` straight to `realtime:4000` and everything else to `web:3000`.
+
+### 10.4 Findings that constrain the change
+- API mints its own HS256 session JWT (`core/security.py:318-334`); no IdP token validation on requests. The only cookie the API sets is the OIDC state cookie, **without `secure`** (`auth/oidc.py:308`) — must become `secure` before HTTPS is real.
+- Audit IP attribution: `core/trusted_proxy.py:13-20` ignores `X-Forwarded-For` unless `AISOC_TRUSTED_PROXIES` lists the immediate peer. uvicorn starts with `--fd` and **no** `--proxy-headers/--forwarded-allow-ips` (`app/scripts/serve.py:43-56`), so behind nginx `actor_ip` would be the nginx container address → `[TODO]` recorded, fix is config-only.
+- Realtime already prefers `x-forwarded-for` (`services/realtime/src/index.ts:235-236`), so its rate limiter sees the client once nginx sets the header.
+
+### 10.5 Files being written this phase
+- `docker-compose.yml`: `nginx` + `certbot` services, `clops_soc_letsencrypt` / `clops_soc_acme_webroot` volumes, web/realtime host ports removed, `PUBLIC_SCHEME` + `PUBLIC_PORT_SUFFIX` applied to the public URLs.
+- `infra/nginx/{bootstrap,tls,snippets}`: bootstrap HTTP config (ACME + redirect), TLS config (TLS1.2/1.3, OCSP, 444 default, WS/SSE routing, login rate limits), shared `server-name-*.conf` includes.
+- `.env.https.example`, `scripts/preflight.sh` (80/443 + DNS), `docs/DEPLOY-HTTPS.md`.
+
+### 10.6 Verification (laptop; the running stack was never started, stopped or rebuilt)
+- `docker compose config -q` → 0 (default `.env`), and `docker compose --env-file .env.https.example config -q` → 0 (also with `--profile certbot`, which is where the certbot command lives).
+- With `.env.https.example`: `AISOC_CONSOLE_URL=https://soc.cloudifyops.com`, `AISOC_CORS_ORIGINS=https://…`, web build args `wss://soc.cloudifyops.com` / `https://soc.cloudifyops.com`, nginx `0.0.0.0:80->80, 0.0.0.0:443->443`, certbot `certonly --webroot … --staging`.
+- `nginx -t` in throwaway containers (`docker run --rm nginx:1.28-alpine`), bootstrap and TLS configs, with a self-signed cert generated into a temp dir for `/etc/letsencrypt/live/soc.cloudifyops.com/`: both "syntax is ok / test is successful". The TLS run warns `ssl_stapling ignored, no OCSP responder URL` — expected for a self-signed test cert, not for a Let's Encrypt one.
+- Resolved port table: only `nginx` binds `0.0.0.0` (80/443). Everything else is `127.0.0.1` (api 18000, agents 18001, …), unchanged from before; `web` (13000) and `realtime` (18086) publish nothing.
+- Gates after the change: posture 0 (38 services), published_images 0, published_secrets `--check`/`--check-env` 0, env_placeholders 0, hosted_hostname 0, service_token_wiring 0, runtime_db_role 0. `sh -n` + shellcheck on `preflight.sh` 0.
+- Still red, as before: `check_profile_service_counts.py` (now says 18 long-running vs the published 16 — it was already 17 vs 16) and `check_deployment_completeness.py` (now also flags that the Helm chart renders no workload for `nginx`; `bootstrap` was already flagged). Adding a Helm workload is deliberately out of this compose-only phase.
+- Not verified: no EC2, no DNS record, no certificate, no security-group change, and no browser WebSocket run — the runbook's steps 1–11 are the verification path on the instance.
