@@ -7,13 +7,16 @@ import { AuditLogView } from '@/components/audit/AuditLogView';
 // import { ComplianceFrameworksView } from '@/components/compliance/ComplianceFrameworksView';
 import { ConnectorsView } from '@/components/connectors/ConnectorsView';
 // import { MfaView } from '@/components/settings/MfaView';
-import { RBACView } from '@/components/settings/RBACView';
-import { DeploymentAIPanel, SettingsView } from '@/components/settings/SettingsView';
+// [HIDDEN-UI SETTINGS-FIX-1 General and Roles & Permissions tabs hidden]
+// import { RBACView } from '@/components/settings/RBACView';
+// import { SettingsView } from '@/components/settings/SettingsView';
+import { DeploymentAIPanel } from '@/components/settings/SettingsView';
 import { UsersView } from '@/components/settings/UsersView';
 import { SectionTabs, type SectionTabItem } from '@/components/ui/SectionTabs';
 
 const SETTINGS_TABS: readonly SectionTabItem[] = [
-  { id: 'general', label: 'General', render: () => <SettingsView /> },
+  // [HIDDEN-UI SETTINGS-FIX-1 General tab not needed]
+  // { id: 'general', label: 'General', render: () => <SettingsView /> },
   { id: 'deployment', label: 'AI Settings', render: () => <DeploymentAIPanel /> },
   { id: 'connectors', label: 'Connectors', render: () => <ConnectorsView /> },
   {
@@ -32,6 +35,7 @@ const SETTINGS_TABS: readonly SectionTabItem[] = [
       </div>
     ),
   },
+  /* [HIDDEN-UI SETTINGS-FIX-1 Roles & Permissions tab hidden from the UI]
   {
     id: 'rbac',
     label: 'Roles & Permissions',
@@ -41,6 +45,7 @@ const SETTINGS_TABS: readonly SectionTabItem[] = [
       </div>
     ),
   },
+  */
   /* [HIDDEN-UI UI-OVERHAUL-1 Two-Factor Auth and Compliance tabs retired.
      Settings keeps General, AI Settings, Connectors, Users, Roles &
      Permissions and Audit Logs.
@@ -58,7 +63,7 @@ const SETTINGS_TABS: readonly SectionTabItem[] = [
   { id: 'audit-logs', label: 'Audit Logs', render: () => <AuditLogView /> },
 ];
 
-export function SettingsTabs({ defaultTab = 'general' }: { defaultTab?: string }) {
+export function SettingsTabs({ defaultTab = 'deployment' }: { defaultTab?: string }) {
   const searchParams = useSearchParams();
   const initialTab =
     searchParams?.get('section') === 'deployment' && !searchParams.get('tab')

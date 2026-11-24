@@ -23,7 +23,8 @@ import React, { Component, Suspense, type ErrorInfo, type ReactNode, useState, u
 import useSWR from 'swr';
 import { metricsApi, type DashboardMetrics } from '@/lib/api';
 import { useTimeWindow } from '@/components/layout/TimeWindowProvider';
-import { TIME_WINDOW_LONG_LABEL, TIME_WINDOW_SHORT_LABEL } from '@/lib/timeWindow';
+import { TimeWindowSelector } from '@/components/layout/TimeWindowSelector';
+import { TIME_WINDOW_LONG_LABEL, TIME_WINDOW_SHORT_LABEL, type TimeWindow } from '@/lib/timeWindow';
 import { clsx } from 'clsx';
 import Link from 'next/link';
 import { DashboardWelcome } from './DashboardWelcome';
@@ -211,33 +212,61 @@ interface VolumeBucket {
   total: number;
 }
 
-function buildVolumeBuckets(
+// The API only returns buckets that contain alerts, so a quiet window came back
+// as two or three rows and drew two or three full-width bars. The chart lays out
+// every slot of the window instead (matching the API's date_trunc step: minute
+// for 1h, hour for 24h, day for 7d/30d, all UTC). One extra slot covers the
+// partial bucket at the start of the window.
+const VOLUME_SLOTS: Record<TimeWindow, { stepMs: number; count: number }> = {
+  '1h': { stepMs: 60_000, count: 60 },
+  '24h': { stepMs: 3_600_000, count: 24 },
+  '7d': { stepMs: 86_400_000, count: 7 },
+  '30d': { stepMs: 86_400_000, count: 30 },
+};
+
+export function buildVolumeBuckets(
   trend: DashboardMetrics['alertsTrend'],
+  window: TimeWindow = '24h',
+  now: number = Date.now(),
 ): VolumeBucket[] {
-  const byTimestamp = new Map<string, VolumeBucket>();
+  const { stepMs, count } = VOLUME_SLOTS[window];
+  const last = Math.floor(now / stepMs) * stepMs;
+  const buckets: VolumeBucket[] = Array.from({ length: count + 1 }, (_, i) => {
+    const timestamp = last - (count - i) * stepMs;
+    return {
+      key: String(timestamp),
+      timestamp,
+      counts: { critical: 0, high: 0, medium: 0, low: 0, info: 0, unspecified: 0 },
+      total: 0,
+    };
+  });
   for (const point of trend) {
-    const key = String(point.timestamp);
-    const parsed = Date.parse(key);
-    const existing = byTimestamp.get(key);
-    const bucket: VolumeBucket =
-      existing ?? {
-        key,
-        timestamp: Number.isFinite(parsed) ? parsed : 0,
-        counts: { critical: 0, high: 0, medium: 0, low: 0, info: 0, unspecified: 0 },
-        total: 0,
-      };
-    const severity = (
-      SEVERITY_KEYS as readonly string[]
-    ).includes(point.severity)
+    const index = Math.floor((Date.parse(point.timestamp) - buckets[0].timestamp) / stepMs);
+    const bucket = buckets[index];
+    if (!bucket) continue;
+    const severity = (SEVERITY_KEYS as readonly string[]).includes(point.severity)
       ? (point.severity as SeverityKey)
       : 'unspecified';
     bucket.counts[severity] += point.count;
     bucket.total += point.count;
-    byTimestamp.set(key, bucket);
   }
-  return Array.from(byTimestamp.values())
-    .sort((a, b) => a.timestamp - b.timestamp)
-    .slice(-24);
+  return buckets;
+}
+
+function bucketLabel(timestamp: number, window: TimeWindow): string {
+  return window === '7d' || window === '30d'
+    ? new Date(timestamp).toLocaleDateString([], { month: 'short', day: 'numeric', timeZone: 'UTC' })
+    : new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+function bucketTooltip(bucket: VolumeBucket, window: TimeWindow): string {
+  const parts = SEVERITY_KEYS.filter((k) => bucket.counts[k] > 0).map(
+    (k) => `${k} ${bucket.counts[k]}`,
+  );
+  if (bucket.counts.unspecified > 0) parts.push(`unspecified ${bucket.counts.unspecified}`);
+  return `${bucketLabel(bucket.timestamp, window)} · ${bucket.total} alert${bucket.total === 1 ? '' : 's'}${
+    parts.length ? ` (${parts.join(', ')})` : ''
+  }`;
 }
 
 // ─── Source status vocabulary ────────────────────────────────────────────────
@@ -525,8 +554,10 @@ export function DashboardView() {
   const activeSourceCount = countConnectedSources(sources);
 
   const periodLabel = TIME_WINDOW_SHORT_LABEL[timeWindow] ?? '';
-  const volumeBuckets = buildVolumeBuckets(metrics?.alertsTrend ?? []);
+  const volumeBuckets = buildVolumeBuckets(metrics?.alertsTrend ?? [], timeWindow);
+  const hasVolume = volumeBuckets.some((b) => b.total > 0);
   const maxVolume = Math.max(1, ...volumeBuckets.map((b) => b.total));
+  const createdInWindow = (metrics?.alertsTrend ?? []).reduce((sum, p) => sum + p.count, 0);
   const maxTactic = Math.max(1, ...topMitre.map((t) => t.count));
 
   // WS-F3: drag-and-drop widget reordering
@@ -547,7 +578,9 @@ export function DashboardView() {
           {
             label: 'Open Alerts',
             value: metrics.alerts.active ?? metrics.alerts.total,
-            sub: `${metrics.alerts.total} in last ${periodLabel}`,
+            // [HIDDEN-UI OVERVIEW-FIX-1 `${metrics.alerts.total} in last ${periodLabel}`
+            // labelled the all-time unresolved backlog as a windowed count.]
+            sub: `${createdInWindow} new in last ${periodLabel}`,
             tone: 'info',
           },
           {
@@ -603,42 +636,53 @@ export function DashboardView() {
             </h3>
             <span className="text-caption text-fg-muted">Last {periodLabel}</span>
           </div>
-          {volumeBuckets.length > 0 ? (
+          {hasVolume ? (
             <>
               <div
-                className="flex h-36 items-end gap-1"
+                className="flex h-36 items-end gap-px"
                 role="img"
                 aria-label="Alert volume by severity over the selected window"
               >
                 {volumeBuckets.map((bucket) => {
-                  const height =
-                    bucket.total > 0
-                      ? Math.max((bucket.total / maxVolume) * 100, 4)
-                      : 0;
+                  const height = Math.max((bucket.total / maxVolume) * 100, 4);
                   return (
                     <div
                       key={bucket.key}
-                      className="flex min-w-0 flex-1 flex-col overflow-hidden rounded"
-                      style={{ height: `${height}%` }}
+                      title={bucketTooltip(bucket, timeWindow)}
+                      className="flex h-full min-w-0 flex-1 flex-col justify-end"
                     >
-                      {SEVERITY_KEYS.map((key) =>
-                        bucket.counts[key] > 0 ? (
-                          <div
-                            key={key}
-                            className={clsx('w-full', SEVERITY_BAR[key])}
-                            style={{ flex: bucket.counts[key] }}
-                          />
-                        ) : null,
-                      )}
-                      {bucket.counts.unspecified > 0 ? (
+                      {bucket.total === 0 ? (
+                        <div className="h-px w-full bg-surface-border-strong" />
+                      ) : (
                         <div
-                          className="w-full bg-surface-border-strong"
-                          style={{ flex: bucket.counts.unspecified }}
-                        />
-                      ) : null}
+                          className="flex min-w-0 flex-col overflow-hidden rounded-t"
+                          style={{ height: `${height}%` }}
+                        >
+                          {SEVERITY_KEYS.map((key) =>
+                            bucket.counts[key] > 0 ? (
+                              <div
+                                key={key}
+                                className={clsx('w-full', SEVERITY_BAR[key])}
+                                style={{ flex: bucket.counts[key] }}
+                              />
+                            ) : null,
+                          )}
+                          {bucket.counts.unspecified > 0 ? (
+                            <div
+                              className="w-full bg-surface-border-strong"
+                              style={{ flex: bucket.counts.unspecified }}
+                            />
+                          ) : null}
+                        </div>
+                      )}
                     </div>
                   );
                 })}
+              </div>
+              <div className="mt-1 flex justify-between text-caption tabular-nums text-fg-muted">
+                <span>{bucketLabel(volumeBuckets[0].timestamp, timeWindow)}</span>
+                <span>peak {maxVolume} per {timeWindow === '1h' ? 'minute' : timeWindow === '24h' ? 'hour' : 'day'}</span>
+                <span>{bucketLabel(volumeBuckets[volumeBuckets.length - 1].timestamp, timeWindow)}</span>
               </div>
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 {SEVERITY_LEGEND.map((entry) => (
@@ -782,6 +826,10 @@ export function DashboardView() {
   return (
     <DashboardErrorBoundary>
       <div className="space-y-5">
+        {/* Time window for the whole page. Pipeline flow is live health and has no window. */}
+        <div className="flex justify-end">
+          <TimeWindowSelector variant="full" />
+        </div>
         {metricsErrorMessage && (
           <div className="rounded-container border border-tone-danger/30 bg-pill-danger-bg px-4 py-3 text-body text-tone-danger">
             <p className="font-semibold">Dashboard metrics unavailable</p>

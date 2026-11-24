@@ -68,6 +68,16 @@ describe('Sidebar', () => {
     }
   });
 
+  it('gives every primary nav item its own icon', () => {
+    render(<Sidebar />);
+
+    const icons = ['Overview', 'SOC Operations', 'Alerts', 'Investigation Queue', 'Runbooks', 'Detection Rules', 'Settings'].map(
+      (label) =>
+        screen.getByRole('link', { name: new RegExp(`^${label}(?:\\s|$)`, 'i') }).querySelector('svg')?.innerHTML,
+    );
+    expect(new Set(icons).size).toBe(icons.length);
+  });
+
   it('hides the section headings when the rail is collapsed', () => {
     render(<Sidebar collapsed />);
 

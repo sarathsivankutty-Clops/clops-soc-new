@@ -29,22 +29,20 @@ afterEach(() => {
 });
 
 describe('Settings URL navigation', () => {
-  it('does not request AI panel data while the General tab is active', () => {
-    window.history.replaceState(null, '', '/settings?tab=general');
+  // [HIDDEN-UI SETTINGS-FIX-1 General and Roles & Permissions tabs are hidden;
+  // the former General-tab assertions are replaced by these.]
+  it('does not offer General or Roles & Permissions tabs', () => {
     render(<SettingsTabs />, { wrapper: NavigationTestProvider });
 
-    expect(screen.getByRole('heading', { name: 'Profile' })).toBeInTheDocument();
-    expect(swrKeys).not.toContain('settings:airgap-status');
-    expect(swrKeys).not.toContain('settings:llm-status');
-    expect(swrKeys).not.toContain('settings:llm-credential');
+    expect(screen.queryByRole('tab', { name: 'General' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('tab', { name: 'Roles & Permissions' })).not.toBeInTheDocument();
   });
 
-  it('does not render the old Deployment panel inside General when section=deployment is retained', () => {
-    window.history.replaceState(null, '', '/settings?tab=general&section=deployment');
+  it.each(['?tab=general', '?tab=rbac'])('falls back to AI Settings for the retired %s link', (query) => {
+    window.history.replaceState(null, '', `/settings${query}`);
     render(<SettingsTabs />, { wrapper: NavigationTestProvider });
 
-    expect(screen.getByRole('heading', { name: 'Profile' })).toBeInTheDocument();
-    expect(screen.queryByRole('heading', { name: 'Deployment & AI' })).not.toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'AI Settings' })).toHaveAttribute('aria-selected', 'true');
   });
 
   it('opens AI Settings from the existing deep link without an inner tab bar', () => {

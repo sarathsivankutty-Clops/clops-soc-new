@@ -167,7 +167,9 @@ const navSections: NavSection[] = [
       // the operations views moved to their own rail destination below.]
       // { label: 'Dashboards', href: '/dashboards', icon: <ChartBarIcon /> },
       { label: 'Overview', href: '/dashboards', icon: <ChartBarIcon /> },
-      { label: 'SOC Operations', href: '/operations', icon: <ChartBarIcon /> },
+      // [HIDDEN-UI OVERVIEW-FIX-1 SOC Operations shared Overview's ChartBarIcon]
+      // { label: 'SOC Operations', href: '/operations', icon: <ChartBarIcon /> },
+      { label: 'SOC Operations', href: '/operations', icon: <ClockIcon /> },
       { label: 'Alerts', href: '/alerts', icon: <BellIcon /> },
       {
         label: 'Investigation Queue',
@@ -290,7 +292,8 @@ const navSections: NavSection[] = [
       { label: 'Get started', href: '/onboarding', icon: <SparklesIcon /> },
       { label: 'Connectors', href: '/connectors', icon: <PuzzleIcon /> },
       { label: 'Users', href: '/settings/users', icon: <UsersIcon />, adminOnly: true },
-      { label: 'Roles & Permissions', href: '/settings/rbac', icon: <ShieldIcon /> },
+      // [HIDDEN-UI SETTINGS-FIX-1 Roles & Permissions hidden from the UI]
+      // { label: 'Roles & Permissions', href: '/settings/rbac', icon: <ShieldIcon /> },
       { label: 'Two-factor auth', href: '/settings/mfa', icon: <ShieldIcon /> },
       { label: 'Compliance', href: '/compliance', icon: <ShieldIcon /> },
       { label: 'MSSP Dashboard', href: '/mssp', icon: <GlobeIcon /> },
