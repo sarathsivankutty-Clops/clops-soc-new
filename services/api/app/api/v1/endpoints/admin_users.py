@@ -40,7 +40,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.v1.deps import AuthUser, require_permission
 from app.core import role_grants
 from app.core.permission_cache import bump_version
-from app.db.rls import TenantDBSession
+from app.core.rbac_catalog import sync_user_catalog_role
+from app.db.rls import TenantDBSession, set_rls_context
 from app.models.rbac import Permission, Role, RolePermission, UserRole
 from app.models.tenant import User
 from app.services import keycloak_sync
@@ -48,9 +49,23 @@ from app.services.audit import emit_audit
 
 router = APIRouter(prefix="/admin/users", tags=["admin-users"])
 
-#: Rank for the `users.role` mirror: the highest held role wins. Roles
-#: outside this list rank below every listed one.
-ROLE_RANK: dict[str, int] = {"viewer": 0, "infosec": 1, "admin": 2, "platform_admin": 3}
+#: Rank for the `users.role` mirror: the highest held role wins. Same order
+#: as `sso_provisioning.map_groups_to_role`, with the admin tiers above it.
+#: Roles outside this list rank below every listed one.
+ROLE_RANK: dict[str, int] = {
+    r: i
+    for i, r in enumerate(
+        ["viewer", "infosec", "soc_analyst", "threat_hunter", "soc_lead", "tenant_admin", "admin", "platform_admin"]
+    )
+}
+
+#: SQL predicate matching only SSO connections that point at the configured
+#: Keycloak realm (OIDC, issuer `.../realms/<realm>`); bind `sfx` with `_kc_bind()`.
+_KC_CONN = "c.provider = 'oidc' AND right(rtrim(c.issuer, '/'), char_length(CAST(:sfx AS text))) = CAST(:sfx AS text)"
+
+
+def _kc_bind() -> str:
+    return f"/realms/{keycloak_sync.realm_name()}"
 
 _SORTABLE = {
     "name": User.username,
@@ -94,6 +109,7 @@ class KeycloakSyncOut(BaseModel):
     users_seen: int = 0
     users_updated: int = 0
     roles_changed: int = 0
+    users_disabled: int = 0
 
 
 class UserPage(BaseModel):
@@ -250,69 +266,105 @@ async def keycloak_reconcile(
     current_user: Annotated[AuthUser, Depends(require_permission("roles:write"))],
     db: TenantDBSession,
 ) -> KeycloakSyncOut:
-    """Pull realm users and group memberships and reconcile bound identities.
+    """Pull this tenant's bound Keycloak users and reconcile them locally.
 
     Never creates users. Group lists are refreshed for every bound identity;
-    a role is changed only on connections whose `group_role_mode` is
-    `authoritative` (the same rule the sign-in path applies).
+    role and disabled state are applied only on connections whose
+    `group_role_mode` is `authoritative` (the same rule the sign-in path
+    applies). A change that would remove the tenant's last admin is skipped
+    and the identity is marked `skipped`.
     """
-    from app.auth.sso_provisioning import map_groups_to_role
-
-    result, realm_users = await keycloak_sync.pull_realm()
-    if result.status != "synced":
-        return KeycloakSyncOut(status=result.status, detail=result.detail)
-
+    tid = current_user.tenant_id
     idents = (
         (
             await db.execute(
                 text(
-                    "SELECT i.user_id, i.subject, i.connection_id, c.group_role_mapping, c.group_role_mode "
-                    "FROM aisoc_sso_identities i LEFT JOIN aisoc_sso_connections c ON c.id = i.connection_id "
-                    "WHERE i.tenant_id = CAST(:t AS uuid)"
-                ).bindparams(t=str(current_user.tenant_id))
+                    "SELECT i.user_id, i.subject, i.connection_id, c.group_role_mapping, c.group_role_mode, c.default_role "
+                    "FROM aisoc_sso_identities i JOIN aisoc_sso_connections c ON c.id = i.connection_id "
+                    f"WHERE i.tenant_id = CAST(:t AS uuid) AND {_KC_CONN}"
+                ).bindparams(t=str(tid), sfx=_kc_bind())
             )
         )
         .mappings()
         .all()
     )
+    result, realm_users = await keycloak_sync.pull_realm({str(r["subject"]) for r in idents})
+    if result.status != "synced":
+        return KeycloakSyncOut(status=result.status, detail=result.detail)
+
     now = datetime.now(UTC)
-    updated = changed = 0
+    updated = changed = disabled = 0
     for row in idents:
-        groups = realm_users.get(str(row["subject"]))
-        if groups is None:
+        state = realm_users.get(str(row["subject"]))
+        if state is None:
             continue
+        enabled, groups = state
+        status_ = "synced"
+        if str(row["group_role_mode"] or "") == "authoritative":
+            user = await db.get(User, row["user_id"])
+            if user is not None and user.is_active:
+                try:
+                    change = await _apply_keycloak_state(db, tid, user, row, enabled, groups, now)
+                    disabled += change == "disabled"
+                    changed += change == "role"
+                except HTTPException:  # last active admin: leave the account as it is
+                    status_ = "skipped"
         await db.execute(
             text(
-                "UPDATE aisoc_sso_identities SET idp_groups = CAST(:g AS jsonb), last_synced_at = :now, sync_status = 'synced' "
+                "UPDATE aisoc_sso_identities SET idp_groups = CAST(:g AS jsonb), last_synced_at = :now, sync_status = :st "
                 "WHERE tenant_id = CAST(:t AS uuid) AND connection_id = :c AND subject = :s"
-            ).bindparams(g=json.dumps(groups), now=now, t=str(current_user.tenant_id), c=row["connection_id"], s=row["subject"])
+            ).bindparams(g=json.dumps(groups), now=now, st=status_, t=str(tid), c=row["connection_id"], s=row["subject"])
         )
         updated += 1
-        if str(row["group_role_mode"] or "") != "authoritative" or not groups:
-            continue
-        new_role = map_groups_to_role(groups, _mapping_of(dict(row)))
-        user = await db.get(User, row["user_id"])
-        if user is None or not user.is_active or user.role == new_role:
-            continue
-        roles = await _resolve_roles(db, current_user.tenant_id, [new_role])
-        await _replace_roles(db, user.id, roles, current_user.user_id, now)
-        changed += 1
     await emit_audit(
         db=db,
-        tenant_id=current_user.tenant_id,
+        tenant_id=tid,
         actor_id=current_user.user_id,
         actor_email=current_user.email,
         api_key_prefix=getattr(current_user, "api_key_prefix", None),
         action="admin.users.keycloak_sync",
         resource="user",
         resource_id="keycloak",
-        changes={"realm_users": len(realm_users), "identities_updated": updated, "roles_changed": changed},
+        changes={"realm_users": len(realm_users), "identities_updated": updated, "roles_changed": changed, "users_disabled": disabled},
         request=request,
     )
     await db.commit()
-    if changed:
-        await bump_version(str(current_user.tenant_id))
-    return KeycloakSyncOut(status="synced", users_seen=len(realm_users), users_updated=updated, roles_changed=changed)
+    if changed or disabled:
+        await bump_version(str(tid))
+    return KeycloakSyncOut(
+        status="synced", users_seen=len(realm_users), users_updated=updated, roles_changed=changed, users_disabled=disabled
+    )
+
+
+async def _apply_keycloak_state(
+    db: AsyncSession, tenant_id: uuid.UUID, user: User, row: Any, enabled: bool, groups: list[str], now: datetime
+) -> str | None:
+    """Apply Keycloak's enabled flag and group-derived role to an active local user.
+
+    Mirrors the sign-in path: no groups means the connection's default role,
+    and the role is set with `sync_user_catalog_role` (a no-op for catalog
+    roles this tenant has not seeded). Keycloak can only disable, never
+    re-enable, so a failed push of a local disable cannot be undone by a sync.
+    Raises 409 (via `_guard_last_admin`) rather than orphan the tenant.
+    Returns "disabled", "role", or None when nothing changed.
+    """
+    from app.auth.sso_provisioning import ASSIGNABLE_ROLES, DEFAULT_ROLE, map_groups_to_role
+
+    if not enabled:
+        await _guard_last_admin(db, tenant_id, user, [], deactivating=True)
+        await db.execute(update(User).where(User.id == user.id).values(is_active=False, updated_at=now))
+        await _end_sessions(db, user.id, now)
+        return "disabled"
+    new_role = row["default_role"] if not groups else map_groups_to_role(groups, _mapping_of(dict(row)))
+    if new_role not in ASSIGNABLE_ROLES:
+        new_role = DEFAULT_ROLE
+    if user.role == new_role:
+        return None
+    await _guard_last_admin(db, tenant_id, user, [])
+    await db.execute(update(User).where(User.id == user.id).values(role=new_role, updated_at=now))
+    await sync_user_catalog_role(db, tenant_id=tenant_id, user_id=user.id, role_name=new_role)
+    await _end_sessions(db, user.id, now)
+    return "role"
 
 
 @router.get("/{user_id}", response_model=AdminUserOut)
@@ -422,6 +474,7 @@ async def add_role(
     role = await _resolve_role_or_400(db, current_user.tenant_id, body.role_name)
     await _authorize_roles(db, [role], current_user)
 
+    detail: str | None = None
     existing = await db.execute(select(UserRole).where(UserRole.user_id == target.id, UserRole.role_id == role.id))
     if existing.scalar_one_or_none() is None:
         old_roles = await _roles_of(db, target.id, current_user.tenant_id)
@@ -445,7 +498,10 @@ async def add_role(
         )
         await db.commit()
         await bump_version(str(current_user.tenant_id))
-    return await _read_out(db, target, current_user.tenant_id)
+        detail = await _push_to_keycloak(
+            db, current_user.tenant_id, target, role_names=set(await _roles_of(db, target.id, current_user.tenant_id))
+        )
+    return await _read_out(db, target, current_user.tenant_id, detail)
 
 
 @router.delete("/{user_id}/roles/{role_name}", response_model=AdminUserOut)
@@ -494,7 +550,8 @@ async def remove_role(
     )
     await db.commit()
     await bump_version(str(current_user.tenant_id))
-    return await _read_out(db, target, current_user.tenant_id)
+    detail = await _push_to_keycloak(db, current_user.tenant_id, target, role_names={r.name for r in held})
+    return await _read_out(db, target, current_user.tenant_id, detail)
 
 
 # ──────────────────────────────────────────────
@@ -780,7 +837,7 @@ async def _read_out(
 
 
 async def _identities(db: AsyncSession, tenant_id: uuid.UUID, user_ids: list[uuid.UUID]) -> dict[uuid.UUID, dict[str, Any]]:
-    """Most recent SSO identity per user, with its connection's group mapping."""
+    """Most recent Keycloak SSO identity per user, with its connection's group mapping."""
     if not user_ids:
         return {}
     rows = (
@@ -789,10 +846,10 @@ async def _identities(db: AsyncSession, tenant_id: uuid.UUID, user_ids: list[uui
                 text(
                     "SELECT DISTINCT ON (i.user_id) i.user_id, i.subject, i.idp_groups, i.sync_status, "
                     "i.last_synced_at, i.connection_id, c.group_role_mapping, c.group_role_mode "
-                    "FROM aisoc_sso_identities i LEFT JOIN aisoc_sso_connections c ON c.id = i.connection_id "
-                    "WHERE i.tenant_id = CAST(:t AS uuid) AND i.user_id = ANY(CAST(:ids AS uuid[])) "
+                    "FROM aisoc_sso_identities i JOIN aisoc_sso_connections c ON c.id = i.connection_id "
+                    f"WHERE i.tenant_id = CAST(:t AS uuid) AND i.user_id = ANY(CAST(:ids AS uuid[])) AND {_KC_CONN} "
                     "ORDER BY i.user_id, i.last_seen_at DESC"
-                ).bindparams(t=str(tenant_id), ids=[str(u) for u in user_ids])
+                ).bindparams(t=str(tenant_id), ids=[str(u) for u in user_ids], sfx=_kc_bind())
             )
         )
         .mappings()
@@ -840,6 +897,9 @@ async def _push_to_keycloak(
     back the edit; the outcome is recorded on the identity and returned for
     the UI. Returns None when the user has no SSO identity (nothing to push).
     """
+    # The caller's commit ended the transaction, and `SET LOCAL` with it; the
+    # identity UPDATE below is checked against `current_tenant_id()`.
+    await set_rls_context(db, tenant_id)
     ident = (await _identities(db, tenant_id, [target.id])).get(target.id)
     if not ident:
         return None

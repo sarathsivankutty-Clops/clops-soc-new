@@ -1,7 +1,11 @@
 """Keycloak admin client for the two-way user sync.
 
-Credentials come from the environment only (`KEYCLOAK_ADMIN_USER`,
-`KEYCLOAK_ADMIN_PASSWORD`) and are never logged or returned. The URL is the
+Credentials come from the environment only and are never logged or returned.
+Preferred: a realm service-account client (`KEYCLOAK_SYNC_CLIENT_ID` /
+`KEYCLOAK_SYNC_CLIENT_SECRET`, `client_credentials`, `realm-management` roles
+only). Fallback: the master-realm admin (`KEYCLOAK_ADMIN_USER` /
+`KEYCLOAK_ADMIN_PASSWORD`, password grant). Access tokens are cached until
+shortly before they expire. The URL is the
 internal Docker address, so the call never leaves the compose network.
 Every public function returns a `SyncResult` rather than raising: a Keycloak
 outage must not turn a local role edit into a 500, it is reported back to the
@@ -10,8 +14,10 @@ operator as `failed` / `unconfigured`.
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import os
+import time
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -20,6 +26,8 @@ import httpx
 logger = logging.getLogger(__name__)
 
 _TIMEOUT = httpx.Timeout(8.0, connect=3.0)
+_PULL_CONCURRENCY = 8
+_token_cache: dict[str, tuple[str, float]] = {}  # token url + client -> (token, expiry)
 
 
 @dataclass
@@ -29,13 +37,19 @@ class SyncResult:
     groups: list[str] = field(default_factory=list)
 
 
-def _cfg() -> tuple[str, str, str, str] | None:
-    user = os.getenv("KEYCLOAK_ADMIN_USER", "")
-    password = os.getenv("KEYCLOAK_ADMIN_PASSWORD", "")
-    if not user or not password:
-        return None
+def _cfg() -> tuple[str, str, str, dict[str, str]] | None:
+    """`(base, realm, token_url, form)`, or None when no credentials are set."""
     base = os.getenv("KEYCLOAK_INTERNAL_URL", "http://keycloak:8080").rstrip("/")
-    return base, realm_name(), user, password
+    realm = realm_name()
+    cid, secret = os.getenv("KEYCLOAK_SYNC_CLIENT_ID", ""), os.getenv("KEYCLOAK_SYNC_CLIENT_SECRET", "")
+    if cid and secret:
+        form = {"grant_type": "client_credentials", "client_id": cid, "client_secret": secret}
+        return base, realm, f"{base}/realms/{realm}/protocol/openid-connect/token", form
+    user, password = os.getenv("KEYCLOAK_ADMIN_USER", ""), os.getenv("KEYCLOAK_ADMIN_PASSWORD", "")
+    if user and password:
+        form = {"grant_type": "password", "client_id": "admin-cli", "username": user, "password": password}
+        return base, realm, f"{base}/realms/master/protocol/openid-connect/token", form
+    return None
 
 
 def realm_name() -> str:
@@ -73,15 +87,30 @@ class _Admin:
     async def user_groups(self, subject: str) -> list[dict[str, Any]]:
         return await self.get(f"/users/{subject}/groups")
 
+    async def group_ids(self) -> dict[str, str]:
+        """Group name -> id across the whole tree (subgroups included)."""
+        out: dict[str, str] = {}
 
-async def _login(client: httpx.AsyncClient, cfg: tuple[str, str, str, str]) -> _Admin:
-    base, realm, user, password = cfg
-    r = await client.post(
-        f"{base}/realms/master/protocol/openid-connect/token",
-        data={"grant_type": "password", "client_id": "admin-cli", "username": user, "password": password},
-    )
-    r.raise_for_status()
-    return _Admin(client, base, realm, r.json()["access_token"])
+        def walk(groups: list[dict[str, Any]]) -> None:
+            for g in groups:
+                out.setdefault(g["name"], g["id"])
+                walk(g.get("subGroups") or [])
+
+        walk(await self.get("/groups", max=500, briefRepresentation="false"))
+        return out
+
+
+async def _login(client: httpx.AsyncClient, cfg: tuple[str, str, str, dict[str, str]]) -> _Admin:
+    base, realm, token_url, form = cfg
+    key = f"{token_url}|{form.get('client_id')}|{form.get('username', '')}"
+    token, expires = _token_cache.get(key, ("", 0.0))
+    if not token or expires <= time.monotonic():
+        r = await client.post(token_url, data=form)
+        r.raise_for_status()
+        body = r.json()
+        token = body["access_token"]
+        _token_cache[key] = (token, time.monotonic() + max(int(body.get("expires_in", 60)) - 30, 0))
+    return _Admin(client, base, realm, token)
 
 
 async def _run(fn):  # type: ignore[no-untyped-def]
@@ -113,12 +142,14 @@ async def push_user(subject: str, *, enabled: bool | None = None, groups_to_have
     """
 
     async def go(admin: _Admin) -> SyncResult:
-        if await admin.user_by_subject(subject) is None:
+        rep = await admin.user_by_subject(subject)
+        if rep is None:
             return SyncResult("failed", "user not found in realm")
         if enabled is not None:
-            await admin.send("PUT", f"/users/{subject}", json={"enabled": enabled})
+            # Send the whole representation: a partial PUT can fail declarative UserProfile validation.
+            await admin.send("PUT", f"/users/{subject}", json={**rep, "enabled": enabled})
         if groups_to_have is not None and managed_groups:
-            all_groups = {g["name"]: g["id"] for g in await admin.get("/groups", max=500)}
+            all_groups = await admin.group_ids()
             current = {g["name"] for g in await admin.user_groups(subject)}
             for name in managed_groups & groups_to_have - current:
                 if name in all_groups:
@@ -134,21 +165,24 @@ async def push_user(subject: str, *, enabled: bool | None = None, groups_to_have
     return await _run(go)
 
 
-async def pull_realm() -> tuple[SyncResult, dict[str, list[str]]]:
-    """Return `{subject: [group names]}` for every user in the realm."""
-    out: dict[str, list[str]] = {}
+async def pull_realm(subjects: set[str]) -> tuple[SyncResult, dict[str, tuple[bool, list[str]]]]:
+    """Return `{subject: (enabled, [group names])}` for the given Keycloak subjects.
+
+    Only the caller's bound subjects are read (tenant-scoped, no realm-wide
+    scan); subjects missing from the realm are omitted. Reads run concurrently.
+    """
+    out: dict[str, tuple[bool, list[str]]] = {}
 
     async def go(admin: _Admin) -> SyncResult:
-        first = 0
-        while True:
-            page = await admin.get("/users", first=first, max=200)
-            if not page:
-                break
-            for u in page:
-                out[u["id"]] = sorted(g["name"] for g in await admin.user_groups(u["id"]))
-            if len(page) < 200:
-                break
-            first += 200
+        gate = asyncio.Semaphore(_PULL_CONCURRENCY)
+
+        async def one(sub: str) -> None:
+            async with gate:
+                rep = await admin.user_by_subject(sub)
+                if rep is not None:
+                    out[sub] = (bool(rep.get("enabled", True)), sorted(g["name"] for g in await admin.user_groups(sub)))
+
+        await asyncio.gather(*(one(s) for s in subjects))
         return SyncResult("synced", f"{len(out)} users")
 
     return await _run(go), out

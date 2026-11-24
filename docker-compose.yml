@@ -474,6 +474,10 @@ services:
       # credentials are read server-side and never returned to the browser.
       KEYCLOAK_INTERNAL_URL: ${KEYCLOAK_INTERNAL_URL:-http://keycloak:8080}
       KEYCLOAK_REALM: ${KEYCLOAK_REALM:-clopssoc}
+      # Preferred: realm service account (client_credentials, realm-management
+      # roles only). The master-admin pair below is the fallback when unset.
+      KEYCLOAK_SYNC_CLIENT_ID: ${KEYCLOAK_SYNC_CLIENT_ID:-}
+      KEYCLOAK_SYNC_CLIENT_SECRET: ${KEYCLOAK_SYNC_CLIENT_SECRET:-}
       KEYCLOAK_ADMIN_USER: ${KEYCLOAK_ADMIN_USER:-}
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-}
       SSO_LOGIN_LABEL: ${SSO_LOGIN_LABEL:-Sign in with Google}

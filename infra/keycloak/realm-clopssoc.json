@@ -34,7 +34,31 @@
       "path": "/soc-admins"
     }
   ],
+  "users": [
+    {
+      "username": "service-account-clopssoc-sync",
+      "enabled": true,
+      "serviceAccountClientId": "clopssoc-sync",
+      "clientRoles": {
+        "realm-management": ["view-users", "query-users", "query-groups", "manage-users"]
+      }
+    }
+  ],
   "clients": [
+    {
+      "clientId": "clopssoc-sync",
+      "name": "ClopSOC user sync (service account)",
+      "description": "Used only by the ClopSOC API to read and update users and groups in this realm. Set the secret in Keycloak and mirror it in KEYCLOAK_SYNC_CLIENT_SECRET.",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "REPLACE_VIA_KEYCLOAK_ADMIN_UI_OR_CLI",
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true
+    },
     {
       "clientId": "clopssoc-console",
       "name": "ClopSOC Console",

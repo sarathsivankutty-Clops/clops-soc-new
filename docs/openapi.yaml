@@ -9432,6 +9432,50 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/admin/users/keycloak/status:
+    get:
+      tags:
+      - admin-users
+      summary: Keycloak Status
+      description: Connection health, realm and last reconcile time. Never returns
+        credentials.
+      operationId: keycloak_status_api_v1_admin_users_keycloak_status_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KeycloakStatus'
+      security:
+      - HTTPBearer: []
+  /api/v1/admin/users/keycloak/sync:
+    post:
+      tags:
+      - admin-users
+      summary: Keycloak Reconcile
+      description: 'Pull this tenant''s bound Keycloak users and reconcile them locally.
+
+
+        Never creates users. Group lists are refreshed for every bound identity;
+
+        role and disabled state are applied only on connections whose
+
+        `group_role_mode` is `authoritative` (the same rule the sign-in path
+
+        applies). A change that would remove the tenant''s last admin is skipped
+
+        and the identity is marked `skipped`.'
+      operationId: keycloak_reconcile_api_v1_admin_users_keycloak_sync_post
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KeycloakSyncOut'
+      security:
+      - HTTPBearer: []
   /api/v1/admin/users/{user_id}:
     get:
       tags:
@@ -23656,6 +23700,27 @@ components:
           type: array
           title: Effective Permissions
           default: []
+        keycloak_subject:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Keycloak Subject
+        idp_groups:
+          items:
+            type: string
+          type: array
+          title: Idp Groups
+          default: []
+        sync_status:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Sync Status
+        sync_detail:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Sync Detail
       type: object
       required:
       - id
@@ -33380,6 +33445,62 @@ components:
       - created_at
       - created_by
       title: KBDocResponse
+    KeycloakStatus:
+      properties:
+        configured:
+          type: boolean
+          title: Configured
+        reachable:
+          type: boolean
+          title: Reachable
+        realm:
+          type: string
+          title: Realm
+        detail:
+          type: string
+          title: Detail
+          default: ''
+        last_synced_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Last Synced At
+      type: object
+      required:
+      - configured
+      - reachable
+      - realm
+      title: KeycloakStatus
+    KeycloakSyncOut:
+      properties:
+        status:
+          type: string
+          title: Status
+        detail:
+          type: string
+          title: Detail
+          default: ''
+        users_seen:
+          type: integer
+          title: Users Seen
+          default: 0
+        users_updated:
+          type: integer
+          title: Users Updated
+          default: 0
+        roles_changed:
+          type: integer
+          title: Roles Changed
+          default: 0
+        users_disabled:
+          type: integer
+          title: Users Disabled
+          default: 0
+      type: object
+      required:
+      - status
+      title: KeycloakSyncOut
     KillSwitchState:
       properties:
         engaged:
