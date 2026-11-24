@@ -9,5 +9,7 @@ export const metadata = {
 export default function SOCInsightsPage() {
   // [HIDDEN-UI NAV-8 replaced direct view with a redirect]
   // return <SOCInsightsView />;
-  redirect('/dashboards?tab=soc-insights');
+  // [HIDDEN-UI UI-OVERHAUL-1 SOC Insights tab hidden; land on Overview instead]
+  // redirect('/dashboards?tab=soc-insights');
+  redirect('/dashboards');
 }

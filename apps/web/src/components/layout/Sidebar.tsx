@@ -162,7 +162,12 @@ const navSections: NavSection[] = [
   {
     title: 'Navigation',
     items: [
-      { label: 'Dashboards', href: '/dashboards', icon: <ChartBarIcon /> },
+      // [HIDDEN-UI UI-OVERHAUL-1 /dashboards is the Overview page now, not a
+      // seven-tab destination. The remaining dashboard tabs were retired and
+      // the operations views moved to their own rail destination below.]
+      // { label: 'Dashboards', href: '/dashboards', icon: <ChartBarIcon /> },
+      { label: 'Overview', href: '/dashboards', icon: <ChartBarIcon /> },
+      { label: 'SOC Operations', href: '/operations', icon: <ChartBarIcon /> },
       { label: 'Alerts', href: '/alerts', icon: <BellIcon /> },
       {
         label: 'Investigation Queue',
@@ -350,16 +355,23 @@ export function Sidebar({ collapsed = false }: SidebarProps = {}) {
     // [HIDDEN-UI NAV-8 /dashboard is a redirect to /dashboards?tab=overview]
     // if (href === '/dashboard') return pathname === '/dashboard';
     if (href === '/dashboards') {
-      // The old dashboard routes (/dashboard, /sla, /mssp, /costs,
-      // /dashboards/*) all 307 into the same tab bar, so the rail must stay lit
-      // on the destination *and* while the redirect is in flight.
+      // Overview is its own page now. MSSP and Cost still 307 into the
+      // retired tab bar, so the rail stays lit while those redirects resolve.
       return (
-        pathname.startsWith('/dashboards') ||
+        pathname === '/dashboards' ||
         pathname === '/dashboard' ||
-        pathname === '/sla' ||
         pathname === '/mssp' ||
-        pathname === '/costs' ||
-        pathname === '/analytics/team'
+        pathname === '/costs'
+      );
+    }
+    if (href === '/operations') {
+      // SLA and Team Analytics 307 into /operations?tab=…, so the new
+      // destination stays lit during those redirects too.
+      return (
+        pathname.startsWith('/operations') ||
+        pathname === '/sla' ||
+        pathname === '/analytics/team' ||
+        pathname.startsWith('/dashboards/operations')
       );
     }
     return pathname.startsWith(href);

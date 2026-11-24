@@ -45,7 +45,8 @@ describe('Sidebar', () => {
     }
 
     const expected: [string, string][] = [
-      ['Dashboards', '/dashboards'],
+      ['Overview', '/dashboards'],
+      ['SOC Operations', '/operations'],
       ['Alerts', '/alerts'],
       ['Investigation Queue', '/queue'],
       ['Runbooks', '/playbooks'],
@@ -59,8 +60,10 @@ describe('Sidebar', () => {
     }
     expect(screen.queryByRole('link', { name: /^Hunt(?:\s|$)/i })).not.toBeInTheDocument();
 
-    // The six tabs that used to be peers are no longer top-level links.
-    for (const retired of ['SOC Insights', 'SOC Operations', 'Dashboard', 'SLA', 'Team Analytics', 'MSSP', 'Cost']) {
+    // The retired dashboard tabs and the old "Dashboards" label are no longer
+    // top-level links. [HIDDEN-UI UI-OVERHAUL-1] SOC Operations is a real
+    // destination now, so it is no longer in this list.
+    for (const retired of ['Dashboards', 'SOC Insights', 'Dashboard', 'SLA', 'Team Analytics', 'MSSP', 'Cost']) {
       expect(screen.queryByRole('link', { name: new RegExp(`^${retired}(?:\\s|$)`, 'i') })).not.toBeInTheDocument();
     }
   });

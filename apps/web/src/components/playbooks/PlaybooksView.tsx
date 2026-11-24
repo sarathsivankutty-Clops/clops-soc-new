@@ -505,19 +505,23 @@ export function PlaybooksView() {
         >
           Run History
         </button>
+        {/* [HIDDEN-UI UI-OVERHAUL-1 Community runbook browsing retired]
         <button
           onClick={() => setTab('community')}
           className={`px-1 py-2.5 text-control font-medium transition-colors border-b-2 -mb-px ${tab === 'community' ? 'border-accent text-fg-primary' : 'border-transparent text-fg-muted hover:text-fg-secondary'}`}
         >
           Community
         </button>
+        */}
       </div>
 
       {/* Run History */}
       {tab === 'runs' && <RunHistoryTab />}
 
-      {/* Community */}
+      {/* [HIDDEN-UI UI-OVERHAUL-1 Community tab retired; CommunityPlaybooksTab
+          stays on disk for restoration.]
       {tab === 'community' && <CommunityPlaybooksTab />}
+      */}
 
       {/* Playbooks list */}
       {tab === 'playbooks' && (
@@ -573,6 +577,7 @@ export function PlaybooksView() {
                   >
                     Create your first runbook
                   </Link>
+                  {/* [HIDDEN-UI UI-OVERHAUL-1 Community runbook browsing retired]
                   <Button
                     variant="secondary"
                     size="sm"
@@ -580,6 +585,7 @@ export function PlaybooksView() {
                   >
                     Browse community
                   </Button>
+                  */}
                 </div>
               }
               className="bg-transparent py-16"

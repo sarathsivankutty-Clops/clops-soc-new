@@ -35,9 +35,12 @@ const routeLabels: Record<string, RouteInfo> = {
   '/settings/users': { title: 'Users', description: 'Member and role management' },
   '/settings/rbac': { title: 'Roles & Permissions', description: 'Access control and team management' },
   '/settings/mfa': { title: 'Two-Factor Auth', description: 'Your second factor, and whether this tenant requires one' },
-  // [HIDDEN-UI NAV-8 /analytics/team is a 307 to /dashboards?tab=team]
+  // [HIDDEN-UI NAV-8 /analytics/team is a 307 to /operations?tab=team]
   // '/analytics/team': { title: 'Team Analytics', description: 'Analyst workload, resolution speed, and accuracy' },
-  '/dashboards': { title: 'Dashboards', description: 'SOC overview, insights, operations, SLA, team analytics, MSSP, and cost' },
+  // [HIDDEN-UI UI-OVERHAUL-1 /dashboards is the Overview page; the tab bar is gone]
+  // '/dashboards': { title: 'Dashboards', description: 'SOC overview, insights, operations, SLA, team analytics, MSSP, and cost' },
+  '/dashboards': { title: 'Overview', description: 'SOC overview and metrics' },
+  '/operations': { title: 'SOC Operations', description: 'Pipeline health, SLA, and team analytics' },
   // [HIDDEN-UI NAV-8 /dashboard redirects to /dashboards?tab=overview]
   // '/dashboard': { title: 'Dashboard', description: 'SOC overview and metrics' },
   '/alerts': { title: 'Alerts', description: 'Security alerts and incidents' },
@@ -70,9 +73,9 @@ const routeLabels: Record<string, RouteInfo> = {
   '/': { title: 'Dashboard', description: 'SOC overview and metrics' },
 };
 
-// NAV-8: `/dashboards` is one route with seven tabs, so the bar title has to
-// come from `?tab=` the same way the panel does. Keys mirror
-// `DASHBOARD_TABS` in components/dashboard/DashboardsTabs.tsx.
+// [HIDDEN-UI UI-OVERHAUL-1 `/dashboards` is a single page now, so its title
+// comes from `routeLabels`. The retired tab titles are kept for restoration.
+/*
 const dashboardTabLabels: Record<string, RouteInfo> = {
   overview: { title: 'Overview', description: 'SOC overview and metrics' },
   'soc-insights': { title: 'SOC Insights', description: 'Rolling KPIs, MTTA, MTTR, and cost per investigation' },
@@ -81,6 +84,16 @@ const dashboardTabLabels: Record<string, RouteInfo> = {
   team: { title: 'Team Analytics', description: 'Analyst workload, resolution speed, and accuracy' },
   mssp: { title: 'MSSP', description: 'Managed multi-tenant portfolio overview' },
   costs: { title: 'Cost', description: 'LLM spend, token usage, and BYOK savings' },
+};
+*/
+
+// `/operations` is one route with three tabs, so the bar title follows
+// `?tab=` the same way the panel does. Keys mirror `OPERATIONS_TABS` in
+// components/dashboard/OperationsTabs.tsx.
+const operationsTabLabels: Record<string, RouteInfo> = {
+  operations: { title: 'SOC Operations', description: 'Pipeline health, connector fleet, and agent throughput' },
+  sla: { title: 'SLA', description: 'Response targets and breach posture' },
+  team: { title: 'Team Analytics', description: 'Analyst workload, resolution speed, and accuracy' },
 };
 
 function TopBarHeading({
@@ -94,15 +107,15 @@ function TopBarHeading({
   const selectedSettingsTab =
     searchParams?.get('tab') ??
     (searchParams?.get('section') === 'deployment' ? 'deployment' : null);
-  const dashboardTab = searchParams?.get('tab') ?? 'overview';
+  const operationsTab = searchParams?.get('tab') ?? 'operations';
   const pageInfo =
     pathname === '/settings' && selectedSettingsTab === 'deployment'
       ? {
           title: 'AI Settings',
           description: 'LLM provider, BYOK, and air-gap configuration',
         }
-      : pathname === '/dashboards'
-        ? (dashboardTabLabels[dashboardTab] ?? routeInfo)
+      : pathname === '/operations'
+        ? (operationsTabLabels[operationsTab] ?? routeInfo)
         : routeInfo;
 
   return (

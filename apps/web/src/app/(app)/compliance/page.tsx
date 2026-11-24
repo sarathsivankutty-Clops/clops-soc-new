@@ -14,5 +14,7 @@ const FRAMEWORKS = [ ... ];
 
 export default function CompliancePage() {
   // [HIDDEN-UI NAV-4 redirect with permanent:false (307) to Compliance tab]
-  redirect('/settings?tab=compliance');
+  // [HIDDEN-UI UI-OVERHAUL-1 Compliance tab retired from Settings]
+  // redirect('/settings?tab=compliance');
+  redirect('/settings');
 }

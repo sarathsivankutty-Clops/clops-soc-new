@@ -2,9 +2,11 @@
 
 import { useSearchParams } from 'next/navigation';
 import { AuditLogView } from '@/components/audit/AuditLogView';
-import { ComplianceFrameworksView } from '@/components/compliance/ComplianceFrameworksView';
+// [HIDDEN-UI UI-OVERHAUL-1 Compliance and Two-Factor Auth tabs retired from
+// Settings; the components stay on disk behind their routes.
+// import { ComplianceFrameworksView } from '@/components/compliance/ComplianceFrameworksView';
 import { ConnectorsView } from '@/components/connectors/ConnectorsView';
-import { MfaView } from '@/components/settings/MfaView';
+// import { MfaView } from '@/components/settings/MfaView';
 import { RBACView } from '@/components/settings/RBACView';
 import { DeploymentAIPanel, SettingsView } from '@/components/settings/SettingsView';
 import { UsersView } from '@/components/settings/UsersView';
@@ -39,6 +41,9 @@ const SETTINGS_TABS: readonly SectionTabItem[] = [
       </div>
     ),
   },
+  /* [HIDDEN-UI UI-OVERHAUL-1 Two-Factor Auth and Compliance tabs retired.
+     Settings keeps General, AI Settings, Connectors, Users, Roles &
+     Permissions and Audit Logs.
   {
     id: 'mfa',
     label: 'Two-Factor Auth',
@@ -49,6 +54,7 @@ const SETTINGS_TABS: readonly SectionTabItem[] = [
     ),
   },
   { id: 'compliance', label: 'Compliance', render: () => <ComplianceFrameworksView /> },
+  */
   { id: 'audit-logs', label: 'Audit Logs', render: () => <AuditLogView /> },
 ];
 

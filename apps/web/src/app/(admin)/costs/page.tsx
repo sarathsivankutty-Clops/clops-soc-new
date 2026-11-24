@@ -7,5 +7,7 @@ export const metadata = { title: 'Cost Dashboard' };
 export default function CostDashboardPage() {
   // [HIDDEN-UI NAV-8 redirect with permanent:false (307) to Cost tab]
   // return <CostDashboardView />;
-  redirect('/dashboards?tab=costs');
+  // [HIDDEN-UI UI-OVERHAUL-1 Cost tab hidden; land on Overview instead]
+  // redirect('/dashboards?tab=costs');
+  redirect('/dashboards');
 }

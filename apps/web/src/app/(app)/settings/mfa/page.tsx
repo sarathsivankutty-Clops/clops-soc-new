@@ -13,5 +13,7 @@ export default function MfaSettingsPage() {
   //     <MfaView />
   //   </div>
   // );
-  redirect('/settings?tab=mfa');
+  // [HIDDEN-UI UI-OVERHAUL-1 Two-Factor Auth tab retired from Settings]
+  // redirect('/settings?tab=mfa');
+  redirect('/settings');
 }

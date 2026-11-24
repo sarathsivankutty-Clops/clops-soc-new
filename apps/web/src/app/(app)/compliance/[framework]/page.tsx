@@ -1,5 +1,8 @@
 import { Metadata } from 'next';
-import { FrameworkView } from '@/components/compliance/FrameworkView';
+import { redirect } from 'next/navigation';
+// [HIDDEN-UI UI-OVERHAUL-1 Compliance retired from Settings; the framework
+// view is kept on disk behind its component so the surface can be restored.
+// import { FrameworkView } from '@/components/compliance/FrameworkView';
 
 interface Props {
   params: Promise<{ framework: string }>;
@@ -20,11 +23,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return { title: `${name} Compliance` };
 }
 
-export default async function ComplianceFrameworkPage({ params }: Props) {
-  const { framework } = await params;
-  return (
-    <div className="p-6">
-      <FrameworkView framework={framework} />
-    </div>
-  );
+export default async function ComplianceFrameworkPage(_props: Props) {
+  // [HIDDEN-UI UI-OVERHAUL-1 replaced the direct view with a redirect]
+  // return (
+  //   <div className="p-6">
+  //     <FrameworkView framework={framework} />
+  //   </div>
+  // );
+  redirect('/settings');
 }

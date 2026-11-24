@@ -11,5 +11,7 @@ export default function TeamAnalyticsPage() {
   //     <TeamAnalyticsView />
   //   </div>
   // );
-  redirect('/dashboards?tab=team');
+  // [HIDDEN-UI UI-OVERHAUL-1 Team Analytics is a tab of /operations]
+  // redirect('/dashboards?tab=team');
+  redirect('/operations?tab=team');
 }

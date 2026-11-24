@@ -9,5 +9,7 @@ export const metadata = {
 export default function OperationsDashboardPage() {
   // [HIDDEN-UI NAV-8 replaced direct view with a redirect]
   // return <OperationsDashboard />;
-  redirect('/dashboards?tab=operations');
+  // [HIDDEN-UI UI-OVERHAUL-1 the operations views moved to /operations]
+  // redirect('/dashboards?tab=operations');
+  redirect('/operations?tab=operations');
 }

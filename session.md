@@ -272,3 +272,19 @@ Preserved inside `[HIDDEN-UI CHROME-2 ...]` comments:
 - Activated `infra/nginx/tls/30-auth.conf` (and added the HTTP-01 challenge server block for `auth.cloudifyops.com` to `infra/nginx/bootstrap/default.conf`), blocking `/admin`, `/admin/*`, `/realms/master`, and `/realms/master/*` with `403`, and rate-limiting `/realms/*/login-actions/` (`aisoc_login`) and `/realms/*/protocol/openid-connect/(auth|token|registrations)` (`aisoc_auth`).
 - Created `infra/keycloak/realm-clopssoc.json`: realm `clopssoc`, confidential client `clopssoc-console` (`standardFlowEnabled: true`, `implicitFlowEnabled: false`, `directAccessGrantsEnabled: false`, `pkce.code.challenge.method: S256`, redirect URI `https://soc.cloudifyops.com/auth/oidc/callback`, web origin & post-logout redirect `https://soc.cloudifyops.com`, placeholder secret), `oidc-group-membership-mapper` emitting `groups` (`full.path: false`), groups `soc-analysts` and `soc-admins`, `verifyEmail: true`, `registrationAllowed: false`, `bruteForceProtected: true`, `passwordPolicy: "length(12) and notUsername and notEmail"`, no test users, and no Google IdP secret.
 - Documented full EC2 runbook, manual Google IdP steps (`Hosted Domain: cloudifyops.com`, verified email), app env vars, `POST /api/v1/sso-connections` creation, MFA policy verification (`GET/PUT /api/v1/auth/mfa/policy`), rollback, and test checklist in `docs/DEPLOY-KEYCLOAK.md`.
+
+---
+
+## 12. Console UI overhaul (`ui/console-overhaul`, branched from `02aaa9f7a`)
+
+### 12.1 Phase 1 — navigation split and surface removals
+- `Sidebar.tsx`: `Dashboards` → `Overview` (`/dashboards`); new `SOC Operations` item (`/operations`). `isActive` split: `/dashboards` lights for `/dashboard`, `/mssp`, `/costs` (the surviving redirects) and `/operations` lights for `/sla`, `/analytics/team`, `/dashboards/operations`.
+- `OperationsTabs.tsx` + `apps/web/src/app/(app)/operations/page.tsx`: `SectionTabs` with `operations` / `sla` / `team`, reusing `OperationsDashboard`, `SLADashboard`, `TeamAnalyticsView`.
+- `/dashboards` renders `DashboardView` directly; `DashboardsTabs` is kept, reduced to the Overview tab, and no longer mounted (`[HIDDEN-UI UI-OVERHAUL-1]`).
+- Redirects (307 via `next/navigation`): `/sla` → `/operations?tab=sla`, `/analytics/team` → `/operations?tab=team`, `/dashboards/operations` → `/operations?tab=operations`, `/mssp`, `/costs`, `/dashboards/soc-insights` → `/dashboards`.
+- `SettingsTabs.tsx`: Two-Factor Auth and Compliance tabs commented out with their imports; `/settings/mfa`, `/compliance`, `/compliance/soc2`, `/compliance/[framework]` all 307 to `/settings`.
+- `PlaybooksView.tsx`: Community tab button, its render branch, and the "Browse community" empty-state action commented out; component kept on disk.
+- `TopBar.tsx` / `CommandPalette.tsx`: Overview + SOC Operations destinations; `/operations` titles follow `?tab=`; retired dashboard tab labels kept commented.
+- `Sidebar.test.tsx` updated for the new rail.
+- Verification: `pnpm --filter @aisoc/web type-check` → 0 errors; `lint` → 0 errors, 94 warnings (was 95); targeted Vitest (`Sidebar`, `SectionTabs`, `SettingsView.navigation`, `DashboardHonesty`) → 4 files / 49 tests passed.
+
