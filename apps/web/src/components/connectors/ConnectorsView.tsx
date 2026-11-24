@@ -242,11 +242,13 @@ export function ConnectorsView() {
           {
             label: 'Installed',
             value: countsUnknown ? '—' : healthSummary?.total ?? data?.total ?? connectors.length,
+            sub: countsUnknown ? 'not measured' : undefined,
             tone: 'info',
           },
           {
             label: 'Healthy',
             value: countsUnknown ? '—' : stats.active,
+            sub: countsUnknown ? 'not measured' : undefined,
             tone: 'ok',
           },
           {
@@ -262,12 +264,15 @@ export function ConnectorsView() {
           {
             label: 'Errors',
             value: countsUnknown ? '—' : stats.errored,
+            sub: countsUnknown ? 'not measured' : undefined,
             tone: 'bad',
           },
           {
             label: 'Schema Drift',
             value: countsUnknown ? '—' : stats.drifted,
-            sub: healthSummary?.lastDriftAt
+            sub: countsUnknown
+              ? 'not measured'
+              : healthSummary?.lastDriftAt
               ? `Most recent ${new Date(healthSummary.lastDriftAt).toLocaleDateString()}`
               : undefined,
             tone: 'purple',

@@ -470,6 +470,12 @@ services:
       OIDC_PKCE: ${OIDC_PKCE:-true}
       OIDC_IDP_HINT: ${OIDC_IDP_HINT:-google}
       SSO_GROUPS_CLAIM: ${SSO_GROUPS_CLAIM:-}
+      # Two-way Keycloak sync (Settings -> Users). Internal Docker URL only;
+      # credentials are read server-side and never returned to the browser.
+      KEYCLOAK_INTERNAL_URL: ${KEYCLOAK_INTERNAL_URL:-http://keycloak:8080}
+      KEYCLOAK_REALM: ${KEYCLOAK_REALM:-clopssoc}
+      KEYCLOAK_ADMIN_USER: ${KEYCLOAK_ADMIN_USER:-}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-}
       SSO_LOGIN_LABEL: ${SSO_LOGIN_LABEL:-Sign in with Google}
       REALTIME_INTERNAL_TOKEN: ${REALTIME_INTERNAL_TOKEN:-}
       # Depth 5.2. Where a pending approval is offered besides the console.

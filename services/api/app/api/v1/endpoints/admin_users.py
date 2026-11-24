@@ -27,6 +27,7 @@ Design notes carried over from `rbac.py`, where they matter most:
 
 from __future__ import annotations
 
+import json
 import uuid
 from datetime import UTC, datetime
 from typing import Annotated, Any
@@ -42,6 +43,7 @@ from app.core.permission_cache import bump_version
 from app.db.rls import TenantDBSession
 from app.models.rbac import Permission, Role, RolePermission, UserRole
 from app.models.tenant import User
+from app.services import keycloak_sync
 from app.services.audit import emit_audit
 
 router = APIRouter(prefix="/admin/users", tags=["admin-users"])
@@ -70,6 +72,28 @@ class AdminUserOut(BaseModel):
     last_login: datetime | None = None
     created_at: datetime | None = None
     effective_permissions: list[str] = []
+    # Keycloak / SSO identity, if this account has signed in through an IdP.
+    keycloak_subject: str | None = None
+    idp_groups: list[str] = []
+    sync_status: str | None = None
+    # Outcome of the push-to-Keycloak this request performed (writes only).
+    sync_detail: str | None = None
+
+
+class KeycloakStatus(BaseModel):
+    configured: bool
+    reachable: bool
+    realm: str
+    detail: str = ""
+    last_synced_at: datetime | None = None
+
+
+class KeycloakSyncOut(BaseModel):
+    status: str
+    detail: str = ""
+    users_seen: int = 0
+    users_updated: int = 0
+    roles_changed: int = 0
 
 
 class UserPage(BaseModel):
@@ -180,6 +204,7 @@ async def list_users(
         for uid, pname in perm_rows.all():
             perms_by_user[uuid.UUID(str(uid))].append(pname)
 
+    idents = await _identities(db, current_user.tenant_id, user_ids)
     items = []
     for u in rows:
         held = roles_by_user.get(u.id) or ([u.role] if u.role else [])
@@ -195,9 +220,103 @@ async def list_users(
                 last_login=u.last_login,
                 created_at=u.created_at,
                 effective_permissions=perms_by_user.get(u.id, []),
+                **_kc_fields(idents.get(u.id)),
             )
         )
     return UserPage(items=items, total=int(total or 0), limit=limit, offset=offset)
+
+
+@router.get("/keycloak/status", response_model=KeycloakStatus)
+async def keycloak_status(
+    current_user: Annotated[AuthUser, Depends(require_permission("roles:write"))],
+    db: TenantDBSession,
+) -> KeycloakStatus:
+    """Connection health, realm and last reconcile time. Never returns credentials."""
+    last = await db.scalar(
+        text("SELECT max(last_synced_at) FROM aisoc_sso_identities WHERE tenant_id = CAST(:t AS uuid)").bindparams(
+            t=str(current_user.tenant_id)
+        )
+    )
+    realm = keycloak_sync.realm_name()
+    if not keycloak_sync.is_configured():
+        return KeycloakStatus(configured=False, reachable=False, realm=realm, detail="unconfigured", last_synced_at=last)
+    h = await keycloak_sync.check_health()
+    return KeycloakStatus(configured=True, reachable=h.status == "synced", realm=realm, detail=h.detail, last_synced_at=last)
+
+
+@router.post("/keycloak/sync", response_model=KeycloakSyncOut)
+async def keycloak_reconcile(
+    request: Request,
+    current_user: Annotated[AuthUser, Depends(require_permission("roles:write"))],
+    db: TenantDBSession,
+) -> KeycloakSyncOut:
+    """Pull realm users and group memberships and reconcile bound identities.
+
+    Never creates users. Group lists are refreshed for every bound identity;
+    a role is changed only on connections whose `group_role_mode` is
+    `authoritative` (the same rule the sign-in path applies).
+    """
+    from app.auth.sso_provisioning import map_groups_to_role
+
+    result, realm_users = await keycloak_sync.pull_realm()
+    if result.status != "synced":
+        return KeycloakSyncOut(status=result.status, detail=result.detail)
+
+    idents = (
+        (
+            await db.execute(
+                text(
+                    "SELECT i.user_id, i.subject, i.connection_id, c.group_role_mapping, c.group_role_mode "
+                    "FROM aisoc_sso_identities i LEFT JOIN aisoc_sso_connections c ON c.id = i.connection_id "
+                    "WHERE i.tenant_id = CAST(:t AS uuid)"
+                ).bindparams(t=str(current_user.tenant_id))
+            )
+        )
+        .mappings()
+        .all()
+    )
+    now = datetime.now(UTC)
+    updated = changed = 0
+    for row in idents:
+        groups = realm_users.get(str(row["subject"]))
+        if groups is None:
+            continue
+        await db.execute(
+            text(
+                "UPDATE aisoc_sso_identities SET idp_groups = CAST(:g AS jsonb), last_synced_at = :now, sync_status = 'synced' "
+                "WHERE tenant_id = CAST(:t AS uuid) AND connection_id = :c AND subject = :s"
+            ).bindparams(g=json.dumps(groups), now=now, t=str(current_user.tenant_id), c=row["connection_id"], s=row["subject"])
+        )
+        updated += 1
+        if str(row["group_role_mode"] or "") != "authoritative" or not groups:
+            continue
+        new_role = map_groups_to_role(groups, _mapping_of(dict(row)))
+        user = await db.get(User, row["user_id"])
+        if user is None or not user.is_active or user.role == new_role:
+            continue
+        roles = await _resolve_roles(db, current_user.tenant_id, [new_role])
+        await db.execute(text("DELETE FROM user_roles WHERE user_id = CAST(:u AS uuid)").bindparams(u=str(user.id)))
+        for r in roles:
+            db.add(UserRole(user_id=user.id, role_id=r.id, assigned_by=current_user.user_id))
+        await db.execute(update(User).where(User.id == user.id).values(role=_mirror_role(roles), updated_at=now))
+        await _end_sessions(db, user.id, now)
+        changed += 1
+    await emit_audit(
+        db=db,
+        tenant_id=current_user.tenant_id,
+        actor_id=current_user.user_id,
+        actor_email=current_user.email,
+        api_key_prefix=getattr(current_user, "api_key_prefix", None),
+        action="admin.users.keycloak_sync",
+        resource="user",
+        resource_id="keycloak",
+        changes={"realm_users": len(realm_users), "identities_updated": updated, "roles_changed": changed},
+        request=request,
+    )
+    await db.commit()
+    if changed:
+        await bump_version(str(current_user.tenant_id))
+    return KeycloakSyncOut(status="synced", users_seen=len(realm_users), users_updated=updated, roles_changed=changed)
 
 
 @router.get("/{user_id}", response_model=AdminUserOut)
@@ -209,6 +328,7 @@ async def get_user(
     target = await _get_target(db, user_id, current_user.tenant_id)
     roles = await _roles_of(db, target.id, current_user.tenant_id)
     perms = await _effective_perms(db, target.id, current_user.tenant_id)
+    idents = await _identities(db, current_user.tenant_id, [target.id])
     return AdminUserOut(
         id=target.id,
         email=target.email,
@@ -220,6 +340,7 @@ async def get_user(
         last_login=target.last_login,
         created_at=target.created_at,
         effective_permissions=perms,
+        **_kc_fields(idents.get(target.id)),
     )
 
 
@@ -292,7 +413,8 @@ async def set_roles(
     await db.commit()
     await bump_version(str(current_user.tenant_id))
 
-    return await _read_out(db, target, current_user.tenant_id)
+    detail = await _push_to_keycloak(db, current_user.tenant_id, target, role_names={r.name for r in roles})
+    return await _read_out(db, target, current_user.tenant_id, detail)
 
 
 @router.post("/{user_id}/roles", response_model=AdminUserOut, status_code=status.HTTP_201_CREATED)
@@ -422,7 +544,8 @@ async def patch_status(
         request=request,
     )
     await db.commit()
-    return await _read_out(db, target, current_user.tenant_id)
+    detail = await _push_to_keycloak(db, current_user.tenant_id, target, enabled=body.is_active)
+    return await _read_out(db, target, current_user.tenant_id, detail)
 
 
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -631,10 +754,13 @@ async def _end_sessions(db: AsyncSession, user_id: uuid.UUID, now: datetime) -> 
     await db.execute(update(User).where(User.id == user_id).values(sessions_revoked_at=now))
 
 
-async def _read_out(db: AsyncSession, target: User, tenant_id: uuid.UUID) -> AdminUserOut:
+async def _read_out(
+    db: AsyncSession, target: User, tenant_id: uuid.UUID, sync_detail: str | None = None
+) -> AdminUserOut:
     await db.refresh(target)
     roles = await _roles_of(db, target.id, tenant_id)
     perms = await _effective_perms(db, target.id, tenant_id)
+    idents = await _identities(db, tenant_id, [target.id])
     return AdminUserOut(
         id=target.id,
         email=target.email,
@@ -646,4 +772,96 @@ async def _read_out(db: AsyncSession, target: User, tenant_id: uuid.UUID) -> Adm
         last_login=target.last_login,
         created_at=target.created_at,
         effective_permissions=perms,
+        **_kc_fields(idents.get(target.id)),
+        sync_detail=sync_detail,
     )
+
+
+async def _identities(db: AsyncSession, tenant_id: uuid.UUID, user_ids: list[uuid.UUID]) -> dict[uuid.UUID, dict[str, Any]]:
+    """Most recent SSO identity per user, with its connection's group mapping."""
+    if not user_ids:
+        return {}
+    rows = (
+        (
+            await db.execute(
+                text(
+                    "SELECT DISTINCT ON (i.user_id) i.user_id, i.subject, i.idp_groups, i.sync_status, "
+                    "i.last_synced_at, i.connection_id, c.group_role_mapping, c.group_role_mode "
+                    "FROM aisoc_sso_identities i LEFT JOIN aisoc_sso_connections c ON c.id = i.connection_id "
+                    "WHERE i.tenant_id = CAST(:t AS uuid) AND i.user_id = ANY(CAST(:ids AS uuid[])) "
+                    "ORDER BY i.user_id, i.last_seen_at DESC"
+                ).bindparams(t=str(tenant_id), ids=[str(u) for u in user_ids])
+            )
+        )
+        .mappings()
+        .all()
+    )
+    return {uuid.UUID(str(r["user_id"])): dict(r) for r in rows}
+
+
+def _json_val(v: Any, default: Any) -> Any:
+    if isinstance(v, str):
+        try:
+            return json.loads(v)
+        except ValueError:
+            return default
+    return v if v is not None else default
+
+
+def _mapping_of(ident: dict[str, Any]) -> dict[str, str]:
+    m = _json_val(ident.get("group_role_mapping"), {})
+    return {str(k): str(v) for k, v in m.items()} if isinstance(m, dict) else {}
+
+
+def _kc_fields(ident: dict[str, Any] | None) -> dict[str, Any]:
+    if not ident:
+        return {}
+    groups = _json_val(ident.get("idp_groups"), [])
+    return {
+        "keycloak_subject": ident.get("subject"),
+        "idp_groups": [str(g) for g in groups] if isinstance(groups, list) else [],
+        "sync_status": ident.get("sync_status"),
+    }
+
+
+async def _push_to_keycloak(
+    db: AsyncSession,
+    tenant_id: uuid.UUID,
+    target: User,
+    *,
+    enabled: bool | None = None,
+    role_names: set[str] | None = None,
+) -> str | None:
+    """Mirror a local edit to Keycloak for an SSO-bound user.
+
+    Runs after the local commit, so a Keycloak outage never blocks or rolls
+    back the edit; the outcome is recorded on the identity and returned for
+    the UI. Returns None when the user has no SSO identity (nothing to push).
+    """
+    ident = (await _identities(db, tenant_id, [target.id])).get(target.id)
+    if not ident:
+        return None
+    mapping = _mapping_of(ident)
+    result = await keycloak_sync.push_user(
+        str(ident["subject"]),
+        enabled=enabled,
+        groups_to_have={g for g, r in mapping.items() if r in role_names} if role_names is not None else None,
+        managed_groups=set(mapping) if role_names is not None else None,
+    )
+    await db.execute(
+        text(
+            "UPDATE aisoc_sso_identities SET sync_status = :s, last_synced_at = :now, "
+            "idp_groups = CASE WHEN :ok THEN CAST(:g AS jsonb) ELSE idp_groups END "
+            "WHERE tenant_id = CAST(:t AS uuid) AND connection_id = :c AND subject = :sub"
+        ).bindparams(
+            s=result.status,
+            now=datetime.now(UTC),
+            ok=result.status == "synced",
+            g=json.dumps(result.groups),
+            t=str(tenant_id),
+            c=ident["connection_id"],
+            sub=ident["subject"],
+        )
+    )
+    await db.commit()
+    return result.status if result.status == "synced" or not result.detail else f"{result.status}: {result.detail}"

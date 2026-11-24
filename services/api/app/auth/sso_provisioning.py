@@ -37,6 +37,7 @@ On first sign-in the user is created. Two constraints make that safe:
 
 from __future__ import annotations
 
+import json
 import logging
 import uuid
 from datetime import UTC, datetime
@@ -558,7 +559,6 @@ async def complete_sso_login(
 
     mapping = connection.get("group_role_mapping") or {}
     if isinstance(mapping, str):
-        import json
 
         try:
             mapping = json.loads(mapping)
@@ -595,6 +595,20 @@ async def complete_sso_login(
         email_verified=email_verified,
         jit_provisioning=bool(connection.get("jit_provisioning", True)),
         group_role_mode=str(connection.get("group_role_mode") or "first_login_only"),
+    )
+    # Display-only record of what the IdP asserted (Settings -> Users).
+    # Roles are decided above from group_role_mapping, never from this column.
+    await db.execute(
+        text(
+            "UPDATE aisoc_sso_identities SET idp_groups = CAST(:g AS jsonb), last_synced_at = :now, sync_status = 'synced' "
+            "WHERE tenant_id = :t AND connection_id = :c AND subject = :s"
+        ).bindparams(
+            g=json.dumps(sorted({str(x) for x in (groups or [])})),
+            now=datetime.now(UTC),
+            t=connection["tenant_id"],
+            c=connection["id"],
+            s=subject,
+        )
     )
     await db.commit()
 

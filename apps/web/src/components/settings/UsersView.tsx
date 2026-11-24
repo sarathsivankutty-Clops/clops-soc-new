@@ -8,6 +8,7 @@ import {
   authApi,
   rbacApi,
   type AdminUserRow,
+  type KeycloakStatus,
   type RbacRole,
 } from '@/lib/api';
 
@@ -61,6 +62,33 @@ function StatusBadge({ active }: { active: boolean }) {
   );
 }
 
+function SyncPill({ status }: { status?: string | null }) {
+  if (!status) return null;
+  const ok = status === 'synced';
+  return (
+    <span
+      className={
+        ok
+          ? 'inline-block rounded-pill bg-pill-success-bg px-2 py-0.5 text-caption text-tone-success'
+          : 'inline-block rounded-pill bg-pill-warning-bg px-2 py-0.5 text-caption text-tone-warning'
+      }
+    >
+      {ok ? 'in sync' : status}
+    </span>
+  );
+}
+
+function GroupChips({ groups }: { groups?: string[] }) {
+  if (!groups || groups.length === 0) return <span className="text-xs text-fg-subtle">—</span>;
+  return (
+    <div className="flex flex-wrap gap-1">
+      {groups.map((g) => (
+        <span key={g} className="rounded-pill bg-pill-neutral-bg px-2 py-0.5 font-mono text-caption text-fg-secondary">{g}</span>
+      ))}
+    </div>
+  );
+}
+
 interface EditRolesModalProps {
   user: AdminUserRow;
   roles: RbacRole[];
@@ -106,10 +134,14 @@ function EditRolesModal({ user, roles, isSelf, onClose, onSaved }: EditRolesModa
     setSaving(true);
     setError(null);
     try {
-      await adminUsersApi.setRoles(user.id, [...selected], reason.trim());
+      const saved = await adminUsersApi.setRoles(user.id, [...selected], reason.trim());
       toast.success(
         `${user.email} → ${[...selected].join(', ')}. Their active sessions were revoked; the new permissions apply on their next sign-in.`,
       );
+      if (saved.sync_detail) {
+        if (saved.sync_detail === 'synced') toast.success('Pushed to Keycloak: groups updated and sessions revoked.');
+        else toast.error(`Keycloak push: ${saved.sync_detail}. The local change is saved.`);
+      }
       onSaved();
     } catch (e) {
       // Safe, human-readable server detail only — never a stack trace.
@@ -122,76 +154,90 @@ function EditRolesModal({ user, roles, isSelf, onClose, onSaved }: EditRolesModa
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-surface-overlay/60 p-4" onClick={onClose}>
       <div
-        className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-gray-800 bg-gray-900 p-6 shadow-2xl"
+        className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-surface-border bg-surface-card p-6 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <h3 className="text-base font-semibold text-gray-100">Edit roles</h3>
-        <p className="mt-1 text-sm text-gray-400">
+        <h3 className="text-base font-semibold text-fg-primary">Edit roles</h3>
+        <p className="mt-1 text-sm text-fg-muted">
           {user.username || user.email} · {user.email}
           {!user.is_active && (
-            <span className="ml-2 rounded bg-amber-500/20 px-1.5 py-0.5 text-[10px] uppercase text-amber-300">
+            <span className="ml-2 rounded bg-pill-warning-bg px-1.5 py-0.5 text-caption uppercase text-tone-warning">
               disabled — assignments refused
             </span>
           )}
         </p>
 
         {error && (
-          <p className="mt-3 rounded-lg border border-red-900/60 bg-red-950/40 px-3 py-2 text-sm text-red-300" role="alert">
+          <p className="mt-3 rounded-lg border border-tone-danger/30 bg-pill-danger-bg px-3 py-2 text-sm text-tone-danger" role="alert">
             {error}
           </p>
         )}
 
-        <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-gray-500">
+        {user.keycloak_subject && (
+          <div className="mt-4 rounded-lg border border-surface-border bg-surface-base px-3 py-2">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-semibold uppercase tracking-wide text-fg-muted">Keycloak identity</p>
+              <SyncPill status={user.sync_status} />
+            </div>
+            <p className="mt-1 break-all font-mono text-caption text-fg-secondary">{user.keycloak_subject}</p>
+            <div className="mt-2"><GroupChips groups={user.idp_groups} /></div>
+            <p className="mt-2 text-caption text-fg-muted">
+              Saving pushes the matching group membership to Keycloak and revokes the user&apos;s Keycloak sessions.
+            </p>
+          </div>
+        )}
+
+        <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-fg-muted">
           Roles (multi-select — permissions merge)
         </p>
         <div className="mt-1 space-y-1.5">
           {roles.map((r) => (
             <label
               key={r.id}
-              className="flex cursor-pointer items-start gap-2 rounded-lg border border-gray-800 bg-gray-950/60 px-3 py-2 hover:border-gray-700"
+              className="flex cursor-pointer items-start gap-2 rounded-lg border border-surface-border bg-surface-base px-3 py-2 hover:border-surface-border"
             >
               <input
                 type="checkbox"
                 checked={selected.has(r.name)}
                 onChange={() => toggle(r.name)}
                 disabled={!user.is_active}
-                className="mt-0.5 rounded border-gray-600 text-indigo-600"
+                className="mt-0.5 rounded border-surface-border text-accent"
               />
               <span className="min-w-0">
-                <span className="block text-sm text-gray-100">
+                <span className="block text-sm text-fg-primary">
                   {r.label || r.name}
-                  <span className="ml-2 font-mono text-[11px] text-gray-500">{r.name}</span>
+                  <span className="ml-2 font-mono text-caption text-fg-muted">{r.name}</span>
                   {r.is_system && (
-                    <span className="ml-2 rounded bg-indigo-100/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-indigo-300">system</span>
+                    <span className="ml-2 rounded bg-accent-subtle px-1.5 py-0.5 text-caption font-bold uppercase tracking-wide text-accent">system</span>
                   )}
                   {r.is_sso_default && (
-                    <span className="ml-2 rounded bg-sky-500/20 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-sky-300">SSO default</span>
+                    <span className="ml-2 rounded bg-accent-subtle px-1.5 py-0.5 text-caption font-bold uppercase tracking-wide text-accent">SSO default</span>
                   )}
                 </span>
-                {r.description && <span className="block text-xs text-gray-500">{r.description}</span>}
+                {r.description && <span className="block text-xs text-fg-muted">{r.description}</span>}
               </span>
             </label>
           ))}
         </div>
 
-        <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-gray-500">
+        <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-fg-muted">
           Effective permissions — {effective.length} (read-only preview)
         </p>
-        <div className="mt-1 max-h-32 overflow-y-auto rounded-lg border border-gray-800 bg-gray-950/80 p-2">
+        <div className="mt-1 max-h-32 overflow-y-auto rounded-lg border border-surface-border bg-surface-base p-2">
           {effective.length === 0 ? (
-            <p className="text-xs italic text-gray-600">Select at least one role.</p>
+            <p className="text-xs italic text-fg-subtle">Select at least one role.</p>
           ) : (
             <div className="flex flex-wrap gap-1">
               {effective.map((p) => (
-                <span key={p} className="rounded bg-gray-800 px-1.5 py-0.5 font-mono text-[10px] text-gray-300">{p}</span>
+                <span key={p} className="rounded bg-surface-raised px-1.5 py-0.5 font-mono text-caption text-fg-secondary">{p}</span>
               ))}
             </div>
           )}
         </div>
 
-        <label className="mt-4 block text-xs font-semibold uppercase tracking-wide text-gray-500" htmlFor="users-role-reason">
+        <label className="mt-4 block text-xs font-semibold uppercase tracking-wide text-fg-muted" htmlFor="users-role-reason">
           Reason (required, audited)
         </label>
         <textarea
@@ -201,11 +247,11 @@ function EditRolesModal({ user, roles, isSelf, onClose, onSaved }: EditRolesModa
           rows={2}
           maxLength={500}
           placeholder="Why are these roles changing? Stored in the audit log with actor, target, old and new roles."
-          className="mt-1 w-full rounded-lg border border-gray-700 bg-gray-950 px-3 py-2 text-sm text-gray-100 placeholder-gray-600 focus:border-indigo-500 focus:outline-none"
+          className="mt-1 w-full rounded-lg border border-surface-border bg-surface-base px-3 py-2 text-sm text-fg-primary placeholder-fg-subtle focus:border-accent focus:outline-none"
         />
 
         {grantingAdmin && (
-          <label className="mt-3 flex items-start gap-2 rounded-lg border border-amber-800/60 bg-amber-950/30 px-3 py-2 text-sm text-amber-200">
+          <label className="mt-3 flex items-start gap-2 rounded-lg border border-tone-warning/30 bg-pill-warning-bg px-3 py-2 text-sm text-tone-warning">
             <input type="checkbox" checked={confirmAdmin} onChange={(e) => setConfirmAdmin(e.target.checked)} className="mt-0.5" />
             <span>
               Granting <strong>admin</strong> confers full control of this workspace — users, roles, SSO and audit.
@@ -214,21 +260,21 @@ function EditRolesModal({ user, roles, isSelf, onClose, onSaved }: EditRolesModa
           </label>
         )}
         {isSelf && user.roles.includes('admin') && !selected.has('admin') && (
-          <p className="mt-3 rounded-lg border border-red-900/60 bg-red-950/40 px-3 py-2 text-sm text-red-300" role="alert">
+          <p className="mt-3 rounded-lg border border-tone-danger/30 bg-pill-danger-bg px-3 py-2 text-sm text-tone-danger" role="alert">
             You appear to be removing your own admin role. If you are the last active admin the server will refuse
             this with a 409 — promote another admin first.
           </p>
         )}
 
         <div className="mt-5 flex justify-end gap-3">
-          <button type="button" onClick={onClose} className="rounded-lg px-4 py-2 text-sm text-gray-400 hover:bg-gray-800">
+          <button type="button" onClick={onClose} className="rounded-lg px-4 py-2 text-sm text-fg-muted hover:bg-surface-raised">
             Cancel
           </button>
           <button
             type="button"
             onClick={save}
             disabled={!canSave}
-            className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-50"
           >
             {saving ? 'Saving…' : unchanged ? 'No changes' : `Save ${selected.size} role${selected.size === 1 ? '' : 's'}`}
           </button>
@@ -248,6 +294,7 @@ export function UsersView() {
   const [offset, setOffset] = useState(0);
   const [editing, setEditing] = useState<AdminUserRow | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [syncing, setSyncing] = useState(false);
 
   const qs = new URLSearchParams();
   if (appliedSearch) qs.set('search', appliedSearch);
@@ -269,6 +316,29 @@ export function UsersView() {
     shouldRetryOnError: false,
   });
 
+  const { data: kc, mutate: mutateKc } = useSWR<KeycloakStatus>(
+    'admin-users:keycloak-status',
+    () => adminUsersApi.keycloakStatus(),
+    { revalidateOnFocus: false, shouldRetryOnError: false },
+  );
+
+  const syncNow = async () => {
+    setSyncing(true);
+    try {
+      const r = await adminUsersApi.keycloakSync();
+      if (r.status === 'synced') {
+        toast.success(`Keycloak sync: ${r.users_seen} realm users, ${r.users_updated} linked accounts refreshed, ${r.roles_changed} role changes.`);
+      } else {
+        toast.error(`Keycloak sync ${r.status}${r.detail ? `: ${r.detail}` : ''}`);
+      }
+      await Promise.all([mutate(), mutateKc()]);
+    } catch (e) {
+      toast.error((e as Error).message || 'Keycloak sync failed.');
+    } finally {
+      setSyncing(false);
+    }
+  };
+
   const refresh = useCallback(() => { void mutate(); }, [mutate]);
 
   // Comparing against the signed-in operator's own id so the modal can warn
@@ -283,7 +353,8 @@ export function UsersView() {
     if (!reason.trim()) { toast.error('A reason is required.'); return; }
     setBusyId(u.id);
     try {
-      await adminUsersApi.setStatus(u.id, active, reason.trim());
+      const saved = await adminUsersApi.setStatus(u.id, active, reason.trim());
+      if (saved.sync_detail && saved.sync_detail !== 'synced') toast.error(`Keycloak push: ${saved.sync_detail}. The local change is saved.`);
       toast.success(`${u.email} ${active ? 'enabled' : 'disabled'}${active ? '' : ' — cannot log in; role preserved, active sessions revoked.'}`);
       await mutate();
     } catch (e) {
@@ -334,7 +405,7 @@ export function UsersView() {
   const headerSort = (col: 'name' | 'email' | 'status' | 'created' | 'last_login', label: string) => (
     <button
       type="button"
-      className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-gray-500 hover:text-gray-300"
+      className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-fg-muted hover:text-fg-secondary"
       onClick={() => {
         if (sort === col) setOrder(order === 'asc' ? 'desc' : 'asc');
         else { setSort(col); setOrder('asc'); }
@@ -342,12 +413,36 @@ export function UsersView() {
       }}
     >
       {label}
-      {sort === col && <span className="text-indigo-400">{order === 'asc' ? '↑' : '↓'}</span>}
+      {sort === col && <span className="text-accent">{order === 'asc' ? '↑' : '↓'}</span>}
     </button>
   );
 
   return (
     <div className="space-y-4">
+      {kc && (
+        <div className="flex flex-wrap items-center gap-3 rounded-container border border-surface-border bg-surface-card px-4 py-2.5">
+          <span
+            className={`h-2 w-2 rounded-full ${kc.configured && kc.reachable ? 'bg-dot-success' : 'bg-dot-warning'}`}
+            aria-hidden="true"
+          />
+          <p className="text-body text-fg-primary">
+            Keycloak realm <span className="font-mono">{kc.realm}</span>
+            <span className="text-fg-muted">
+              {' · '}
+              {!kc.configured ? 'not configured' : kc.reachable ? 'in sync' : 'unreachable'}
+              {kc.last_synced_at ? ` · last sync ${formatDate(kc.last_synced_at)}` : ''}
+            </span>
+          </p>
+          <button
+            type="button"
+            onClick={syncNow}
+            disabled={syncing || !kc.configured}
+            className="ml-auto rounded-control border border-surface-border bg-surface-elevated px-3 py-1.5 text-control text-fg-primary hover:bg-surface-hover disabled:opacity-50"
+          >
+            {syncing ? 'Syncing…' : 'Sync now'}
+          </button>
+        </div>
+      )}
       <div className="flex flex-wrap items-center gap-3">
         <form
           className="flex flex-wrap items-center gap-2"
@@ -418,6 +513,7 @@ export function UsersView() {
                 <th className="px-4 py-2.5">{headerSort('status', 'Status')}</th>
                 <th className="px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-fg-muted">Role(s)</th>
                 <th className="px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-fg-muted">Provider</th>
+                <th className="px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-fg-muted">Keycloak groups</th>
                 <th className="px-4 py-2.5">{headerSort('last_login', 'Last login')}</th>
                 <th className="px-4 py-2.5">{headerSort('created', 'Created')}</th>
                 <th className="px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-fg-muted">Actions</th>
@@ -427,7 +523,7 @@ export function UsersView() {
               {isLoading && rows.length === 0 && (
                 Array.from({ length: 4 }).map((_, i) => (
                   <tr key={i}>
-                    {Array.from({ length: 8 }).map((__, j) => (
+                    {Array.from({ length: 9 }).map((__, j) => (
                       <td key={j} className="px-4 py-3"><div className="h-4 w-full max-w-28 animate-pulse rounded-control bg-surface-subtle" /></td>
                     ))}
                   </tr>
@@ -443,7 +539,17 @@ export function UsersView() {
                       {(u.roles.length ? u.roles : [u.role]).map((r) => <RoleBadge key={r} name={r} />)}
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-xs uppercase tracking-wide text-fg-muted">{u.provider}</td>
+                  <td className="px-4 py-3 text-xs uppercase tracking-wide text-fg-muted">
+                    {u.keycloak_subject ? (
+                      <span className="inline-flex items-center gap-1.5">
+                        <span className="rounded-pill bg-pill-info-bg px-2 py-0.5 text-caption normal-case text-accent">Keycloak SSO</span>
+                        <SyncPill status={u.sync_status} />
+                      </span>
+                    ) : (
+                      u.provider
+                    )}
+                  </td>
+                  <td className="px-4 py-3"><GroupChips groups={u.idp_groups} /></td>
                   <td className="px-4 py-3 text-xs text-fg-muted">{formatDate(u.last_login)}</td>
                   <td className="px-4 py-3 text-xs text-fg-muted">{formatDate(u.created_at)}</td>
                   <td className="px-4 py-3">

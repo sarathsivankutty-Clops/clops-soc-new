@@ -28,6 +28,7 @@ const swrState = vi.hoisted(() => ({
   data: undefined as unknown,
   error: undefined as unknown,
   isLoading: false,
+  kc: undefined as unknown,
 }));
 
 vi.mock('swr', () => ({
@@ -37,6 +38,9 @@ vi.mock('swr', () => ({
     // depend on which call fired first.
     if (typeof key === 'string' && key.startsWith('api/v1/rbac/roles')) {
       return { data: [], error: undefined, isLoading: false, mutate: vi.fn() };
+    }
+    if (key === 'admin-users:keycloak-status') {
+      return { data: swrState.kc, error: undefined, isLoading: false, mutate: vi.fn() };
     }
     return { ...swrState, mutate: vi.fn(async () => undefined) };
   },
@@ -62,6 +66,7 @@ beforeEach(() => {
   swrState.data = undefined;
   swrState.error = undefined;
   swrState.isLoading = false;
+  swrState.kc = undefined;
 });
 
 afterEach(() => {
@@ -135,5 +140,32 @@ describe('UsersView — the page exists, so it is held to the honest-state rule'
     expect(screen.getByText('ops@example.com')).toBeInTheDocument();
     expect(screen.getByText('admin')).toBeInTheDocument();
     expect(screen.getByText(/1 member$/)).toBeInTheDocument();
+  });
+});
+
+describe('Keycloak sync banner and identity columns', () => {
+  it('shows the realm, sync button and Keycloak badge with groups', () => {
+    swrState.kc = { configured: true, reachable: true, realm: 'clopssoc', detail: '', last_synced_at: null };
+    swrState.data = {
+      items: [
+        {
+          id: 'u1', email: 'a@x.io', username: 'a', is_active: true, role: 'admin', roles: ['admin'],
+          provider: 'sso', last_login: null, created_at: '2026-01-01T00:00:00Z', effective_permissions: [],
+          keycloak_subject: 'kc-1', idp_groups: ['soc-admins'], sync_status: 'synced',
+        },
+      ],
+      total: 1, limit: 20, offset: 0,
+    };
+    render(<UsersView />);
+    expect(screen.getByText('clopssoc')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Sync now' })).toBeTruthy();
+    expect(screen.getByText('Keycloak SSO')).toBeTruthy();
+    expect(screen.getByText('soc-admins')).toBeTruthy();
+  });
+
+  it('disables Sync now when Keycloak is not configured', () => {
+    swrState.kc = { configured: false, reachable: false, realm: 'clopssoc', detail: 'unconfigured', last_synced_at: null };
+    render(<UsersView />);
+    expect((screen.getByRole('button', { name: 'Sync now' }) as HTMLButtonElement).disabled).toBe(true);
   });
 });

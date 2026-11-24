@@ -1283,6 +1283,28 @@ export interface AdminUserRow {
   last_login: string | null;
   created_at: string;
   effective_permissions: string[];
+  /** Keycloak / SSO identity, present only for IdP-bound accounts. */
+  keycloak_subject?: string | null;
+  idp_groups?: string[];
+  sync_status?: string | null;
+  /** Outcome of the push-to-Keycloak this write performed. */
+  sync_detail?: string | null;
+}
+
+export interface KeycloakStatus {
+  configured: boolean;
+  reachable: boolean;
+  realm: string;
+  detail: string;
+  last_synced_at: string | null;
+}
+
+export interface KeycloakSyncResult {
+  status: string;
+  detail: string;
+  users_seen: number;
+  users_updated: number;
+  roles_changed: number;
 }
 
 export interface AdminUserPage {
@@ -1413,6 +1435,14 @@ export const adminUsersApi = {
     await request<void>(`/api/v1/admin/users/${userId}?reason=${encodeURIComponent(reason)}`, {
       method: "DELETE",
     });
+  },
+
+  async keycloakStatus(): Promise<KeycloakStatus> {
+    return request<KeycloakStatus>("/api/v1/admin/users/keycloak/status");
+  },
+
+  async keycloakSync(): Promise<KeycloakSyncResult> {
+    return request<KeycloakSyncResult>("/api/v1/admin/users/keycloak/sync", { method: "POST" });
   },
 };
 
