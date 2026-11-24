@@ -49,20 +49,20 @@ export function OperationsDashboard() {
 
       <FunnelKpiBar period="24h" />
 
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+      <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-2">
         <ConnectorFleetPanel />
         <div className="space-y-4">
-          <PipelineHealth />
+          <PipelineHealth variant="table" />
           <RejectedEventsPanel />
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+      <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-2">
         <AlertPosturePanel />
         <DetectionCoveragePanel />
       </div>
 
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+      <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-2">
         <AgentThroughputPanel />
         <ResponseActionsPanel />
       </div>

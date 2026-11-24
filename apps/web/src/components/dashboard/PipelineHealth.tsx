@@ -128,7 +128,44 @@ function formatErrorRate(ratio: number): string {
   return `${(ratio * 100).toFixed(2).replace(/\.?0+$/, '')}%`;
 }
 
-/** One cell of the five-stage rail. */
+/**
+ * One stage of the pipeline as a table row: name, status and description on
+ * the left (full text, wrapping), the three measurements in fixed columns on
+ * the right. The old five-column layout gave each stage about 110px inside a
+ * half-width card, which truncated the stage name to 11px.
+ */
+const ROW_GRID = 'grid grid-cols-[minmax(0,1fr)_4.5rem_4.5rem_4.5rem] items-start gap-x-3';
+
+function StageRow({ stage }: { stage: PipelineStage }) {
+  const meta = STATUS_META[stage.status];
+  const unmeasured = new Set(stage.unmeasured ?? []);
+  const cell = 'text-right font-mono text-caption font-medium tabular-nums text-fg-primary';
+
+  return (
+    <div className={clsx(ROW_GRID, 'bg-surface-card px-5 py-3')}>
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <p className="text-control font-semibold text-fg-primary">{STAGE_LABELS[stage.stage]}</p>
+          <StatusPill status={meta.pill} label={meta.label} />
+        </div>
+        <p className="mt-0.5 text-caption text-fg-muted leading-snug">
+          {stage.detail ?? STAGE_DESCRIPTIONS[stage.stage]}
+        </p>
+      </div>
+      <span className={cell}>
+        {unmeasured.has('backlog') ? <NotMeasured /> : formatBacklog(stage.backlog)}
+      </span>
+      <span className={cell}>
+        {unmeasured.has('p95_latency_ms') ? <NotMeasured /> : formatLatency(stage.p95_latency_ms)}
+      </span>
+      <span className={clsx(cell, !unmeasured.has('error_rate') && meta.text)}>
+        {unmeasured.has('error_rate') ? <NotMeasured /> : formatErrorRate(stage.error_rate)}
+      </span>
+    </div>
+  );
+}
+
+/** Five-column rail cell: the Overview layout. SOC Operations passes variant="table" and gets StageRow. */
 function StageCell({
   stage,
   maxBacklog,
@@ -249,7 +286,7 @@ function MissingStage({
   );
 }
 
-export function PipelineHealth() {
+export function PipelineHealth({ variant = 'rail' }: { variant?: 'rail' | 'table' } = {}) {
   const { data, error, isLoading } = useSWR<PipelineHealthData>(
     'pipeline-health',
     () => metricsApi.getPipelineHealth(),
@@ -271,6 +308,7 @@ export function PipelineHealth() {
       .filter((s) => !(s.unmeasured ?? []).includes('backlog'))
       .map((s) => s.backlog),
   );
+  const table = variant === 'table';
 
   const overall = STATUS_META[data?.overall_status ?? 'unknown'];
 
@@ -305,7 +343,20 @@ export function PipelineHealth() {
         )}
       </div>
 
-      <div className="grid grid-cols-1 gap-px bg-surface-divider sm:grid-cols-2 lg:grid-cols-5">
+      {table && (
+        <div className={clsx(ROW_GRID, 'border-b border-surface-divider px-5 py-2 text-caption text-fg-muted')}>
+          <span>Stage</span>
+          <span className="text-right">Backlog</span>
+          <span className="text-right">p95</span>
+          <span className="text-right">Errors</span>
+        </div>
+      )}
+      <div
+        className={clsx(
+          'grid grid-cols-1 gap-px bg-surface-divider',
+          !table && 'sm:grid-cols-2 lg:grid-cols-5',
+        )}
+      >
         {STAGE_ORDER.map((name) => {
           const stage = stagesByName[name];
           if (isLoading) return <LoadingStage key={name} stage={name} />;
@@ -320,7 +371,11 @@ export function PipelineHealth() {
                 reason={error ? 'stage unavailable' : 'not reported'}
               />
             );
-          return <StageCell key={name} stage={stage} maxBacklog={maxBacklog} />;
+          return table ? (
+            <StageRow key={name} stage={stage} />
+          ) : (
+            <StageCell key={name} stage={stage} maxBacklog={maxBacklog} />
+          );
         })}
       </div>
     </div>
