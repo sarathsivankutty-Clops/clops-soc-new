@@ -159,7 +159,7 @@ interface FieldInputProps {
 
 export function FieldInput({ field, value, onChange, id }: FieldInputProps) {
   const baseClass =
-    'w-full bg-gray-950/60 border border-gray-800 rounded-lg px-3 py-2 text-sm text-gray-100 placeholder-gray-600 focus:outline-none focus:border-blue-500/60 focus:ring-1 focus:ring-blue-500/30 transition-colors';
+    'w-full bg-surface-base border border-surface-border rounded-lg px-3 py-2 text-sm text-fg-primary placeholder-fg-subtle focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors';
 
   switch (field.type) {
     case 'secret':
@@ -212,9 +212,9 @@ export function FieldInput({ field, value, onChange, id }: FieldInputProps) {
             type="checkbox"
             checked={Boolean(value)}
             onChange={(e) => onChange(e.target.checked)}
-            className="h-4 w-4 rounded border-gray-700 bg-gray-900 text-blue-500 focus:ring-blue-500/30"
+            className="h-4 w-4 rounded border-surface-border bg-surface-card text-accent focus:ring-accent"
           />
-          <span className="text-sm text-gray-300">{field.placeholder ?? 'Enabled'}</span>
+          <span className="text-sm text-fg-secondary">{field.placeholder ?? 'Enabled'}</span>
         </label>
       );
     case 'number':
@@ -353,7 +353,7 @@ function CatalogGrid({
 
   if (entries.length === 0) {
     return (
-      <div className="text-center text-sm text-gray-500 py-12">
+      <div className="text-center text-sm text-fg-muted py-12">
         No connector types are registered in this build.
       </div>
     );
@@ -361,8 +361,8 @@ function CatalogGrid({
 
   if (filtered.length === 0) {
     return (
-      <div className="text-center text-sm text-gray-500 py-12">
-        No connectors match <span className="text-gray-300">{query}</span>.
+      <div className="text-center text-sm text-fg-muted py-12">
+        No connectors match <span className="text-fg-secondary">{query}</span>.
       </div>
     );
   }
@@ -377,7 +377,7 @@ function CatalogGrid({
         <section aria-labelledby="cat-popular">
           <h3
             id="cat-popular"
-            className="text-[11px] uppercase tracking-wider text-amber-300/80 font-semibold mb-2"
+            className="text-[11px] uppercase tracking-wider text-tone-warning font-semibold mb-2"
           >
             Most teams pick
           </h3>
@@ -387,20 +387,20 @@ function CatalogGrid({
                 key={`popular-${entry.connector_id}`}
                 type="button"
                 onClick={() => onPick(entry)}
-                className="text-left rounded-lg border border-amber-500/20 bg-amber-500/5 hover:bg-amber-500/10 hover:border-amber-500/40 transition-colors p-4 group"
+                className="text-left rounded-lg border border-tone-warning/30 bg-pill-warning-bg hover:bg-pill-warning-bg hover:border-tone-warning/30 transition-colors p-4 group"
               >
                 <div className="flex items-start justify-between gap-2 mb-1">
-                  <span className="text-sm font-medium text-gray-100 group-hover:text-white">
+                  <span className="text-sm font-medium text-fg-primary group-hover:text-white">
                     {entry.connector_name}
                   </span>
                   {entry.oauth?.supported_in_hosted && (
-                    <span className="text-[10px] uppercase tracking-wider text-emerald-300/90 bg-emerald-500/10 border border-emerald-500/30 rounded px-1.5 py-0.5">
+                    <span className="text-[10px] uppercase tracking-wider text-tone-success bg-pill-success-bg border border-tone-success/30 rounded px-1.5 py-0.5">
                       OAuth one-click
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-gray-500 line-clamp-2">{entry.description}</p>
-                <p className="mt-2 text-[11px] text-gray-600 font-mono">{entry.connector_id}</p>
+                <p className="text-xs text-fg-muted line-clamp-2">{entry.description}</p>
+                <p className="mt-2 text-[11px] text-fg-subtle font-mono">{entry.connector_id}</p>
               </button>
             ))}
           </div>
@@ -411,7 +411,7 @@ function CatalogGrid({
         <section key={category} aria-labelledby={`cat-${category}`}>
           <h3
             id={`cat-${category}`}
-            className="text-[11px] uppercase tracking-wider text-gray-500 font-semibold mb-2"
+            className="text-[11px] uppercase tracking-wider text-fg-muted font-semibold mb-2"
           >
             {CATEGORY_LABEL[category] ?? category}
           </h3>
@@ -421,20 +421,20 @@ function CatalogGrid({
                 key={entry.connector_id}
                 type="button"
                 onClick={() => onPick(entry)}
-                className="text-left rounded-lg border border-gray-800/80 bg-gray-900/40 hover:bg-gray-900/80 hover:border-gray-700 transition-colors p-4 group"
+                className="text-left rounded-lg border border-surface-border bg-surface-card hover:bg-surface-card hover:border-surface-border transition-colors p-4 group"
               >
                 <div className="flex items-start justify-between gap-2 mb-1">
-                  <span className="text-sm font-medium text-gray-100 group-hover:text-white">
+                  <span className="text-sm font-medium text-fg-primary group-hover:text-white">
                     {entry.connector_name}
                   </span>
                   {entry.oauth?.supported_in_hosted && (
-                    <span className="text-[10px] uppercase tracking-wider text-emerald-300/90 bg-emerald-500/10 border border-emerald-500/30 rounded px-1.5 py-0.5">
+                    <span className="text-[10px] uppercase tracking-wider text-tone-success bg-pill-success-bg border border-tone-success/30 rounded px-1.5 py-0.5">
                       OAuth one-click
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-gray-500 line-clamp-2">{entry.description}</p>
-                <p className="mt-2 text-[11px] text-gray-600 font-mono">{entry.connector_id}</p>
+                <p className="text-xs text-fg-muted line-clamp-2">{entry.description}</p>
+                <p className="mt-2 text-[11px] text-fg-subtle font-mono">{entry.connector_id}</p>
               </button>
             ))}
           </div>
@@ -497,13 +497,13 @@ function TroubleshootPanel({
   };
 
   return (
-    <div className="rounded-lg border border-red-500/20 bg-red-500/5 p-4 mt-4 space-y-3">
+    <div className="rounded-lg border border-tone-danger/30 bg-pill-danger-bg p-4 mt-4 space-y-3">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-wider text-red-300">
+          <p className="text-xs font-semibold uppercase tracking-wider text-tone-danger">
             Connection failed
           </p>
-          <p className="text-xs text-red-200/80 mt-1 break-words">
+          <p className="text-xs text-tone-danger mt-1 break-words">
             {testResult.error ?? testResult.message ?? 'Unknown error'}
           </p>
         </div>
@@ -511,7 +511,7 @@ function TroubleshootPanel({
           <button
             type="button"
             onClick={handleAsk}
-            className="text-xs whitespace-nowrap bg-red-500/20 hover:bg-red-500/30 text-red-100 border border-red-500/30 px-3 py-1.5 rounded-md transition-colors"
+            className="text-xs whitespace-nowrap bg-pill-danger-bg hover:bg-pill-danger-bg text-tone-danger border border-tone-danger/30 px-3 py-1.5 rounded-md transition-colors"
           >
             Ask AI to fix
           </button>
@@ -519,14 +519,14 @@ function TroubleshootPanel({
       </div>
 
       {loading && (
-        <div className="flex items-center gap-2 text-xs text-red-200">
-          <span className="animate-spin w-3.5 h-3.5 border-2 border-red-300 border-t-transparent rounded-full" />
+        <div className="flex items-center gap-2 text-xs text-tone-danger">
+          <span className="animate-spin w-3.5 h-3.5 border-2 border-tone-danger/30 border-t-transparent rounded-full" />
           Diagnosing failure…
         </div>
       )}
 
       {error && (
-        <p className="text-xs text-red-200/80">
+        <p className="text-xs text-tone-danger">
           Troubleshooter unavailable: {error}
         </p>
       )}
@@ -534,16 +534,16 @@ function TroubleshootPanel({
       {advice && (
         <div className="space-y-2">
           <div>
-            <p className="text-[11px] uppercase tracking-wider text-gray-400 font-semibold mb-1">
+            <p className="text-[11px] uppercase tracking-wider text-fg-muted font-semibold mb-1">
               Likely cause
             </p>
-            <p className="text-xs text-gray-200">{advice.likely_cause}</p>
+            <p className="text-xs text-fg-primary">{advice.likely_cause}</p>
           </div>
           <div>
-            <p className="text-[11px] uppercase tracking-wider text-gray-400 font-semibold mb-1">
+            <p className="text-[11px] uppercase tracking-wider text-fg-muted font-semibold mb-1">
               Try this
             </p>
-            <ol className="list-decimal list-inside space-y-1 text-xs text-gray-200 marker:text-gray-500">
+            <ol className="list-decimal list-inside space-y-1 text-xs text-fg-primary marker:text-fg-muted">
               {advice.fix_steps.map((step, idx) => (
                 <li key={idx}>{step}</li>
               ))}
@@ -554,7 +554,7 @@ function TroubleshootPanel({
               href={advice.doc_link}
               target="_blank"
               rel="noreferrer"
-              className="inline-block text-xs text-blue-400 hover:text-blue-300 underline-offset-2 hover:underline"
+              className="inline-block text-xs text-accent hover:text-accent underline-offset-2 hover:underline"
             >
               Open setup guide →
             </a>
@@ -694,16 +694,16 @@ function OAuthPanel({
   };
 
   return (
-    <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-4 space-y-3">
+    <div className="rounded-xl border border-tone-success/30 bg-pill-success-bg p-4 space-y-3">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-[11px] uppercase tracking-wider text-emerald-300/90 font-semibold">
+          <p className="text-[11px] uppercase tracking-wider text-tone-success font-semibold">
             One-click OAuth
           </p>
-          <p className="text-sm text-gray-100 mt-1">
+          <p className="text-sm text-fg-primary mt-1">
             Connect with {entry.connector_name} via OAuth
           </p>
-          <p className="text-xs text-gray-400 mt-1 leading-relaxed">
+          <p className="text-xs text-fg-muted mt-1 leading-relaxed">
             Recommended. We&apos;ll redirect you to {entry.connector_name} to grant access, then
             {/* [HIDDEN-UI THEME-7 prior product label: AiSOC vault] */}
             store the rotated tokens in the ClopsSOC vault. No long-lived secrets to paste.
@@ -711,7 +711,7 @@ function OAuthPanel({
         </div>
         {appView && !showRegisterForm && (
           <span
-            className="shrink-0 inline-flex items-center text-[10px] uppercase tracking-wider text-emerald-200 bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 rounded"
+            className="shrink-0 inline-flex items-center text-[10px] uppercase tracking-wider text-tone-success bg-pill-success-bg border border-tone-success/30 px-2 py-0.5 rounded"
             title={`OAuth app last updated ${new Date(appView.updated_at).toLocaleString()}`}
           >
             App registered
@@ -720,12 +720,12 @@ function OAuthPanel({
       </div>
 
       {loadingApp ? (
-        <div className="flex items-center gap-2 text-xs text-gray-400">
-          <span className="animate-spin w-3.5 h-3.5 border-2 border-gray-500 border-t-transparent rounded-full" />
+        <div className="flex items-center gap-2 text-xs text-fg-muted">
+          <span className="animate-spin w-3.5 h-3.5 border-2 border-surface-border border-t-transparent rounded-full" />
           Checking OAuth registration…
         </div>
       ) : appLoadError ? (
-        <p className="text-xs text-amber-200">
+        <p className="text-xs text-tone-warning">
           Couldn&apos;t check OAuth registration: {appLoadError}
         </p>
       ) : appView && !showRegisterForm ? (
@@ -736,7 +736,7 @@ function OAuthPanel({
               type="button"
               onClick={handleConnect}
               disabled={connecting}
-              className="text-sm bg-emerald-500/90 hover:bg-emerald-400 text-white px-4 py-2 rounded-lg transition-colors disabled:opacity-60 flex items-center gap-2"
+              className="text-sm bg-tone-success hover:bg-pill-success-bg text-white px-4 py-2 rounded-lg transition-colors disabled:opacity-60 flex items-center gap-2"
             >
               {connecting && (
                 <span className="animate-spin w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full" />
@@ -746,12 +746,12 @@ function OAuthPanel({
             <button
               type="button"
               onClick={() => setShowRegisterForm(true)}
-              className="text-xs text-gray-400 hover:text-gray-200 px-2 py-1 transition-colors"
+              className="text-xs text-fg-muted hover:text-fg-primary px-2 py-1 transition-colors"
             >
               Rotate client credentials
             </button>
           </div>
-          <p className="text-[11px] text-gray-500 font-mono break-all">
+          <p className="text-[11px] text-fg-muted font-mono break-all">
             client_id: {appView.client_id}
           </p>
         </div>
@@ -845,18 +845,18 @@ function OAuthAppRegistrationForm({
   };
 
   const fieldClass =
-    'w-full bg-gray-950/60 border border-gray-800 rounded-lg px-3 py-2 text-xs text-gray-100 placeholder-gray-600 focus:outline-none focus:border-emerald-500/60 focus:ring-1 focus:ring-emerald-500/30 transition-colors';
+    'w-full bg-surface-base border border-surface-border rounded-lg px-3 py-2 text-xs text-fg-primary placeholder-fg-subtle focus:outline-none focus:border-tone-success/30 focus:ring-1 focus:ring-tone-success/30 transition-colors';
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3 pt-1">
-      <p className="text-xs text-gray-400 leading-relaxed">
+      <p className="text-xs text-fg-muted leading-relaxed">
         First time connecting? Register your OAuth app in {entry.connector_name} (using the
         redirect URI shown in the docs), then paste the client credentials below.
       </p>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
-          <label className="block text-[11px] font-semibold text-gray-300 mb-1">
-            Client ID <span className="text-red-400">*</span>
+          <label className="block text-[11px] font-semibold text-fg-secondary mb-1">
+            Client ID <span className="text-tone-danger">*</span>
           </label>
           <input
             type="text"
@@ -869,8 +869,8 @@ function OAuthAppRegistrationForm({
           />
         </div>
         <div>
-          <label className="block text-[11px] font-semibold text-gray-300 mb-1">
-            Client Secret <span className="text-red-400">*</span>
+          <label className="block text-[11px] font-semibold text-fg-secondary mb-1">
+            Client Secret <span className="text-tone-danger">*</span>
           </label>
           <input
             type="password"
@@ -885,12 +885,12 @@ function OAuthAppRegistrationForm({
       </div>
 
       <details className="group">
-        <summary className="cursor-pointer text-[11px] text-gray-500 hover:text-gray-300 select-none">
+        <summary className="cursor-pointer text-[11px] text-fg-muted hover:text-fg-secondary select-none">
           Override authorize URL, token URL, or scopes
         </summary>
         <div className="mt-3 space-y-3">
           <div>
-            <label className="block text-[11px] font-semibold text-gray-300 mb-1">
+            <label className="block text-[11px] font-semibold text-fg-secondary mb-1">
               Authorize URL
             </label>
             <input
@@ -903,7 +903,7 @@ function OAuthAppRegistrationForm({
             />
           </div>
           <div>
-            <label className="block text-[11px] font-semibold text-gray-300 mb-1">
+            <label className="block text-[11px] font-semibold text-fg-secondary mb-1">
               Token URL
             </label>
             <input
@@ -916,7 +916,7 @@ function OAuthAppRegistrationForm({
             />
           </div>
           <div>
-            <label className="block text-[11px] font-semibold text-gray-300 mb-1">
+            <label className="block text-[11px] font-semibold text-fg-secondary mb-1">
               Scopes (space- or comma-separated)
             </label>
             <input
@@ -928,7 +928,7 @@ function OAuthAppRegistrationForm({
               autoComplete="off"
             />
             {schemaHints?.scopes && schemaHints.scopes.length > 0 && (
-              <p className="mt-1 text-[10px] text-gray-600 font-mono">
+              <p className="mt-1 text-[10px] text-fg-subtle font-mono">
                 Schema default: {schemaHints.scopes.join(' ')}
               </p>
             )}
@@ -940,7 +940,7 @@ function OAuthAppRegistrationForm({
         <button
           type="submit"
           disabled={saving}
-          className="text-xs bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-2 rounded-lg transition-colors disabled:opacity-60 flex items-center gap-2"
+          className="text-xs bg-tone-success hover:bg-pill-success-bg text-white px-3 py-2 rounded-lg transition-colors disabled:opacity-60 flex items-center gap-2"
         >
           {saving && (
             <span className="animate-spin w-3 h-3 border-2 border-white border-t-transparent rounded-full" />
@@ -952,7 +952,7 @@ function OAuthAppRegistrationForm({
             type="button"
             onClick={onCancel}
             disabled={saving}
-            className="text-xs text-gray-400 hover:text-gray-200 px-2 py-2 transition-colors disabled:opacity-50"
+            className="text-xs text-fg-muted hover:text-fg-primary px-2 py-2 transition-colors disabled:opacity-50"
           >
             Cancel
           </button>
@@ -1004,19 +1004,19 @@ function ConfigStep({
           so an operator can have e.g. two CrowdStrike tenants distinguished
           by "Falcon — production" / "Falcon — staging". */}
       <div>
-        <label className="block text-xs font-semibold text-gray-300 mb-1">
+        <label className="block text-xs font-semibold text-fg-secondary mb-1">
           Instance name
-          <span className="text-red-400 ml-0.5">*</span>
+          <span className="text-tone-danger ml-0.5">*</span>
         </label>
         <input
           type="text"
           value={instanceName}
           onChange={(e) => setInstanceName(e.target.value)}
           placeholder={`${entry.connector_name} — production`}
-          className="w-full bg-gray-950/60 border border-gray-800 rounded-lg px-3 py-2 text-sm text-gray-100 placeholder-gray-600 focus:outline-none focus:border-blue-500/60 focus:ring-1 focus:ring-blue-500/30"
+          className="w-full bg-surface-base border border-surface-border rounded-lg px-3 py-2 text-sm text-fg-primary placeholder-fg-subtle focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent"
           required
         />
-        <p className="mt-1 text-xs text-gray-500">
+        <p className="mt-1 text-xs text-fg-muted">
           Shown in the connectors list and on alerts ingested through this connector.
         </p>
       </div>
@@ -1033,16 +1033,16 @@ function ConfigStep({
           a disclosure since OAuth is the recommended path; for everyone
           else they're rendered inline as before. */}
       {supportsHostedOAuth ? (
-        <details className="group rounded-lg border border-gray-800/80 bg-gray-900/30">
-          <summary className="cursor-pointer select-none px-4 py-3 text-xs font-semibold text-gray-400 hover:text-gray-200 transition-colors">
+        <details className="group rounded-lg border border-surface-border bg-surface-card">
+          <summary className="cursor-pointer select-none px-4 py-3 text-xs font-semibold text-fg-muted hover:text-fg-primary transition-colors">
             Or use static credentials instead
           </summary>
           <div className="px-4 pb-4 pt-1 space-y-5">
             {entry.fields.map((f) => (
               <div key={f.name}>
-                <label className="block text-xs font-semibold text-gray-300 mb-1">
+                <label className="block text-xs font-semibold text-fg-secondary mb-1">
                   {f.label}
-                  {f.required && <span className="text-red-400 ml-0.5">*</span>}
+                  {f.required && <span className="text-tone-danger ml-0.5">*</span>}
                 </label>
                 <FieldInput
                   field={f}
@@ -1050,7 +1050,7 @@ function ConfigStep({
                   onChange={(v) => updateField(f.name, v)}
                 />
                 {f.help_text && (
-                  <p className="mt-1 text-xs text-gray-500 leading-relaxed">{f.help_text}</p>
+                  <p className="mt-1 text-xs text-fg-muted leading-relaxed">{f.help_text}</p>
                 )}
               </div>
             ))}
@@ -1059,26 +1059,26 @@ function ConfigStep({
       ) : (
         entry.fields.map((f) => (
           <div key={f.name}>
-            <label className="block text-xs font-semibold text-gray-300 mb-1">
+            <label className="block text-xs font-semibold text-fg-secondary mb-1">
               {f.label}
-              {f.required && <span className="text-red-400 ml-0.5">*</span>}
+              {f.required && <span className="text-tone-danger ml-0.5">*</span>}
             </label>
             <FieldInput field={f} value={values[f.name]} onChange={(v) => updateField(f.name, v)} />
             {f.help_text && (
-              <p className="mt-1 text-xs text-gray-500 leading-relaxed">{f.help_text}</p>
+              <p className="mt-1 text-xs text-fg-muted leading-relaxed">{f.help_text}</p>
             )}
           </div>
         ))
       )}
 
       {entry.docs_url && (
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-fg-muted">
           Need help?{' '}
           <a
             href={entry.docs_url}
             target="_blank"
             rel="noreferrer"
-            className="text-blue-400 hover:text-blue-300 underline-offset-2 hover:underline"
+            className="text-accent hover:text-accent underline-offset-2 hover:underline"
           >
             View setup guide
           </a>
@@ -1177,52 +1177,52 @@ function VerifyStep({
 
   return (
     <div className="space-y-5">
-      <div className="rounded-lg border border-gray-800/80 bg-gray-900/40 p-5">
+      <div className="rounded-lg border border-surface-border bg-surface-card p-5">
         <div className="flex items-start gap-4">
           {arrived ? (
-            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-green-500/15 border border-green-500/30 flex items-center justify-center">
-              <svg className="w-5 h-5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-pill-success-bg border border-tone-success/30 flex items-center justify-center">
+              <svg className="w-5 h-5 text-tone-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </div>
           ) : timedOut ? (
-            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-amber-500/15 border border-amber-500/30 flex items-center justify-center">
-              <svg className="w-5 h-5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-pill-warning-bg border border-tone-warning/30 flex items-center justify-center">
+              <svg className="w-5 h-5 text-tone-warning" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
           ) : (
-            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-500/15 border border-blue-500/30 flex items-center justify-center">
-              <span className="animate-spin w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full" />
+            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-accent-subtle border border-accent flex items-center justify-center">
+              <span className="animate-spin w-4 h-4 border-2 border-accent border-t-transparent rounded-full" />
             </div>
           )}
           <div className="min-w-0 flex-1">
-            <h3 className="text-sm font-semibold text-gray-100">
+            <h3 className="text-sm font-semibold text-fg-primary">
               {arrived
                 ? 'Data is flowing'
                 : timedOut
                   ? 'No data yet'
                   : 'Waiting for first event…'}
             </h3>
-            <p className="text-xs text-gray-400 mt-1 leading-relaxed">
+            <p className="text-xs text-fg-muted mt-1 leading-relaxed">
               {arrived ? (
                 <>
                   {/* [HIDDEN-UI THEME-7 prior product label: AiSOC received] */}
                   ClopsSOC received the first event from{' '}
-                  <span className="text-gray-200">{connector.name}</span>. The connector is
+                  <span className="text-fg-primary">{connector.name}</span>. The connector is
                   healthy and on its normal poll cadence.
                 </>
               ) : timedOut ? (
                 <>
                   We didn&apos;t see any events from{' '}
-                  <span className="text-gray-200">{connector.name}</span> in five minutes.
+                  <span className="text-fg-primary">{connector.name}</span> in five minutes.
                   This is normal for low-volume sources, but if you expect activity, check the
                   connector&apos;s Health tab for poll errors.
                 </>
               ) : (
                 <>
                   {/* [HIDDEN-UI THEME-7 prior product label: AiSOC is polling] */}
-                  ClopsSOC is polling <span className="text-gray-200">{connector.name}</span> on
+                  ClopsSOC is polling <span className="text-fg-primary">{connector.name}</span> on
                   its configured cadence. The first batch usually lands within a minute or two.
                 </>
               )}
@@ -1230,33 +1230,33 @@ function VerifyStep({
 
             {arrived && lastEvent?.last_event_at && (
               <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-xs">
-                <dt className="text-gray-500">First event</dt>
-                <dd className="text-gray-200 font-mono">
+                <dt className="text-fg-muted">First event</dt>
+                <dd className="text-fg-primary font-mono">
                   {new Date(lastEvent.last_event_at).toLocaleString()}
                 </dd>
                 {lastEvent.last_event_kind && (
                   <>
-                    <dt className="text-gray-500">Kind</dt>
-                    <dd className="text-gray-200 font-mono">{lastEvent.last_event_kind}</dd>
+                    <dt className="text-fg-muted">Kind</dt>
+                    <dd className="text-fg-primary font-mono">{lastEvent.last_event_kind}</dd>
                   </>
                 )}
               </dl>
             )}
 
             {!arrived && !timedOut && (
-              <p className="mt-3 text-xs text-gray-600 font-mono">
+              <p className="mt-3 text-xs text-fg-subtle font-mono">
                 {Math.floor(elapsed / 60)}:{String(elapsed % 60).padStart(2, '0')} elapsed
               </p>
             )}
 
             {pollError && (
-              <p className="mt-2 text-xs text-red-400">Polling error: {pollError}</p>
+              <p className="mt-2 text-xs text-tone-danger">Polling error: {pollError}</p>
             )}
           </div>
         </div>
       </div>
 
-      <div className="text-xs text-gray-500 leading-relaxed">
+      <div className="text-xs text-fg-muted leading-relaxed">
         You can close this dialog at any time — verification keeps running in the background.
         Health and freshness for this connector live on its detail page.
       </div>
@@ -1268,8 +1268,8 @@ function VerifyStep({
           className={clsx(
             'text-sm px-4 py-2 rounded-lg transition-colors',
             arrived
-              ? 'bg-blue-600 hover:bg-blue-500 text-white'
-              : 'bg-gray-800 hover:bg-gray-700 text-gray-200',
+              ? 'bg-accent hover:bg-accent-hover text-white'
+              : 'bg-surface-raised hover:bg-surface-raised text-fg-primary',
           )}
         >
           {arrived ? 'Done' : 'Close — keep waiting in background'}
@@ -1517,14 +1517,14 @@ export function AddConnectorModal({
               role="dialog"
               aria-modal="true"
               aria-labelledby="add-connector-title"
-              className="pointer-events-auto w-full max-w-3xl max-h-[85vh] overflow-hidden rounded-2xl border border-gray-800 bg-gray-950 shadow-2xl flex flex-col"
+              className="pointer-events-auto w-full max-w-3xl max-h-[85vh] overflow-hidden rounded-2xl border border-surface-border bg-surface-base shadow-2xl flex flex-col"
             >
               {/* Header */}
-              <div className="flex items-start justify-between gap-4 px-6 py-4 border-b border-gray-800">
+              <div className="flex items-start justify-between gap-4 px-6 py-4 border-b border-surface-border">
                 <div className="min-w-0">
                   <h2
                     id="add-connector-title"
-                    className="text-base font-semibold text-gray-100"
+                    className="text-base font-semibold text-fg-primary"
                   >
                     {step === 'pick'
                       ? 'Add connector'
@@ -1532,7 +1532,7 @@ export function AddConnectorModal({
                         ? `Configure ${selected?.connector_name ?? ''}`
                         : `Verifying ${createdConnector?.name ?? ''}`}
                   </h2>
-                  <p className="text-xs text-gray-500 mt-0.5">
+                  <p className="text-xs text-fg-muted mt-0.5">
                     {step === 'pick'
                       ? /* [HIDDEN-UI THEME-7 prior text: AiSOC vault] */ 'Pick a security tool to connect. Credentials are encrypted with the ClopsSOC vault.'
                       : step === 'configure'
@@ -1544,7 +1544,7 @@ export function AddConnectorModal({
                   type="button"
                   onClick={onClose}
                   aria-label="Close"
-                  className="text-gray-500 hover:text-gray-300 transition-colors p-1"
+                  className="text-fg-muted hover:text-fg-secondary transition-colors p-1"
                 >
                   <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1562,7 +1562,7 @@ export function AddConnectorModal({
                         categories. */}
                     <div className="relative">
                       <svg
-                        className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-600"
+                        className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-fg-subtle"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -1579,7 +1579,7 @@ export function AddConnectorModal({
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
                         placeholder="Search by name, vendor, or capability"
-                        className="w-full bg-gray-950/60 border border-gray-800 rounded-lg pl-9 pr-3 py-2 text-sm text-gray-100 placeholder-gray-600 focus:outline-none focus:border-blue-500/60 focus:ring-1 focus:ring-blue-500/30"
+                        className="w-full bg-surface-base border border-surface-border rounded-lg pl-9 pr-3 py-2 text-sm text-fg-primary placeholder-fg-subtle focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent"
                         autoFocus
                       />
                     </div>
@@ -1588,12 +1588,12 @@ export function AddConnectorModal({
                         us a category to filter to. Clicking the X drops the
                         filter so the operator can browse the full catalog. */}
                     {categoryFilter && (
-                      <div className="flex items-center gap-2 text-xs text-gray-400">
+                      <div className="flex items-center gap-2 text-xs text-fg-muted">
                         <span>Filtered to</span>
                         <button
                           type="button"
                           onClick={() => setCategoryFilter(null)}
-                          className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-200 px-2.5 py-0.5 hover:bg-blue-500/20 transition-colors"
+                          className="inline-flex items-center gap-1.5 rounded-full bg-accent-subtle border border-accent text-accent px-2.5 py-0.5 hover:bg-accent-hover/20 transition-colors"
                           title="Clear category filter"
                         >
                           <span className="font-medium">
@@ -1617,11 +1617,11 @@ export function AddConnectorModal({
                     )}
 
                     {catalog === null && !catalogError ? (
-                      <div className="flex items-center justify-center h-32 text-gray-600">
-                        <div className="animate-spin w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full" />
+                      <div className="flex items-center justify-center h-32 text-fg-subtle">
+                        <div className="animate-spin w-6 h-6 border-2 border-accent border-t-transparent rounded-full" />
                       </div>
                     ) : catalogError ? (
-                      <div className="text-sm text-red-300 bg-red-500/10 border border-red-500/20 rounded-lg p-4">
+                      <div className="text-sm text-tone-danger bg-pill-danger-bg border border-tone-danger/30 rounded-lg p-4">
                         Failed to load connector catalog: {catalogError}
                       </div>
                     ) : (
@@ -1652,17 +1652,17 @@ export function AddConnectorModal({
               </div>
 
               {/* Footer */}
-              <div className="flex items-center justify-between gap-3 px-6 py-4 border-t border-gray-800 bg-gray-950/80">
+              <div className="flex items-center justify-between gap-3 px-6 py-4 border-t border-surface-border bg-surface-base">
                 {step === 'pick' ? (
                   <>
-                    <p className="text-xs text-gray-600">
+                    <p className="text-xs text-fg-subtle">
                       {(catalog?.length ?? 0)} connector type
                       {(catalog?.length ?? 0) === 1 ? '' : 's'} available
                     </p>
                     <button
                       type="button"
                       onClick={onClose}
-                      className="text-sm text-gray-400 hover:text-gray-200 px-3 py-2 rounded-lg transition-colors"
+                      className="text-sm text-fg-muted hover:text-fg-primary px-3 py-2 rounded-lg transition-colors"
                     >
                       Cancel
                     </button>
@@ -1674,7 +1674,7 @@ export function AddConnectorModal({
                         type="button"
                         onClick={handleBack}
                         disabled={saving}
-                        className="text-sm text-gray-400 hover:text-gray-200 px-3 py-2 rounded-lg transition-colors disabled:opacity-50"
+                        className="text-sm text-fg-muted hover:text-fg-primary px-3 py-2 rounded-lg transition-colors disabled:opacity-50"
                       >
                         ← Back
                       </button>
@@ -1683,8 +1683,8 @@ export function AddConnectorModal({
                           className={clsx(
                             'truncate text-xs px-2 py-1 rounded-md border',
                             testResult.success
-                              ? 'text-green-300 bg-green-500/10 border-green-500/20'
-                              : 'text-red-300 bg-red-500/10 border-red-500/20',
+                              ? 'text-tone-success bg-pill-success-bg border-tone-success/30'
+                              : 'text-tone-danger bg-pill-danger-bg border-tone-danger/30',
                           )}
                           title={testResult.message ?? testResult.error ?? ''}
                         >
@@ -1699,10 +1699,10 @@ export function AddConnectorModal({
                         type="button"
                         onClick={handleTest}
                         disabled={testing || saving}
-                        className="text-sm bg-gray-800 hover:bg-gray-700 text-gray-200 px-3 py-2 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
+                        className="text-sm bg-surface-raised hover:bg-surface-raised text-fg-primary px-3 py-2 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
                       >
                         {testing && (
-                          <span className="animate-spin w-3.5 h-3.5 border-2 border-blue-400 border-t-transparent rounded-full" />
+                          <span className="animate-spin w-3.5 h-3.5 border-2 border-accent border-t-transparent rounded-full" />
                         )}
                         Test connection
                       </button>
@@ -1710,7 +1710,7 @@ export function AddConnectorModal({
                         type="button"
                         onClick={handleSave}
                         disabled={saving || testing}
-                        className="text-sm bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
+                        className="text-sm bg-accent hover:bg-accent-hover text-white px-4 py-2 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
                       >
                         {saving && (
                           <span className="animate-spin w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full" />
@@ -1724,7 +1724,7 @@ export function AddConnectorModal({
                   // (the centered "Done" / "Close" CTA), so the footer just
                   // shows secondary status. Keeping a lightweight footer
                   // preserves visual rhythm with the previous two steps.
-                  <p className="text-xs text-gray-600">
+                  <p className="text-xs text-fg-subtle">
                     Verification continues in the background even after you close.
                   </p>
                 )}

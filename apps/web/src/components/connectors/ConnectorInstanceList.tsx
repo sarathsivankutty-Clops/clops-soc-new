@@ -15,10 +15,12 @@
  * dashed placeholder card.
  */
 
+import { useEffect } from 'react';
 import { clsx } from 'clsx';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { SkeletonCard } from '@/components/ui/Skeleton';
-import type { Connector } from '@/lib/api';
+import { StatusPill, type StatusKind } from '@/components/ui/StatusPill';
+import type { Connector, ConnectorTestResult } from '@/lib/api';
 
 const CONNECTOR_LABELS: Record<string, string> = {
   crowdstrike: 'CS',
@@ -43,23 +45,23 @@ const STATUS_CONFIG: Record<
 > = {
   active: {
     label: 'Active',
-    color: 'text-green-400 bg-green-500/10 border-green-500/20',
-    dot: 'bg-green-400',
+    color: 'text-tone-success bg-pill-success-bg border-tone-success/30',
+    dot: 'bg-tone-success',
   },
   inactive: {
     label: 'Inactive',
-    color: 'text-gray-400 bg-gray-500/10 border-gray-500/20',
-    dot: 'bg-gray-500',
+    color: 'text-fg-muted bg-surface-raised border-surface-border',
+    dot: 'bg-surface-raised',
   },
   error: {
     label: 'Error',
-    color: 'text-red-400 bg-red-500/10 border-red-500/20',
-    dot: 'bg-red-400',
+    color: 'text-tone-danger bg-pill-danger-bg border-tone-danger/30',
+    dot: 'bg-pill-danger-bg',
   },
   configuring: {
     label: 'Configuring',
-    color: 'text-amber-300 bg-amber-500/10 border-amber-500/20',
-    dot: 'bg-amber-400',
+    color: 'text-tone-warning bg-pill-warning-bg border-tone-warning/30',
+    dot: 'bg-pill-warning-bg',
   },
 };
 
@@ -104,9 +106,9 @@ function formatDurationSeconds(secs: number | null | undefined): string {
  * events yet looks clean instead of being painted gray "stale."
  */
 const FRESHNESS_BADGE_STYLES: Record<'green' | 'yellow' | 'red', string> = {
-  green: 'text-emerald-300 bg-emerald-500/10 border-emerald-500/30',
-  yellow: 'text-amber-300 bg-amber-500/10 border-amber-500/30',
-  red: 'text-red-300 bg-red-500/10 border-red-500/30',
+  green: 'text-tone-success bg-pill-success-bg border-tone-success/30',
+  yellow: 'text-tone-warning bg-pill-warning-bg border-tone-warning/30',
+  red: 'text-tone-danger bg-pill-danger-bg border-tone-danger/30',
 };
 
 const FRESHNESS_BADGE_LABELS: Record<'green' | 'yellow' | 'red', string> = {
@@ -133,7 +135,9 @@ interface ConnectorCardProps {
   onDelete?: (connector: Connector) => void;
 }
 
-function ConnectorCard({
+// [HIDDEN-UI UI-OVERHAUL-4 the card layout was replaced by the connector
+// table below. Retained for rollback without changing the existing card UI.
+export function LegacyConnectorCard({
   connector,
   testing,
   testResult,
@@ -185,15 +189,15 @@ function ConnectorCard({
     : '';
 
   return (
-    <div className="bg-gray-900/60 border border-gray-800/60 rounded-xl p-5 hover:border-gray-700/60 transition-colors flex flex-col">
+    <div className="bg-surface-card border border-surface-border rounded-xl p-5 hover:border-surface-border transition-colors flex flex-col">
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="w-10 h-10 bg-gray-800 rounded-xl flex items-center justify-center text-[10px] font-semibold uppercase tracking-wider text-gray-400 flex-shrink-0">
+          <div className="w-10 h-10 bg-surface-raised rounded-xl flex items-center justify-center text-[10px] font-semibold uppercase tracking-wider text-fg-muted flex-shrink-0">
             {abbreviateType(connector.type)}
           </div>
           <div className="min-w-0">
-            <h3 className="text-sm font-medium text-gray-200 truncate">{connector.name}</h3>
-            <p className="text-xs text-gray-500 truncate">{connector.type}</p>
+            <h3 className="text-sm font-medium text-fg-primary truncate">{connector.name}</h3>
+            <p className="text-xs text-fg-muted truncate">{connector.type}</p>
           </div>
         </div>
         <span
@@ -209,7 +213,7 @@ function ConnectorCard({
       </div>
 
       {connector.description && (
-        <p className="text-xs text-gray-500 mb-4 line-clamp-2">{connector.description}</p>
+        <p className="text-xs text-fg-muted mb-4 line-clamp-2">{connector.description}</p>
       )}
 
       {/* Schema-drift, filter-drop, and freshness SLO badges. Only render
@@ -248,8 +252,8 @@ function ConnectorCard({
               className={clsx(
                 'text-[10px] px-2 py-0.5 rounded-full border inline-flex items-center gap-1',
                 driftRecent
-                  ? 'text-amber-300 bg-amber-500/10 border-amber-500/30'
-                  : 'text-gray-400 bg-gray-800/60 border-gray-700/50',
+                  ? 'text-tone-warning bg-pill-warning-bg border-tone-warning/30'
+                  : 'text-fg-muted bg-surface-raised border-surface-border',
               )}
             >
               <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -273,7 +277,7 @@ function ConnectorCard({
           {eventsDropped > 0 && (
             <span
               title={`${eventsDropped.toLocaleString()} event${eventsDropped === 1 ? '' : 's'} dropped by pre-ingest filter rules`}
-              className="text-[10px] px-2 py-0.5 rounded-full border inline-flex items-center gap-1 text-blue-300 bg-blue-500/10 border-blue-500/30"
+              className="text-[10px] px-2 py-0.5 rounded-full border inline-flex items-center gap-1 text-accent bg-accent-subtle border-accent"
             >
               <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
@@ -290,15 +294,15 @@ function ConnectorCard({
       )}
 
       <div className="grid grid-cols-2 gap-2 mb-4">
-        <div className="bg-gray-800/60 rounded-lg p-2">
-          <p className="text-xs text-gray-500">Events ingested</p>
-          <p className="text-sm font-medium text-gray-300">
+        <div className="bg-surface-raised rounded-lg p-2">
+          <p className="text-xs text-fg-muted">Events ingested</p>
+          <p className="text-sm font-medium text-fg-secondary">
             {alertCount.toLocaleString()}
           </p>
         </div>
-        <div className="bg-gray-800/60 rounded-lg p-2">
-          <p className="text-xs text-gray-500">Last sync</p>
-          <p className="text-sm font-medium text-gray-300">
+        <div className="bg-surface-raised rounded-lg p-2">
+          <p className="text-xs text-fg-muted">Last sync</p>
+          <p className="text-sm font-medium text-fg-secondary">
             {formatLastSync(connector.lastSync)}
           </p>
         </div>
@@ -309,10 +313,10 @@ function ConnectorCard({
           type="button"
           onClick={() => onTest(connector.id)}
           disabled={testing}
-          className="flex-1 text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 px-3 py-2 rounded-lg transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+          className="flex-1 text-xs bg-surface-raised hover:bg-surface-raised text-fg-secondary px-3 py-2 rounded-lg transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
         >
           {testing && (
-            <span className="animate-spin w-3 h-3 border-2 border-blue-400 border-t-transparent rounded-full" />
+            <span className="animate-spin w-3 h-3 border-2 border-accent border-t-transparent rounded-full" />
           )}
           Test
         </button>
@@ -321,7 +325,7 @@ function ConnectorCard({
             type="button"
             onClick={() => onConfigure(connector)}
             aria-label={`Configure ${connector.name}`}
-            className="flex-1 text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 px-3 py-2 rounded-lg transition-colors"
+            className="flex-1 text-xs bg-surface-raised hover:bg-surface-raised text-fg-secondary px-3 py-2 rounded-lg transition-colors"
           >
             Configure
           </button>
@@ -331,7 +335,7 @@ function ConnectorCard({
             type="button"
             onClick={() => onDelete(connector)}
             aria-label={`Delete ${connector.name}`}
-            className="text-xs text-gray-500 hover:text-red-400 px-2 py-2 rounded-lg transition-colors"
+            className="text-xs text-fg-muted hover:text-tone-danger px-2 py-2 rounded-lg transition-colors"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
@@ -349,11 +353,343 @@ function ConnectorCard({
         <p
           className={clsx(
             'mt-3 text-xs',
-            testResult ? 'text-green-400' : 'text-red-400',
+            testResult ? 'text-tone-success' : 'text-tone-danger',
           )}
         >
           {testResult ? '✓ Connection successful' : '✗ Connection failed'}
         </p>
+      )}
+    </div>
+  );
+}
+
+const STATUS_PILLS: Record<Connector['status'], { status: StatusKind; label: string }> = {
+  active: { status: 'completed', label: 'Healthy' },
+  inactive: { status: 'unknown', label: 'Inactive' },
+  error: { status: 'failed', label: 'Error' },
+  configuring: { status: 'pending', label: 'Configuring' },
+};
+
+const FRESHNESS_PILLS: Record<
+  NonNullable<Connector['freshness']>['status'],
+  { status: StatusKind; label: string }
+> = {
+  green: { status: 'completed', label: 'Fresh' },
+  yellow: { status: 'pending', label: 'Late' },
+  red: { status: 'failed', label: 'Stalled' },
+  unknown: { status: 'unknown', label: 'Unknown' },
+};
+
+function ConnectorTableRow({
+  connector,
+  testing,
+  onTest,
+  onDetails,
+  onConfigure,
+  onDelete,
+}: {
+  connector: Connector;
+  testing: boolean;
+  onTest: (id: string) => void;
+  onDetails: (id: string) => void;
+  onConfigure?: (connector: Connector) => void;
+  onDelete?: (connector: Connector) => void;
+}) {
+  const driftAdded = connector.lastDriftDetails?.added?.length ?? 0;
+  const driftRemoved = connector.lastDriftDetails?.removed?.length ?? 0;
+  const driftLabel = connector.lastSchemaDriftAt
+    ? `${driftAdded > 0 ? `+${driftAdded}` : ''}${driftAdded > 0 && driftRemoved > 0 ? ' / ' : ''}${driftRemoved > 0 ? `-${driftRemoved}` : ''}`
+    : 'No drift';
+
+  return (
+    <tr className="border-t border-surface-border text-body text-fg-secondary">
+      <td className="px-4 py-3">
+        <div className="flex min-w-48 items-center gap-3">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-control bg-surface-elevated text-eyebrow font-semibold text-fg-muted">
+            {abbreviateType(connector.type)}
+          </span>
+          <div className="min-w-0">
+            <button
+              type="button"
+              onClick={() => onDetails(connector.id)}
+              className="block max-w-64 truncate text-left font-medium text-fg-primary hover:text-accent"
+            >
+              {connector.name}
+            </button>
+            {connector.description && (
+              <p className="max-w-64 truncate text-caption text-fg-subtle">{connector.description}</p>
+            )}
+          </div>
+        </div>
+      </td>
+      <td className="whitespace-nowrap px-4 py-3 text-caption text-fg-muted">
+        {connector.type}
+      </td>
+      <td className="whitespace-nowrap px-4 py-3">
+        <StatusPill
+          status={STATUS_PILLS[connector.status].status}
+          label={STATUS_PILLS[connector.status].label}
+          title={connector.errorMessage}
+        />
+      </td>
+      <td className="whitespace-nowrap px-4 py-3">
+        <StatusPill
+          status={FRESHNESS_PILLS[connector.freshness?.status ?? 'unknown'].status}
+          label={FRESHNESS_PILLS[connector.freshness?.status ?? 'unknown'].label}
+          title={
+            connector.freshness
+              ? `Last event ${formatDurationSeconds(connector.freshness.seconds_since_last_event)} ago; expected every ${formatDurationSeconds(connector.freshness.expected_cadence_seconds)}`
+              : 'No freshness data reported'
+          }
+        />
+      </td>
+      <td className="whitespace-nowrap px-4 py-3">
+        <p className="font-medium text-fg-primary">
+          {(connector.alertCount ?? connector.alertsIngested ?? 0).toLocaleString()} events
+        </p>
+        <p className="text-caption text-fg-subtle">Last sync {formatLastSync(connector.lastSync)}</p>
+      </td>
+      <td className="whitespace-nowrap px-4 py-3">
+        <span
+          title={
+            connector.lastSchemaDriftAt
+              ? `Changed ${new Date(connector.lastSchemaDriftAt).toLocaleString()}`
+              : undefined
+          }
+          className={clsx(
+            'inline-flex rounded-pill px-2.5 py-0.5 text-caption font-medium',
+            connector.lastSchemaDriftAt
+              ? 'bg-pill-warning-bg text-tone-warning'
+              : 'bg-pill-neutral-bg text-fg-muted',
+          )}
+        >
+          {driftLabel}
+        </span>
+      </td>
+      <td className="whitespace-nowrap px-4 py-3">
+        <div className="flex items-center justify-end gap-2">
+          <button
+            type="button"
+            onClick={() => onTest(connector.id)}
+            disabled={testing}
+            className="rounded-control border border-surface-border px-2.5 py-1.5 text-caption font-medium text-fg-secondary hover:bg-surface-hover disabled:opacity-50"
+          >
+            {testing ? 'Testing…' : 'Test'}
+          </button>
+          <button
+            type="button"
+            onClick={() => onDetails(connector.id)}
+            aria-label={`Details for ${connector.name}`}
+            className="rounded-control border border-surface-border px-2.5 py-1.5 text-caption text-fg-secondary hover:bg-surface-hover"
+          >
+            Details
+          </button>
+          {onConfigure && (
+            <button
+              type="button"
+              onClick={() => onConfigure(connector)}
+              aria-label={`Configure ${connector.name}`}
+              className="rounded-control border border-surface-border px-2.5 py-1.5 text-caption text-fg-secondary hover:bg-surface-hover"
+            >
+              Configure
+            </button>
+          )}
+          {onDelete && (
+            <button
+              type="button"
+              onClick={() => onDelete(connector)}
+              aria-label={`Delete ${connector.name}`}
+              className="rounded-control border border-surface-border px-2.5 py-1.5 text-caption text-tone-danger hover:bg-pill-danger-bg"
+            >
+              Delete
+            </button>
+          )}
+        </div>
+      </td>
+    </tr>
+  );
+}
+
+export function ConnectorDetailsDrawer({
+  connector,
+  testing,
+  testResult,
+  onClose,
+  onTest,
+}: {
+  connector: Connector | null;
+  testing: boolean;
+  testResult?: ConnectorTestResult;
+  onClose: () => void;
+  onTest: (id: string) => void;
+}) {
+  useEffect(() => {
+    if (!connector) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [connector, onClose]);
+
+  if (!connector) return null;
+
+  const drift = connector.lastDriftDetails;
+  const driftFieldsAvailable = Boolean(drift?.added?.length || drift?.removed?.length);
+  const latency = testResult?.latency_ms ?? testResult?.latencyMs;
+
+  return (
+    <div className="fixed inset-0 z-50 flex justify-end bg-black/50">
+      <button
+        type="button"
+        aria-label="Close connector details"
+        onClick={onClose}
+        className="absolute inset-0 cursor-default"
+      />
+      <aside
+        role="dialog"
+        aria-modal="true"
+        aria-label={`Connector details: ${connector.name}`}
+        className="relative z-10 flex h-full w-full max-w-xl flex-col border-l border-surface-border bg-surface-card shadow-2xl"
+      >
+        <header className="flex items-start justify-between border-b border-surface-border p-5">
+          <div className="min-w-0">
+            <h2 className="truncate text-section-title font-semibold text-fg-primary">
+              {connector.name}
+            </h2>
+            <p className="mt-1 text-caption text-fg-muted">{connector.type}</p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            className="rounded-control border border-surface-border px-2 py-1 text-caption text-fg-muted hover:bg-surface-hover"
+          >
+            Close
+          </button>
+        </header>
+
+        <div className="flex-1 space-y-5 overflow-y-auto p-5">
+          <section aria-labelledby="connector-test-heading" className="space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <h3 id="connector-test-heading" className="text-control font-semibold text-fg-primary">
+                Connection test
+              </h3>
+              <button
+                type="button"
+                onClick={() => onTest(connector.id)}
+                disabled={testing}
+                className="rounded-control border border-surface-border px-3 py-1.5 text-caption font-medium text-fg-secondary hover:bg-surface-hover disabled:opacity-50"
+              >
+                {testing ? 'Testing…' : 'Run test'}
+              </button>
+            </div>
+            {testing ? (
+              <div className="flex items-center gap-2">
+                <StatusPill status="running" label="Testing" />
+                <span className="text-caption text-fg-muted">Checking the saved connection.</span>
+              </div>
+            ) : testResult ? (
+              <div className="space-y-2">
+                <StatusPill
+                  status={testResult.success ? 'completed' : 'failed'}
+                  label={testResult.success ? 'Passed' : 'Failed'}
+                />
+                {testResult.message && (
+                  <p className="text-body text-fg-secondary">{testResult.message}</p>
+                )}
+                {testResult.error && (
+                  <p role="alert" className="rounded-control border border-pill-danger-bg bg-pill-danger-bg p-3 text-caption text-tone-danger">
+                    {testResult.error}
+                  </p>
+                )}
+                {latency !== undefined && (
+                  <p className="text-caption text-fg-muted">Latency: {latency} ms</p>
+                )}
+              </div>
+            ) : (
+              <p className="text-caption text-fg-muted">No connection test run in this session.</p>
+            )}
+            {connector.errorMessage && (
+              <p className="text-caption text-fg-muted">Last connector error: {connector.errorMessage}</p>
+            )}
+          </section>
+
+          <section aria-labelledby="connector-freshness-heading" className="space-y-2">
+            <h3 id="connector-freshness-heading" className="text-control font-semibold text-fg-primary">
+              Data freshness
+            </h3>
+            <dl className="grid grid-cols-2 gap-3 rounded-container border border-surface-border p-3">
+              <div>
+                <dt className="text-caption text-fg-subtle">Last event</dt>
+                <dd className="text-caption text-fg-secondary">
+                  {connector.lastEventAt ? new Date(connector.lastEventAt).toLocaleString() : 'Not reported'}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-caption text-fg-subtle">Last sync</dt>
+                <dd className="text-caption text-fg-secondary">{formatLastSync(connector.lastSync)}</dd>
+              </div>
+              <div>
+                <dt className="text-caption text-fg-subtle">Freshness category</dt>
+                <dd className="text-caption text-fg-secondary">{connector.freshness?.category ?? 'Not reported'}</dd>
+              </div>
+              <div>
+                <dt className="text-caption text-fg-subtle">Events dropped</dt>
+                <dd className="text-caption text-fg-secondary">{(connector.eventsDropped ?? 0).toLocaleString()}</dd>
+              </div>
+            </dl>
+          </section>
+
+          <section aria-labelledby="connector-drift-heading" className="space-y-2">
+            <h3 id="connector-drift-heading" className="text-control font-semibold text-fg-primary">
+              Schema drift
+            </h3>
+            {connector.lastSchemaDriftAt ? (
+              <div className="space-y-3 rounded-container border border-surface-border p-3">
+                <p className="text-caption text-fg-secondary">
+                  Last changed {new Date(connector.lastSchemaDriftAt).toLocaleString()}
+                </p>
+                {driftFieldsAvailable ? (
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <DriftFieldList label="Added" fields={drift?.added ?? []} prefix="+" />
+                    <DriftFieldList label="Removed" fields={drift?.removed ?? []} prefix="−" />
+                  </div>
+                ) : (
+                  <p className="text-caption text-fg-muted">The field-level diff is not available.</p>
+                )}
+                {connector.schemaFingerprint && (
+                  <p className="break-all text-eyebrow text-fg-subtle">
+                    Current schema fingerprint: {connector.schemaFingerprint}
+                  </p>
+                )}
+              </div>
+            ) : (
+              <p className="rounded-container border border-surface-border p-3 text-caption text-fg-muted">
+                No schema drift has been recorded.
+              </p>
+            )}
+          </section>
+        </div>
+      </aside>
+    </div>
+  );
+}
+
+function DriftFieldList({ label, fields, prefix }: { label: string; fields: string[]; prefix: string }) {
+  return (
+    <div>
+      <h4 className="text-caption font-medium text-fg-secondary">{label} ({fields.length})</h4>
+      {fields.length > 0 ? (
+        <ul className="mt-1 space-y-1">
+          {fields.map((field) => (
+            <li key={field} className="break-all text-caption text-fg-muted">
+              {prefix} {field}
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="mt-1 text-caption text-fg-subtle">None</p>
       )}
     </div>
   );
@@ -372,8 +708,8 @@ export interface ConnectorInstanceListProps {
    */
   failed?: boolean;
   testingId?: string | null;
-  testResults?: Record<string, boolean | undefined>;
   onTest: (id: string) => void;
+  onDetails: (id: string) => void;
   onAdd: () => void;
   onConfigure?: (connector: Connector) => void;
   onDelete?: (connector: Connector) => void;
@@ -384,8 +720,8 @@ export function ConnectorInstanceList({
   isLoading,
   failed,
   testingId,
-  testResults,
   onTest,
+  onDetails,
   onAdd,
   onConfigure,
   onDelete,
@@ -402,9 +738,9 @@ export function ConnectorInstanceList({
 
   if (failed) {
     return (
-      <div className="flex flex-col items-center justify-center gap-1 rounded-xl border border-gray-800/60 bg-gray-900/40 px-4 py-12 text-center">
-        <p className="text-sm text-amber-200/80">The connector list could not be loaded.</p>
-        <p className="text-[11px] text-gray-600">
+      <div className="flex flex-col items-center justify-center gap-1 rounded-container border border-surface-border bg-surface-card px-4 py-12 text-center">
+        <p className="text-control text-tone-warning">The connector list could not be loaded.</p>
+        <p className="text-caption text-fg-subtle">
           Treat this as unknown rather than as an empty estate — see the message above, and
           retry from there.
         </p>
@@ -434,7 +770,7 @@ export function ConnectorInstanceList({
           <button
             type="button"
             onClick={onAdd}
-            className="bg-blue-600 hover:bg-blue-500 text-white text-sm px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+              className="rounded-control bg-btn-grad px-4 py-2 text-control font-semibold text-white transition-all hover:brightness-105"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -447,36 +783,52 @@ export function ConnectorInstanceList({
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {connectors.map((connector) => (
-        <ConnectorCard
-          key={connector.id}
-          connector={connector}
-          testing={testingId === connector.id}
-          testResult={testResults?.[connector.id]}
-          onTest={onTest}
-          onConfigure={onConfigure}
-          onDelete={onDelete}
-        />
-      ))}
-
-      {/* Trailing "add new" tile so adding a second/third connector is one
-          click without having to scroll back to the page header. */}
+    <div className="overflow-x-auto rounded-container border border-surface-border bg-surface-card">
+      <table className="w-full min-w-max text-left">
+        <caption className="sr-only">Installed connectors and their health</caption>
+        <thead className="bg-surface-elevated text-eyebrow uppercase tracking-wide text-fg-subtle">
+          <tr>
+            <th scope="col" className="px-4 py-3 font-medium">Connector</th>
+            <th scope="col" className="px-4 py-3 font-medium">Type</th>
+            <th scope="col" className="px-4 py-3 font-medium">Status</th>
+            <th scope="col" className="px-4 py-3 font-medium">Freshness SLO</th>
+            <th scope="col" className="px-4 py-3 font-medium">Events / Last Sync</th>
+            <th scope="col" className="px-4 py-3 font-medium">Schema Drift</th>
+            <th scope="col" className="px-4 py-3 text-right font-medium">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {connectors.map((connector) => (
+            <ConnectorTableRow
+              key={connector.id}
+              connector={connector}
+              testing={testingId === connector.id}
+              onTest={onTest}
+              onDetails={onDetails}
+              onConfigure={onConfigure}
+              onDelete={onDelete}
+            />
+          ))}
+        </tbody>
+      </table>
+      {/* [HIDDEN-UI UI-OVERHAUL-4 the trailing add tile was moved to the
+          page header; its markup is retained there for reference.
       <button
         type="button"
         onClick={onAdd}
-        className="bg-gray-900/30 border border-dashed border-gray-700/60 rounded-xl p-5 flex flex-col items-center justify-center gap-3 hover:border-gray-600/60 hover:bg-gray-900/50 transition-colors text-left"
+        className="bg-surface-card border border-dashed border-surface-border rounded-xl p-5 flex flex-col items-center justify-center gap-3 hover:border-surface-border hover:bg-surface-card transition-colors text-left"
       >
-        <div className="w-10 h-10 bg-gray-800/60 rounded-xl flex items-center justify-center text-gray-500">
+        <div className="w-10 h-10 bg-surface-raised rounded-xl flex items-center justify-center text-fg-muted">
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
         </div>
         <div className="text-center">
-          <p className="text-sm text-gray-300">Add Connector</p>
-          <p className="text-xs text-gray-600 mt-0.5">Connect a new security tool</p>
+          <p className="text-sm text-fg-secondary">Add Connector</p>
+          <p className="text-xs text-fg-subtle mt-0.5">Connect a new security tool</p>
         </div>
       </button>
+      */}
     </div>
   );
 }

@@ -251,6 +251,7 @@ describe('ConnectorInstanceList', () => {
       <ConnectorInstanceList
         connectors={[CONNECTOR]}
         onTest={vi.fn()}
+        onDetails={vi.fn()}
         onAdd={vi.fn()}
         onConfigure={onConfigure}
       />,

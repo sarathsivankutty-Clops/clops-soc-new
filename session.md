@@ -287,6 +287,7 @@ Preserved inside `[HIDDEN-UI CHROME-2 ...]` comments:
 - `TopBar.tsx` / `CommandPalette.tsx`: Overview + SOC Operations destinations; `/operations` titles follow `?tab=`; retired dashboard tab labels kept commented.
 - `Sidebar.test.tsx` updated for the new rail.
 - Verification: `pnpm --filter @aisoc/web type-check` → 0 errors; `lint` → 0 errors, 94 warnings (was 95); targeted Vitest (`Sidebar`, `SectionTabs`, `SettingsView.navigation`, `DashboardHonesty`) → 4 files / 49 tests passed.
+- Commit: `e6fe05a21` (`ui(console): split operations out of dashboards and retire compliance/2FA/community`).
 
 ### 12.2 Phase 2 — Overview redesign and pipeline rename
 - `DashboardView.tsx` now renders the reference console layout as five draggable widgets: `DashboardWelcome`, the five-tile `KpiStrip`, `PipelineHealth`, a 2:1 alert-volume / connected-sources grid, and a full-width MITRE tactic card.
@@ -298,6 +299,7 @@ Preserved inside `[HIDDEN-UI CHROME-2 ...]` comments:
 - Retired on this surface with `[HIDDEN-UI UI-OVERHAUL-2]`: `LiveFeedPanel`, `FunnelKpiBar`, `EfficiencyReport`, `SOCMetricsDashboard`, the recharts area/pie/bar renderers, and the in-page `PageHead`. Components and their routes stay on disk.
 - `FunnelKpiBar.test.tsx`: pipeline-title assertion updated to `Ingestion & Detection Flow`.
 - Verification: `type-check` → 0 errors; `lint` → 0 errors, 94 warnings; full Vitest → 138/139 files, 1,293/1,295 tests passed (the two failures are the pre-existing CRLF `MitrePanelWording` `indexOf('\n')` assertions); `next build` → passed.
+- Commit: `9f6c3fbe0` (`ui(console): rebuild overview on the reference layout and rename the pipeline card`).
 
 ### 12.3 Phase 3 — Runbooks filter dropdowns
 - `PlaybooksGallery.tsx`: replaced the four stacked Category / MITRE / Severity / Uses chip rows with labelled native dropdowns in a single toolbar card. Search, All / Shipped Packs / Custom controls, and clear-filters behavior remain.
@@ -305,4 +307,12 @@ Preserved inside `[HIDDEN-UI CHROME-2 ...]` comments:
 - Replaced the raw palette classes in `TRIGGER_COLORS` with semantic pill and tone tokens; updated the component/helper descriptions to match the dropdown UI.
 - Added `PlaybooksGallery.test.tsx` to cover filter selection/count labels, clearing filters, and the Custom source behavior.
 - Verification: `pnpm --filter @aisoc/web test -- src/components/playbooks/PlaybooksGallery.test.tsx` → 1 file / 2 tests passed; `pnpm --filter @aisoc/web type-check` → passed; `pnpm --filter @aisoc/web exec eslint src/components/playbooks/PlaybooksGallery.tsx src/components/playbooks/PlaybooksGallery.test.tsx` → passed.
+- Commit: `f6f98987e` (`ui(runbooks): replace facets with filter dropdowns`).
 
+
+### 12.4 Phase 4 — Connectors design improvement
+- `ConnectorsView.tsx`: top stat boxes replaced by the hairline `KpiStrip` (Installed, Healthy, Late / Degraded, Errors, Schema Drift); `window.confirm` replaced by a themed `DeleteConnectorDialog`.
+- `ConnectorInstanceList.tsx`: card grid replaced by a semantic-token table (connector, type, status pill, freshness SLO, events / last sync, schema drift, Test / Configure / Delete) plus `ConnectorDetailsDrawer` (test status, error detail, drift fields). Old card kept as `LegacyConnectorCard` under `[HIDDEN-UI UI-OVERHAUL-4]`.
+- `AddConnectorModal.tsx`, `EditConnectorModal.tsx`, `ConnectorInstanceList.tsx`: all raw `gray/red/green/emerald/amber/blue-*` classes mapped to `fg-*`, `surface-*`, `tone-*`, `pill-*-bg`, `accent*` tokens (0 raw palette classes left in the four connector files).
+- Tests: added `ConnectorInstanceList.test.tsx`, `ConnectorsView.test.tsx`; `EditConnectorModal.test.tsx` adjusted.
+- Verification: `type-check` → 0 errors; `eslint src/components/connectors` → 0 errors; `vitest run src/components/connectors` → 4 files / 27 tests passed.

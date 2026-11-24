@@ -18,22 +18,23 @@
  * unknown, which is the only true statement available when the request failed.
  */
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import useSWR from 'swr';
 import toast from 'react-hot-toast';
-import { clsx } from 'clsx';
 
 import {
   connectorsApi,
   type Connector,
   type ConnectorHealthSummary,
+  type ConnectorTestResult,
 } from '@/lib/api';
 import { AddConnectorModal } from './AddConnectorModal';
 import { EditConnectorModal } from './EditConnectorModal';
-import { ConnectorInstanceList } from './ConnectorInstanceList';
+import { ConnectorDetailsDrawer, ConnectorInstanceList } from './ConnectorInstanceList';
 import { InboxTokensPanel } from './InboxTokensPanel';
 import { demoFallback } from '@/lib/demoFallback';
 import { FailureBanner } from '@/components/ui/FailureBanner';
+import { KpiStrip } from '@/components/ui/KpiStrip';
 import { describeApiFailure } from '@/lib/failure';
 
 const DEMO_CONNECTORS: Connector[] = [
@@ -77,7 +78,10 @@ export function ConnectorsView() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Connector | null>(null);
   const [testingId, setTestingId] = useState<string | null>(null);
-  const [testResults, setTestResults] = useState<Record<string, boolean | undefined>>({});
+  const [detailsId, setDetailsId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Connector | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [testResults, setTestResults] = useState<Record<string, ConnectorTestResult | undefined>>({});
 
   const { data, error, isLoading, mutate } = useSWR(
     'connectors',
@@ -108,6 +112,7 @@ export function ConnectorsView() {
   const localStats = useMemo(() => {
     const active = connectors.filter((c) => c.status === 'active').length;
     const errored = connectors.filter((c) => c.status === 'error').length;
+    const drifted = connectors.filter((c) => Boolean(c.lastSchemaDriftAt)).length;
     const totalEvents = connectors.reduce(
       (sum, c) => sum + (c.alertCount ?? c.alertsIngested ?? 0),
       0,
@@ -120,7 +125,7 @@ export function ConnectorsView() {
       (sum, c) => sum + (c.eventsDropped ?? 0),
       0,
     );
-    return { active, errored, totalEvents, driftedRecently, totalDropped };
+    return { active, errored, drifted, totalEvents, driftedRecently, totalDropped };
   }, [connectors]);
 
   // Prefer backend-aggregated stats when the API is reachable so the tile
@@ -130,6 +135,7 @@ export function ConnectorsView() {
       return {
         active: healthSummary.healthy,
         errored: healthSummary.unhealthy,
+        drifted: healthSummary.drifted,
         totalEvents: healthSummary.totalEventsIngested,
         driftedRecently: healthSummary.driftedRecently,
         totalDropped: healthSummary.totalEventsDropped,
@@ -137,6 +143,18 @@ export function ConnectorsView() {
     }
     return localStats;
   }, [healthSummary, localStats]);
+  const freshnessStats = useMemo(() => {
+    const late = connectors.filter(
+      (connector) =>
+        connector.freshness?.status === 'yellow' ||
+        connector.freshness?.status === 'red',
+    ).length;
+    const unknown = connectors.filter(
+      (connector) =>
+        !connector.freshness || connector.freshness.status === 'unknown',
+    ).length;
+    return { late, unknown };
+  }, [connectors]);
 
   // `localStats` is derived from a list that is `[]` whenever the request
   // failed, so with no health summary to fall back on every tile reads a
@@ -148,11 +166,12 @@ export function ConnectorsView() {
   // ─── Actions ──────────────────────────────────────────────────────────────
 
   const handleTest = async (id: string) => {
+    setDetailsId(id);
     setTestingId(id);
     setTestResults((prev) => ({ ...prev, [id]: undefined }));
     try {
       const result = await connectorsApi.test(id);
-      setTestResults((prev) => ({ ...prev, [id]: result.success }));
+      setTestResults((prev) => ({ ...prev, [id]: result }));
       if (result.success) {
         toast.success(result.message ?? 'Connection test passed');
       } else {
@@ -160,29 +179,28 @@ export function ConnectorsView() {
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Test request failed';
-      setTestResults((prev) => ({ ...prev, [id]: false }));
+      setTestResults((prev) => ({ ...prev, [id]: { success: false, error: msg } }));
       toast.error(msg);
     } finally {
       setTestingId(null);
     }
   };
 
-  const handleDelete = async (connector: Connector) => {
-    // Browser confirm is intentional — destructive, infrequent, and we don't
-    // yet have a shared confirmation dialog component. Worth revisiting once
-    // we add one to `components/ui/`.
-    const ok = window.confirm(
-      `Delete connector "${connector.name}"? This stops polling and removes its credentials. Already-ingested alerts are preserved.`,
-    );
-    if (!ok) return;
-
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget || deletingId) return;
+    const connector = deleteTarget;
+    setDeletingId(connector.id);
     try {
       await connectorsApi.delete(connector.id);
       toast.success(`Removed ${connector.name}`);
-      mutate();
+      setDeleteTarget(null);
+      if (detailsId === connector.id) setDetailsId(null);
+      await mutate();
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Failed to delete connector';
       toast.error(msg);
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -218,71 +236,44 @@ export function ConnectorsView() {
         </button>
       </div>
 
-      {/* Stats — render even with zero connectors so the layout is stable
-          between empty/populated states. The drift/dropped tiles only render
-          when the schema-drift sentinel has actually fired so a clean tenant
-          keeps a calm 4-tile layout. */}
-      <div
-        className={clsx(
-          'grid grid-cols-2 gap-3',
-          stats.driftedRecently > 0 || stats.totalDropped > 0
-            ? 'md:grid-cols-6'
-            : 'md:grid-cols-4',
-        )}
-      >
-        {[
+      <KpiStrip
+        cols={5}
+        items={[
           {
-            label: 'Total Connectors',
-            value: healthSummary?.total ?? connectors.length,
-            color: 'text-accent',
-            show: true,
-          },
-          { label: 'Active', value: stats.active, color: 'text-tone-success', show: true },
-          { label: 'Errors', value: stats.errored, color: 'text-tone-danger', show: true },
-          {
-            label: 'Events Ingested',
-            value: stats.totalEvents.toLocaleString(),
-            color: 'text-tone-purple',
-            show: true,
+            label: 'Installed',
+            value: countsUnknown ? '—' : healthSummary?.total ?? data?.total ?? connectors.length,
+            tone: 'info',
           },
           {
-            label: 'Schema Drift (24h)',
-            value: stats.driftedRecently,
-            color: 'text-tone-warning',
-            show: stats.driftedRecently > 0,
-            tooltip:
-              healthSummary?.lastDriftAt
-                ? `Most recent drift: ${new Date(healthSummary.lastDriftAt).toLocaleString()}`
-                : undefined,
+            label: 'Healthy',
+            value: countsUnknown ? '—' : stats.active,
+            tone: 'ok',
           },
           {
-            label: 'Events Dropped',
-            value: stats.totalDropped.toLocaleString(),
-            color: 'text-tone-info',
-            show: stats.totalDropped > 0,
-            tooltip: 'Filtered out by pre-ingest pipeline rules',
+            label: 'Late / Degraded',
+            value: error ? '—' : freshnessStats.late,
+            sub: error
+              ? 'not measured'
+              : freshnessStats.unknown > 0
+                ? `${freshnessStats.unknown} unknown`
+                : 'outside freshness SLO',
+            tone: error ? 'default' : 'warn',
           },
-        ]
-          .filter((stat) => stat.show)
-          .map((stat) => (
-            <div
-              key={stat.label}
-              title={stat.tooltip}
-              className="bg-surface-card border border-surface-border rounded-container p-4"
-            >
-              <p
-                className={clsx(
-                  'text-kpi font-bold font-mono tabular-nums mb-1',
-                  countsUnknown ? 'text-fg-subtle' : stat.color,
-                )}
-              >
-                {countsUnknown ? '—' : stat.value}
-              </p>
-              <p className="text-xs text-fg-muted">{stat.label}</p>
-              {countsUnknown && <p className="text-eyebrow text-fg-subtle mt-0.5">not measured</p>}
-            </div>
-          ))}
-      </div>
+          {
+            label: 'Errors',
+            value: countsUnknown ? '—' : stats.errored,
+            tone: 'bad',
+          },
+          {
+            label: 'Schema Drift',
+            value: countsUnknown ? '—' : stats.drifted,
+            sub: healthSummary?.lastDriftAt
+              ? `Most recent ${new Date(healthSummary.lastDriftAt).toLocaleDateString()}`
+              : undefined,
+            tone: 'purple',
+          },
+        ]}
+      />
 
       {/* Body */}
       {error && (
@@ -301,11 +292,11 @@ export function ConnectorsView() {
           failed={!!error}
           isLoading={isLoading && !data}
           testingId={testingId}
-          testResults={testResults}
           onTest={handleTest}
           onAdd={() => setModalOpen(true)}
+          onDetails={setDetailsId}
           onConfigure={handleConfigure}
-          onDelete={handleDelete}
+          onDelete={setDeleteTarget}
         />
       )}
 
@@ -326,6 +317,83 @@ export function ConnectorsView() {
         onClose={() => setEditing(null)}
         onSaved={() => mutate()}
       />
+
+      <ConnectorDetailsDrawer
+        connector={connectors.find((connector) => connector.id === detailsId) ?? null}
+        testing={testingId === detailsId}
+        testResult={detailsId ? testResults[detailsId] : undefined}
+        onClose={() => setDetailsId(null)}
+        onTest={handleTest}
+      />
+
+      <DeleteConnectorDialog
+        connector={deleteTarget}
+        deleting={deleteTarget !== null && deletingId === deleteTarget.id}
+        onCancel={() => {
+          if (!deletingId) setDeleteTarget(null);
+        }}
+        onConfirm={handleConfirmDelete}
+      />
+    </div>
+  );
+}
+
+function DeleteConnectorDialog({
+  connector,
+  deleting,
+  onCancel,
+  onConfirm,
+}: {
+  connector: Connector | null;
+  deleting: boolean;
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  useEffect(() => {
+    if (!connector || deleting) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onCancel();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [connector, deleting, onCancel]);
+
+  if (!connector) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-surface-overlay/60 p-4">
+      <div
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="delete-connector-title"
+        aria-describedby="delete-connector-description"
+        className="w-full max-w-md rounded-container border border-surface-border bg-surface-card p-5 shadow-2xl"
+      >
+        <h2 id="delete-connector-title" className="text-section-title font-semibold text-fg-primary">
+          Delete connector?
+        </h2>
+        <p id="delete-connector-description" className="mt-2 text-body text-fg-muted">
+          Delete <span className="font-medium text-fg-primary">{connector.name}</span>? This stops polling and removes its credentials. Already-ingested alerts are preserved.
+        </p>
+        <div className="mt-5 flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={deleting}
+            className="rounded-control border border-surface-border px-3 py-2 text-control-sm text-fg-secondary hover:bg-surface-hover disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            disabled={deleting}
+            className="rounded-control bg-pill-danger-bg px-3 py-2 text-control-sm font-medium text-tone-danger hover:brightness-110 disabled:opacity-50"
+          >
+            {deleting ? 'Deleting…' : 'Delete connector'}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

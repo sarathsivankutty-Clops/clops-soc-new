@@ -239,14 +239,14 @@ function EditConnectorDialog({
           role="dialog"
           aria-modal="true"
           aria-labelledby="edit-connector-title"
-          className="pointer-events-auto w-full max-w-2xl max-h-[85vh] overflow-hidden rounded-2xl border border-gray-800 bg-gray-950 shadow-2xl flex flex-col"
+          className="pointer-events-auto w-full max-w-2xl max-h-[85vh] overflow-hidden rounded-2xl border border-surface-border bg-surface-base shadow-2xl flex flex-col"
         >
-          <div className="flex items-start justify-between gap-4 px-6 py-4 border-b border-gray-800">
+          <div className="flex items-start justify-between gap-4 px-6 py-4 border-b border-surface-border">
             <div className="min-w-0">
-              <h2 id="edit-connector-title" className="text-base font-semibold text-gray-100">
+              <h2 id="edit-connector-title" className="text-base font-semibold text-fg-primary">
                 Edit {connector.name}
               </h2>
-              <p className="text-xs text-gray-500 mt-0.5">
+              <p className="text-xs text-fg-muted mt-0.5">
                 Only the fields you change are saved. Stored credentials are never shown; leave a
                 credential blank to keep it.
               </p>
@@ -256,7 +256,7 @@ function EditConnectorDialog({
               onClick={onClose}
               disabled={saving}
               aria-label="Close"
-              className="text-gray-500 hover:text-gray-300 transition-colors p-1 disabled:opacity-50"
+              className="text-fg-muted hover:text-fg-secondary transition-colors p-1 disabled:opacity-50"
             >
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -268,36 +268,36 @@ function EditConnectorDialog({
             <div>
               <label
                 htmlFor="edit-connector-name"
-                className="block text-xs font-semibold text-gray-300 mb-1"
+                className="block text-xs font-semibold text-fg-secondary mb-1"
               >
                 Instance name
-                <span className="text-red-400 ml-0.5">*</span>
+                <span className="text-tone-danger ml-0.5">*</span>
               </label>
               <input
                 id="edit-connector-name"
                 type="text"
                 value={instanceName}
                 onChange={(e) => setInstanceName(e.target.value)}
-                className="w-full bg-gray-950/60 border border-gray-800 rounded-lg px-3 py-2 text-sm text-gray-100 placeholder-gray-600 focus:outline-none focus:border-blue-500/60 focus:ring-1 focus:ring-blue-500/30"
+                className="w-full bg-surface-base border border-surface-border rounded-lg px-3 py-2 text-sm text-fg-primary placeholder-fg-subtle focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent"
                 required
               />
             </div>
 
             {catalogState === 'loading' && (
-              <div className="flex items-center justify-center h-24 text-gray-600">
-                <div className="animate-spin w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full" />
+              <div className="flex items-center justify-center h-24 text-fg-subtle">
+                <div className="animate-spin w-6 h-6 border-2 border-accent border-t-transparent rounded-full" />
               </div>
             )}
 
             {catalogState === 'error' && (
-              <div className="text-sm text-red-300 bg-red-500/10 border border-red-500/20 rounded-lg p-4">
+              <div className="text-sm text-tone-danger bg-pill-danger-bg border border-tone-danger/30 rounded-lg p-4">
                 The settings form could not be loaded: {catalogError}. The name can still be
                 changed.
               </div>
             )}
 
             {catalogState === 'missing' && (
-              <div className="text-sm text-amber-200 bg-amber-500/10 border border-amber-500/20 rounded-lg p-4">
+              <div className="text-sm text-tone-warning bg-pill-warning-bg border border-tone-warning/30 rounded-lg p-4">
                 This build does not register a <code className="font-mono">{connector.type}</code>{' '}
                 connector, so there is no settings form for it. The name can still be changed.
               </div>
@@ -314,9 +314,9 @@ function EditConnectorDialog({
                   : f;
                 return (
                   <div key={f.name}>
-                    <label htmlFor={inputId} className="block text-xs font-semibold text-gray-300 mb-1">
+                    <label htmlFor={inputId} className="block text-xs font-semibold text-fg-secondary mb-1">
                       {f.label}
-                      {f.required && !isSecret && <span className="text-red-400 ml-0.5">*</span>}
+                      {f.required && !isSecret && <span className="text-tone-danger ml-0.5">*</span>}
                     </label>
                     <FieldInput
                       id={inputId}
@@ -325,24 +325,24 @@ function EditConnectorDialog({
                       onChange={(v) => setValues((prev) => ({ ...prev, [f.name]: v }))}
                     />
                     {isSecret && (
-                      <p className="mt-1 text-xs text-gray-500">
+                      <p className="mt-1 text-xs text-fg-muted">
                         Type a new value to replace the stored one.
                       </p>
                     )}
                     {f.help_text && (
-                      <p className="mt-1 text-xs text-gray-500 leading-relaxed">{f.help_text}</p>
+                      <p className="mt-1 text-xs text-fg-muted leading-relaxed">{f.help_text}</p>
                     )}
                   </div>
                 );
               })}
           </div>
 
-          <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-gray-800 bg-gray-950/80">
+          <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-surface-border bg-surface-base">
             <button
               type="button"
               onClick={onClose}
               disabled={saving}
-              className="text-sm text-gray-400 hover:text-gray-200 px-3 py-2 rounded-lg transition-colors disabled:opacity-50"
+              className="text-sm text-fg-muted hover:text-fg-primary px-3 py-2 rounded-lg transition-colors disabled:opacity-50"
             >
               Cancel
             </button>
@@ -350,7 +350,7 @@ function EditConnectorDialog({
               type="button"
               onClick={handleSave}
               disabled={saving || !dirty}
-              className="text-sm bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
+              className="text-sm bg-accent hover:bg-accent-hover text-white px-4 py-2 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
             >
               {saving && (
                 <span className="animate-spin w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full" />
