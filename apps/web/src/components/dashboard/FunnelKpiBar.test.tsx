@@ -124,7 +124,8 @@ describe('FunnelKpiBar', () => {
       deltas: { ...SAMPLE_FUNNEL.deltas, events_of_interest: null },
     });
     render(<FunnelKpiBar period="24h" />);
-    expect(screen.getByText('no baseline')).toBeInTheDocument();
+    // Said once below the tiles, not on the tile itself.
+    expect(screen.getAllByText(/no baseline/i)).toHaveLength(1);
   });
 
   it('renders six tiles with formatted values and signed deltas', () => {

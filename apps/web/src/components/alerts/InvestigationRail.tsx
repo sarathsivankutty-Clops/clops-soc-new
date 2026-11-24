@@ -185,6 +185,8 @@ export function InvestigationRail({ alertId, onClose, onNavigate }: Investigatio
       <RailShell
         title={alert.title}
         onClose={onClose}
+        /* [HIDDEN-UI AUDIT-P4 the investigate button sat in a footer below the
+           fold of a tall rail; it moved into the rail header]
         footer={
           <div className="border-t border-surface-border bg-surface-elevated px-4 py-3 space-y-2">
             {activeLaunchError && (
@@ -215,8 +217,15 @@ export function InvestigationRail({ alertId, onClose, onNavigate }: Investigatio
             </div>
           </div>
         }
+        */
       >
-        <RailHeader alert={alert} onDeepExplain={() => setDeepExplainOpen(true)} />
+        <RailHeader
+          alert={alert}
+          onDeepExplain={() => setDeepExplainOpen(true)}
+          onInvestigate={() => void handleInvestigateWithAgent()}
+          isLaunching={isLaunching}
+          launchError={activeLaunchError}
+        />
         {/*
          * Story first, detail behind a toggle. An analyst holds "what
          * happened" in their head, not "what fields does this row have" —
@@ -427,9 +436,15 @@ function CorrelatedAlertsSection({ alert }: { alert: Alert }) {
 function RailHeader({
   alert,
   onDeepExplain,
+  onInvestigate,
+  isLaunching,
+  launchError,
 }: {
   alert: Alert;
   onDeepExplain: () => void;
+  onInvestigate: () => void;
+  isLaunching: boolean;
+  launchError: string | null;
 }) {
   return (
     // Labelled as a region so the summary metadata is addressable on its
@@ -463,7 +478,21 @@ function RailHeader({
           </>
         )}
       </div>
+      {launchError && (
+        <p role="alert" className="mt-2 text-xs text-tone-danger">
+          {launchError}
+        </p>
+      )}
       <div className="mt-3 flex items-center gap-3">
+        <Button
+          variant="primary"
+          size="sm"
+          onClick={onInvestigate}
+          disabled={isLaunching}
+          loading={isLaunching}
+        >
+          {isLaunching ? 'Starting investigation…' : alert.caseId ? 'View investigation' : 'Investigate'}
+        </Button>
         <button
           type="button"
           onClick={onDeepExplain}

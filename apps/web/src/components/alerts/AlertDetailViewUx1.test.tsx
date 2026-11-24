@@ -59,7 +59,7 @@ describe('AlertDetailView UX-1 existing case guard', () => {
 
     render(<AlertDetailView alertId="alert-existing" />);
 
-    const btn = await screen.findByRole('button', { name: /start ai investigation/i });
+    const btn = await screen.findByRole('button', { name: /view investigation/i });
     await userEvent.click(btn);
 
     await waitFor(() => {

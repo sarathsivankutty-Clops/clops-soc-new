@@ -82,7 +82,7 @@ async function launchInvestigation(alertId: string, severity: Alert['severity'])
   getAlert.mockResolvedValue(alertWith(alertId, severity));
   render(<AlertDetailView alertId={alertId} />);
 
-  const button = await screen.findByRole('button', { name: /start ai investigation/i });
+  const button = await screen.findByRole('button', { name: /^investigate$/i });
   await userEvent.click(button);
 
   await waitFor(() => expect(createCase).toHaveBeenCalled());

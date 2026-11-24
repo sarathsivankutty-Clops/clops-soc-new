@@ -152,9 +152,13 @@ function Tile({ label, value, delta, lowerIsBetter = false, unit, sampleCount, h
           </span>
         ) : (
           <>
-            <span className={clsx('text-xs font-medium tabular-nums', deltaColor)}>
-              {formatDelta(delta)}
-            </span>
+            {/* [HIDDEN-UI AUDIT-P2 "no baseline" repeated on every tile; the bar now
+                says it once below the tiles] */}
+            {delta !== null && (
+              <span className={clsx('text-xs font-medium tabular-nums', deltaColor)}>
+                {formatDelta(delta)}
+              </span>
+            )}
             {unit && <span className="text-caption text-fg-subtle leading-snug">{unit}</span>}
           </>
         )}
@@ -268,6 +272,7 @@ export function FunnelKpiBar({
   }
 
   const { deltas } = data;
+  const hasNullDelta = Object.values(deltas).some((d) => d === null);
 
   return (
     <div>
@@ -330,6 +335,11 @@ export function FunnelKpiBar({
           href="/queue"
         />
       </div>
+      {hasNullDelta && (
+        <p className="mt-2 text-caption text-fg-muted">
+          No baseline for some tiles: the previous {period} window had no data.
+        </p>
+      )}
     </div>
   );
 }

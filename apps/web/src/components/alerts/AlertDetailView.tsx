@@ -372,7 +372,12 @@ function LedgerEvidenceChain({ runId }: { runId: string }) {
 
 // ─── AI Investigation Panel ───────────────────────────────────────────────────
 
-function AIInvestigation({
+/**
+ * Starts (or opens) the agent investigation for an alert. Lives in a hook so
+ * the primary button can sit in the page header while the AI Investigation
+ * card keeps the explanation and any error.
+ */
+function useInvestigationLauncher({
   alertId,
   alertTitle,
   alertSeverity,
@@ -427,22 +432,36 @@ function AIInvestigation({
       await casesApi.investigate(createdCase.id, 'Opened from the alert detail view by an analyst.');
       router.push(`/cases/${createdCase.id}?tab=ledger`);
     } catch (err) {
-      setError(
+      const message =
         err instanceof Error
           ? err.message
-          : 'Could not start the investigation. Check that the agents service is reachable.',
-      );
+          : 'Could not start the investigation. Check that the agents service is reachable.';
+      setError(message);
+      toast.error(message);
       setIsRunning(false);
     }
   };
 
+  return { startInvestigation, isRunning, error };
+}
+
+type InvestigationLauncher = ReturnType<typeof useInvestigationLauncher>;
+
+function AIInvestigation({
+  launcher,
+  caseId,
+}: {
+  launcher: InvestigationLauncher;
+  caseId?: string;
+}) {
+  const { error } = launcher;
   return (
     <div className="py-2">
       <p className="text-control font-medium text-fg-secondary mb-1">Agent investigation</p>
       <p className="text-xs text-fg-muted mb-4">
         Promotes this alert to a case and runs the agent against it. Every prompt, tool call and
         piece of cited evidence is written to that case&apos;s ledger, where the run can be replayed
-        step by step. You&apos;ll be taken to the case when it starts.
+        step by step. Use Investigate in the page header; you&apos;ll be taken to the case when it starts.
       </p>
 
       {error && (
@@ -462,6 +481,8 @@ function AIInvestigation({
         {isRunning ? 'Starting investigation...' : 'Start AI investigation'}
       </Button>
       */}
+      {/* [HIDDEN-UI AUDIT-P4 the primary Investigate button moved to the page
+          header so it is visible without scrolling]
       <div className="flex flex-wrap items-center gap-2">
         <Button
           variant="primary"
@@ -472,6 +493,9 @@ function AIInvestigation({
         >
           {isRunning ? 'Starting investigation...' : 'Start AI investigation'}
         </Button>
+      </div>
+      */}
+      <div className="flex flex-wrap items-center gap-2">
         {caseId && (
           <Link
             href={`/cases/${caseId}`}
@@ -911,6 +935,13 @@ export function AlertDetailView({ alertId }: { alertId: string }) {
     { fallbackData: demoFallback({ ...MOCK_ALERT, id: alertId, status }) }
   );
 
+  const launcher = useInvestigationLauncher({
+    alertId,
+    alertTitle: alert?.title,
+    alertSeverity: alert?.severity,
+    caseId: alert?.caseId,
+  });
+
   const handleStatusChange = async (newStatus: Alert['status']) => {
     setStatus(newStatus);
     try {
@@ -998,6 +1029,20 @@ export function AlertDetailView({ alertId }: { alertId: string }) {
           <Button
             type="button"
             variant="primary"
+            size="md"
+            onClick={() => void launcher.startInvestigation()}
+            disabled={launcher.isRunning}
+            loading={launcher.isRunning}
+          >
+            {launcher.isRunning
+              ? 'Starting investigation…'
+              : alert.caseId
+                ? 'View investigation'
+                : 'Investigate'}
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
             size="md"
             onClick={() => setExplainOpen(true)}
             leadingIcon={
@@ -1253,12 +1298,7 @@ export function AlertDetailView({ alertId }: { alertId: string }) {
           )}
 
           <Section title="AI Investigation">
-            <AIInvestigation
-              alertId={alertId}
-              alertTitle={alert?.title}
-              alertSeverity={alert?.severity}
-              caseId={alert?.caseId}
-            />
+            <AIInvestigation launcher={launcher} caseId={alert?.caseId} />
           </Section>
 
           <Section title="Verdict & feedback">

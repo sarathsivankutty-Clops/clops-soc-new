@@ -885,7 +885,7 @@ describe('InvestigationRail — sticky investigation CTA', () => {
       />,
     );
 
-    await userEvent.click(screen.getByRole('button', { name: /investigate with agent/i }));
+    await userEvent.click(screen.getByRole('button', { name: /^investigate$/i }));
 
     await waitFor(() => {
       expect(createSpy).toHaveBeenCalledWith(
@@ -916,7 +916,7 @@ describe('InvestigationRail — sticky investigation CTA', () => {
       />,
     );
 
-    await userEvent.click(screen.getByRole('button', { name: /open existing investigation/i }));
+    await userEvent.click(screen.getByRole('button', { name: /view investigation/i }));
 
     expect(onNavigate).toHaveBeenCalledWith('/cases/case-existing-99?tab=investigation');
     expect(createSpy).not.toHaveBeenCalled();
