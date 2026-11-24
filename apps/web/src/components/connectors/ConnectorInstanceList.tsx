@@ -192,7 +192,7 @@ export function LegacyConnectorCard({
     <div className="bg-surface-card border border-surface-border rounded-xl p-5 hover:border-surface-border transition-colors flex flex-col">
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="w-10 h-10 bg-surface-raised rounded-xl flex items-center justify-center text-[10px] font-semibold uppercase tracking-wider text-fg-muted flex-shrink-0">
+          <div className="w-10 h-10 bg-surface-raised rounded-xl flex items-center justify-center text-caption font-semibold uppercase tracking-wider text-fg-muted flex-shrink-0">
             {abbreviateType(connector.type)}
           </div>
           <div className="min-w-0">
@@ -225,7 +225,7 @@ export function LegacyConnectorCard({
             <span
               title={freshnessTooltip}
               className={clsx(
-                'text-[10px] px-2 py-0.5 rounded-full border inline-flex items-center gap-1',
+                'text-caption px-2 py-0.5 rounded-full border inline-flex items-center gap-1',
                 FRESHNESS_BADGE_STYLES[
                   freshness.status as 'green' | 'yellow' | 'red'
                 ],
@@ -250,7 +250,7 @@ export function LegacyConnectorCard({
             <span
               title={driftTooltip}
               className={clsx(
-                'text-[10px] px-2 py-0.5 rounded-full border inline-flex items-center gap-1',
+                'text-caption px-2 py-0.5 rounded-full border inline-flex items-center gap-1',
                 driftRecent
                   ? 'text-tone-warning bg-pill-warning-bg border-tone-warning/30'
                   : 'text-fg-muted bg-surface-raised border-surface-border',
@@ -277,7 +277,7 @@ export function LegacyConnectorCard({
           {eventsDropped > 0 && (
             <span
               title={`${eventsDropped.toLocaleString()} event${eventsDropped === 1 ? '' : 's'} dropped by pre-ingest filter rules`}
-              className="text-[10px] px-2 py-0.5 rounded-full border inline-flex items-center gap-1 text-accent bg-accent-subtle border-accent"
+              className="text-caption px-2 py-0.5 rounded-full border inline-flex items-center gap-1 text-accent bg-accent-subtle border-accent"
             >
               <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path

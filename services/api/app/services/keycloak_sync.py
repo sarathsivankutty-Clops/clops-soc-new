@@ -35,8 +35,7 @@ def _cfg() -> tuple[str, str, str, str] | None:
     if not user or not password:
         return None
     base = os.getenv("KEYCLOAK_INTERNAL_URL", "http://keycloak:8080").rstrip("/")
-    realm = os.getenv("KEYCLOAK_REALM", "clopssoc")
-    return base, realm, user, password
+    return base, realm_name(), user, password
 
 
 def realm_name() -> str:
@@ -75,10 +74,7 @@ class _Admin:
         return await self.get(f"/users/{subject}/groups")
 
 
-async def _login(client: httpx.AsyncClient) -> _Admin | None:
-    cfg = _cfg()
-    if cfg is None:
-        return None
+async def _login(client: httpx.AsyncClient, cfg: tuple[str, str, str, str]) -> _Admin:
     base, realm, user, password = cfg
     r = await client.post(
         f"{base}/realms/master/protocol/openid-connect/token",
@@ -89,13 +85,12 @@ async def _login(client: httpx.AsyncClient) -> _Admin | None:
 
 
 async def _run(fn):  # type: ignore[no-untyped-def]
-    if not is_configured():
+    cfg = _cfg()
+    if cfg is None:
         return SyncResult("unconfigured", "KEYCLOAK_ADMIN_USER / KEYCLOAK_ADMIN_PASSWORD not set")
     try:
         async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
-            admin = await _login(client)
-            assert admin is not None
-            return await fn(admin)
+            return await fn(await _login(client, cfg))
     except Exception as exc:  # noqa: BLE001 — reported, never raised; secrets are not in the message
         logger.warning("keycloak_sync.failed error=%s", type(exc).__name__)
         return SyncResult("failed", type(exc).__name__)

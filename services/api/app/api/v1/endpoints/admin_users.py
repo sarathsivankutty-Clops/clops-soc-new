@@ -295,11 +295,7 @@ async def keycloak_reconcile(
         if user is None or not user.is_active or user.role == new_role:
             continue
         roles = await _resolve_roles(db, current_user.tenant_id, [new_role])
-        await db.execute(text("DELETE FROM user_roles WHERE user_id = CAST(:u AS uuid)").bindparams(u=str(user.id)))
-        for r in roles:
-            db.add(UserRole(user_id=user.id, role_id=r.id, assigned_by=current_user.user_id))
-        await db.execute(update(User).where(User.id == user.id).values(role=_mirror_role(roles), updated_at=now))
-        await _end_sessions(db, user.id, now)
+        await _replace_roles(db, user.id, roles, current_user.user_id, now)
         changed += 1
     await emit_audit(
         db=db,
@@ -387,12 +383,7 @@ async def set_roles(
 
     old_roles = await _roles_of(db, target.id, current_user.tenant_id)
     now = datetime.now(UTC)
-    await db.execute(text("DELETE FROM user_roles WHERE user_id = CAST(:u AS uuid)").bindparams(u=str(target.id)))
-    for role in roles:
-        db.add(UserRole(user_id=target.id, role_id=role.id, assigned_by=current_user.user_id))
-    mirrored = _mirror_role(roles)
-    await db.execute(update(User).where(User.id == target.id).values(role=mirrored, updated_at=now))
-    await _end_sessions(db, target.id, now)
+    await _replace_roles(db, target.id, roles, current_user.user_id, now)
 
     await emit_audit(
         db=db,
@@ -744,6 +735,17 @@ async def _effective_perms(db: AsyncSession, user_id: uuid.UUID, tenant_id: uuid
         ).bindparams(u=str(user_id), t=str(tenant_id))
     )
     return [p for (p,) in rows.all()]
+
+
+async def _replace_roles(
+    db: AsyncSession, user_id: uuid.UUID, roles: list[Role], actor_id: uuid.UUID, now: datetime
+) -> None:
+    """Swap a user's whole role set, mirror `users.role`, and end their sessions."""
+    await db.execute(text("DELETE FROM user_roles WHERE user_id = CAST(:u AS uuid)").bindparams(u=str(user_id)))
+    for role in roles:
+        db.add(UserRole(user_id=user_id, role_id=role.id, assigned_by=actor_id))
+    await db.execute(update(User).where(User.id == user_id).values(role=_mirror_role(roles), updated_at=now))
+    await _end_sessions(db, user_id, now)
 
 
 def _mirror_role(roles: list[Role]) -> str:
