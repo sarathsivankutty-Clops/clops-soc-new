@@ -288,3 +288,15 @@ Preserved inside `[HIDDEN-UI CHROME-2 ...]` comments:
 - `Sidebar.test.tsx` updated for the new rail.
 - Verification: `pnpm --filter @aisoc/web type-check` → 0 errors; `lint` → 0 errors, 94 warnings (was 95); targeted Vitest (`Sidebar`, `SectionTabs`, `SettingsView.navigation`, `DashboardHonesty`) → 4 files / 49 tests passed.
 
+### 12.2 Phase 2 — Overview redesign and pipeline rename
+- `DashboardView.tsx` now renders the reference console layout as five draggable widgets: `DashboardWelcome`, the five-tile `KpiStrip`, `PipelineHealth`, a 2:1 alert-volume / connected-sources grid, and a full-width MITRE tactic card.
+- KPI tiles: `Open Alerts`, `Critical`, `MTTR`, `Open Cases`, `Connected Sources`. MTTR keeps the `—` + `not measured · no cases closed` branch when `mttr_sample_count === 0`, and the source tile keeps the `describeConnectedSources` caption, so `DashboardHonesty` / `ConnectedSourceCount` contracts still hold.
+- Alert volume is a 24-bucket stacked bar built from the per-severity `alertsTrend` rows (no recharts; semantic `bg-severity-*` tokens). Empty window still renders `No alerts in the last 24 hours`; first paint still renders `Not loaded yet` via `PanelUnavailable`.
+- Connected sources is a row list (name, event count, status pill); status vocabulary is `Healthy` / `Delivering` / `Late` / `Error` / `Unknown` via `StatusPill`. Empty state keeps `No sources connected` + `Go to connectors`.
+- MITRE card keeps the `Top MITRE ATT&CK Tactics` heading and `emptyTitle="No tactic coverage yet"`, now labelled `Alerts ranked by tactic`; bars are relative alert counts, not invented technique coverage.
+- `PipelineHealth.tsx` retitled **Ingestion & Detection Flow** and rebuilt as one card with five divided stage cells: status pill (`Healthy` / `Backlog` / `Error`), backlog share bar, p95, errors, and the existing `n/a` handling for `unmeasured` fields. All raw `green-*` / `amber-*` / `red-*` / `gray-*` classes replaced with semantic tokens. `Live` / `unavailable` / `Loading…` header states kept.
+- Retired on this surface with `[HIDDEN-UI UI-OVERHAUL-2]`: `LiveFeedPanel`, `FunnelKpiBar`, `EfficiencyReport`, `SOCMetricsDashboard`, the recharts area/pie/bar renderers, and the in-page `PageHead`. Components and their routes stay on disk.
+- `FunnelKpiBar.test.tsx`: pipeline-title assertion updated to `Ingestion & Detection Flow`.
+- Verification: `type-check` → 0 errors; `lint` → 0 errors, 94 warnings; full Vitest → 138/139 files, 1,293/1,295 tests passed (the two failures are the pre-existing CRLF `MitrePanelWording` `indexOf('\n')` assertions); `next build` → passed.
+
+

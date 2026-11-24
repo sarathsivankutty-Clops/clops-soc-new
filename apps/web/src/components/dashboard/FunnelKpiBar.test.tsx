@@ -302,9 +302,10 @@ describe('PipelineHealth', () => {
   it('surfaces the unavailable badge when the pipeline call errors', () => {
     swrErrors.set(PIPELINE_KEY, new Error('boom'));
     render(<PipelineHealth />);
-    // Header keeps the title; the live/unavailable indicator flips to
-    // "unavailable" without the rest of the rail throwing.
-    expect(screen.getByText('Pipeline Health')).toBeInTheDocument();
+    // Header keeps the (renamed) title; the live/unavailable indicator flips
+    // to "unavailable" without the rest of the rail throwing.
+    // [UI-OVERHAUL-2] The card is titled "Ingestion & Detection Flow" now.
+    expect(screen.getByText('Ingestion & Detection Flow')).toBeInTheDocument();
     expect(screen.getByText('unavailable')).toBeInTheDocument();
   });
 

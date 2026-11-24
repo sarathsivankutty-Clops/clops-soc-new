@@ -5,11 +5,16 @@
  * =============
  * Main SOC dashboard with live metrics, charts, and source activity.
  *
- * WS-F3: Drag-and-drop widget reordering.
- * Each major section (DashboardWelcome, Top Metrics, Charts row, Bottom row,
- * SOC Performance) is a draggable "widget". The user can grab the ⠿ handle in
- * the widget's header and drop it anywhere in the layout. Order is persisted to
- * localStorage so it survives page refreshes.
+ * UI-OVERHAUL-2: the Overview page now follows the reference console layout —
+ * a five-tile KPI strip, the Ingestion & Detection Flow card, a two-column
+ * alert-volume / connected-sources grid, and a MITRE tactic card. Live feed,
+ * the funnel strip, the efficiency report and the SOC performance block are
+ * hidden on this surface ([HIDDEN-UI UI-OVERHAUL-2]); their components are
+ * still on disk and mounted by their own routes.
+ *
+ * WS-F3: Drag-and-drop widget reordering. Each major section is a draggable
+ * "widget". The user can grab the ⠿ handle and drop it anywhere in the layout.
+ * Order persists to localStorage so it survives page refreshes.
  *
  * Author: Beenu <beenu@cyble.com>
  */
@@ -20,91 +25,24 @@ import { metricsApi, type DashboardMetrics } from '@/lib/api';
 import { useTimeWindow } from '@/components/layout/TimeWindowProvider';
 import { TIME_WINDOW_LONG_LABEL, TIME_WINDOW_SHORT_LABEL } from '@/lib/timeWindow';
 import { clsx } from 'clsx';
-import dynamic from 'next/dynamic';
 import Link from 'next/link';
-import { format } from 'date-fns';
-import { LiveFeedPanel } from './LiveFeedPanel';
-import { SOCMetricsDashboard } from './SOCMetricsDashboard';
 import { DashboardWelcome } from './DashboardWelcome';
-import { FunnelKpiBar } from './FunnelKpiBar';
-import { EfficiencyReport } from './EfficiencyReport';
+// [HIDDEN-UI UI-OVERHAUL-2 the Overview layout is the reference console's
+// four sections; these widgets stay on disk for the operations and SOC pages.
+// import { LiveFeedPanel } from './LiveFeedPanel';
+// import { SOCMetricsDashboard } from './SOCMetricsDashboard';
+// import { FunnelKpiBar } from './FunnelKpiBar';
+// import { EfficiencyReport } from './EfficiencyReport';
 import { PipelineHealth } from './PipelineHealth';
 import { demoFallback } from '@/lib/demoFallback';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { KpiStrip } from '@/components/ui/KpiStrip';
 import { Card } from '@/components/ui/Card';
-import { PageHead } from '@/components/ui/PageHead';
-
-const RechartsArea = dynamic(
-  () => import('recharts').then((m) => {
-    const { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } = m;
-    function RechartsAreaInner(props: { data: { time: string; count: number }[] }) {
-      return (
-        <ResponsiveContainer width="100%" height={180}>
-          <AreaChart data={props.data}>
-            <defs>
-              <linearGradient id="alertGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2} />
-                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" />
-            <XAxis dataKey="time" tick={{ fill: '#6b7280', fontSize: 10 }} tickLine={false} axisLine={false} interval={3} />
-            <YAxis tick={{ fill: '#6b7280', fontSize: 10 }} tickLine={false} axisLine={false} />
-            <Tooltip content={<CustomTooltip />} />
-            <Area type="monotone" dataKey="count" stroke="#3b82f6" fill="url(#alertGrad)" strokeWidth={2} name="Alerts" />
-          </AreaChart>
-        </ResponsiveContainer>
-      );
-    }
-    return RechartsAreaInner;
-  }),
-  { ssr: false, loading: () => <div className="h-[180px] bg-gray-800/30 animate-pulse rounded" /> },
-);
-
-const RechartsPie = dynamic(
-  () => import('recharts').then((m) => {
-    const { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } = m;
-    function RechartsPieInner(props: { data: { name: string; value: number; color: string }[] }) {
-      return (
-        <ResponsiveContainer width="100%" height={140}>
-          <PieChart>
-            <Pie data={props.data} cx="50%" cy="50%" innerRadius={40} outerRadius={65} dataKey="value" strokeWidth={0}>
-              {props.data.map((entry, i) => (
-                <Cell key={i} fill={entry.color} />
-              ))}
-            </Pie>
-            <Tooltip formatter={(value, name) => [value, name]} contentStyle={{ background: '#111827', border: '1px solid #374151', borderRadius: '8px', fontSize: '12px' }} />
-          </PieChart>
-        </ResponsiveContainer>
-      );
-    }
-    return RechartsPieInner;
-  }),
-  { ssr: false, loading: () => <div className="h-[140px] bg-gray-800/30 animate-pulse rounded" /> },
-);
-
-const RechartsBar = dynamic(
-  () => import('recharts').then((m) => {
-    const { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } = m;
-    function RechartsBarInner(props: { data: { tactic: string; count: number }[] }) {
-      return (
-        <ResponsiveContainer width="100%" height={180}>
-          <BarChart data={props.data} layout="vertical">
-            <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" horizontal={false} />
-            <XAxis type="number" tick={{ fill: '#6b7280', fontSize: 10 }} tickLine={false} axisLine={false} />
-            <YAxis type="category" dataKey="tactic" tick={{ fill: '#9ca3af', fontSize: 10 }} tickLine={false} axisLine={false} width={100} />
-            <Tooltip content={<CustomTooltip />} />
-            <Bar dataKey="count" fill="#8b5cf6" radius={[0, 4, 4, 0]} name="Alerts" />
-          </BarChart>
-        </ResponsiveContainer>
-      );
-    }
-    return RechartsBarInner;
-  }),
-  { ssr: false, loading: () => <div className="h-[180px] bg-gray-800/30 animate-pulse rounded" /> },
-);
+import { StatusPill, type StatusKind } from '@/components/ui/StatusPill';
+// [HIDDEN-UI UI-OVERHAUL-2 the reference layout has no in-page page head;
+// the top bar already carries the destination title.
+// import { PageHead } from '@/components/ui/PageHead';
 
 class DashboardErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
   state = { hasError: false };
@@ -113,9 +51,11 @@ class DashboardErrorBoundary extends Component<{ children: ReactNode }, { hasErr
   render() {
     if (this.state.hasError) {
       return (
-        <div className="p-6 text-center text-gray-400">
-          <p className="text-sm">Dashboard encountered an error. Please refresh.</p>
-          <button onClick={() => this.setState({ hasError: false })} className="mt-2 text-xs text-blue-400 underline">Retry</button>
+        <div className="p-6 text-center text-fg-muted">
+          <p className="text-control">Dashboard encountered an error. Please refresh.</p>
+          <button onClick={() => this.setState({ hasError: false })} className="mt-2 text-caption text-accent underline">
+            Retry
+          </button>
         </div>
       );
     }
@@ -176,41 +116,21 @@ const MOCK_METRICS: DashboardMetrics = {
   ],
 };
 
-// ─── Metric Card ──────────────────────────────────────────────────────────────
-
-/* [HIDDEN-UI THEME-4 inline MetricCard replaced by shared KpiStrip in top-metrics]
-interface MetricCardProps ...
-function MetricCard(...) { ... }
-*/
-
 // ─── Honest data-absent panel ─────────────────────────────────────────────────
 
 /**
  * What a panel shows when it has no numbers to show.
  *
- * Two distinct situations, deliberately rendered differently, because
- * conflating them is how "the estate is quiet" and "the API is down" became
- * indistinguishable on this dashboard:
+ * Three states, not two. An error branch and an empty branch alone read as
+ * complete right up until you notice that the empty branch is also what
+ * renders *before* the request lands. On first paint the dashboard asserted
+ * "No alerts in the last 24 hours": a measured claim about a window nothing
+ * had looked at.
  *
- *   - `error` set   → the request failed. Say so, name the failure, offer a
- *                     retry that actually re-issues the request.
- *   - `error` unset → the request succeeded and the tenant genuinely has no
- *                     data for this panel. Say *that*, and point at the thing
- *                     that would produce some.
- */
-/**
- * Three states, not two.
- *
- * This had an error branch and an empty branch, and the error branch runs
- * first — which reads as complete right up until you notice that the empty
- * branch is also what renders *before* the request lands. On first paint,
- * with no data and no error yet, `/dashboard` asserted "No alerts in the last
- * 24 hours": a measured claim about a window nothing had looked at, made
- * milliseconds before the failing request came back.
- *
- * `pending` is the missing third state. It covers the request still being in
- * flight and the request having answered without the figures this panel needs
- * — both are "not measured", and neither is a report of zero.
+ *   - `error` set   → the request failed. Say so, offer a retry.
+ *   - `pending` set → the answer is not in. Never claim a measurement.
+ *   - neither       → the request succeeded and the tenant genuinely has no
+ *                     data for this panel.
  */
 function PanelUnavailable({
   error,
@@ -258,20 +178,85 @@ function PanelUnavailable({
   );
 }
 
-// ─── Chart tooltip ────────────────────────────────────────────────────────────
+// ─── Alert volume by severity (24 buckets, div bars) ─────────────────────────
+//
+// `/metrics/dashboard` returns one `alertsTrend` row per (bucket, severity), so
+// a stacked bar is the honest reading of that payload. The previous area chart
+// flattened the rows to a single `count` and a separate pie re-used the
+// current-state severity totals — two different windows side by side.
 
-function CustomTooltip({ active, payload, label }: any) {
-  if (!active || !payload?.length) return null;
-  return (
-    <div className="bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-xs">
-      <p className="text-gray-400 mb-1">{label}</p>
-      {payload.map((p: any, i: number) => (
-        <p key={i} style={{ color: p.color }} className="font-medium">
-          {p.name}: {p.value}
-        </p>
-      ))}
-    </div>
-  );
+type SeverityKey = 'critical' | 'high' | 'medium' | 'low' | 'info';
+
+const SEVERITY_KEYS: readonly SeverityKey[] = ['critical', 'high', 'medium', 'low', 'info'];
+
+const SEVERITY_BAR: Record<SeverityKey, string> = {
+  critical: 'bg-severity-critical',
+  high: 'bg-severity-high',
+  medium: 'bg-severity-medium',
+  low: 'bg-severity-low',
+  info: 'bg-severity-info',
+};
+
+const SEVERITY_LEGEND: readonly { key: SeverityKey; label: string }[] = [
+  { key: 'critical', label: 'Critical' },
+  { key: 'high', label: 'High' },
+  { key: 'medium', label: 'Medium' },
+  { key: 'low', label: 'Low' },
+];
+
+interface VolumeBucket {
+  key: string;
+  timestamp: number;
+  counts: Record<SeverityKey | 'unspecified', number>;
+  total: number;
+}
+
+function buildVolumeBuckets(
+  trend: DashboardMetrics['alertsTrend'],
+): VolumeBucket[] {
+  const byTimestamp = new Map<string, VolumeBucket>();
+  for (const point of trend) {
+    const key = String(point.timestamp);
+    const parsed = Date.parse(key);
+    const existing = byTimestamp.get(key);
+    const bucket: VolumeBucket =
+      existing ?? {
+        key,
+        timestamp: Number.isFinite(parsed) ? parsed : 0,
+        counts: { critical: 0, high: 0, medium: 0, low: 0, info: 0, unspecified: 0 },
+        total: 0,
+      };
+    const severity = (
+      SEVERITY_KEYS as readonly string[]
+    ).includes(point.severity)
+      ? (point.severity as SeverityKey)
+      : 'unspecified';
+    bucket.counts[severity] += point.count;
+    bucket.total += point.count;
+    byTimestamp.set(key, bucket);
+  }
+  return Array.from(byTimestamp.values())
+    .sort((a, b) => a.timestamp - b.timestamp)
+    .slice(-24);
+}
+
+// ─── Source status vocabulary ────────────────────────────────────────────────
+
+function sourceMeta(status: string): { status: StatusKind; label: string } {
+  switch (status) {
+    case 'active':
+      return { status: 'completed', label: 'Healthy' };
+    case 'ingesting':
+      return { status: 'running', label: 'Delivering' };
+    case 'error':
+    case 'failed':
+      return { status: 'failed', label: 'Error' };
+    case 'stale':
+    case 'degraded':
+      return { status: 'pending', label: 'Late' };
+    default:
+      return { status: 'unknown', label: 'Unknown' };
+  }
 }
 
 // ─── Drag-and-Drop Widget Layout (WS-F3) ──────────────────────────────────────
@@ -280,21 +265,17 @@ const WIDGET_ORDER_KEY = 'aisoc:dashboard:widget-order';
 
 type WidgetId =
   | 'welcome'
-  | 'funnel-kpis'
-  | 'efficiency-and-pipeline'
-  | 'top-metrics'
-  | 'charts-row'
-  | 'bottom-row'
-  | 'soc-performance';
+  | 'overview-kpis'
+  | 'pipeline'
+  | 'volume-and-sources'
+  | 'mitre-posture';
 
 const DEFAULT_WIDGET_ORDER: WidgetId[] = [
   'welcome',
-  'funnel-kpis',
-  'efficiency-and-pipeline',
-  'top-metrics',
-  'charts-row',
-  'bottom-row',
-  'soc-performance',
+  'overview-kpis',
+  'pipeline',
+  'volume-and-sources',
+  'mitre-posture',
 ];
 
 function loadWidgetOrder(): WidgetId[] {
@@ -349,7 +330,7 @@ function DraggableWidget({ id, dragState, onDragStart, onDragOver, onDrop, child
       className={clsx(
         'relative group transition-opacity',
         isDragging && 'opacity-40',
-        isOver && 'ring-2 ring-blue-500/60 ring-offset-2 ring-offset-gray-950 rounded-xl',
+        isOver && 'ring-2 ring-accent/60 ring-offset-2 ring-offset-surface-base rounded-container',
       )}
       aria-label={`Dashboard widget: ${id}`}
     >
@@ -359,8 +340,8 @@ function DraggableWidget({ id, dragState, onDragStart, onDragOver, onDrop, child
         title="Drag to reorder"
         className={clsx(
           'absolute top-2 right-2 z-10 cursor-grab active:cursor-grabbing',
-          'px-1.5 py-0.5 rounded text-gray-600 hover:text-gray-400',
-          'opacity-0 group-hover:opacity-100 transition-opacity',
+          'px-1.5 py-0.5 rounded text-fg-subtle hover:text-fg-muted',
+          'opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity',
           'select-none text-base leading-none',
         )}
         // Pointer-down on the handle initiates the native drag
@@ -544,24 +525,9 @@ export function DashboardView() {
   const activeSourceCount = countConnectedSources(sources);
 
   const periodLabel = TIME_WINDOW_SHORT_LABEL[timeWindow] ?? '';
-  const trendTimeFmt =
-    (timeWindow) === '7d' || (timeWindow) === '30d'
-      ? 'MMM d'
-      : 'HH:mm';
-  const trendData = (metrics?.alertsTrend ?? []).map((d) => ({
-    time: format(new Date(d.timestamp), trendTimeFmt),
-    count: d.count,
-  }));
-
-  const SEVERITY_CHART_DATA = metrics
-    ? [
-        { name: 'Critical', value: metrics.alerts.critical, color: '#ef4444' },
-        { name: 'High', value: metrics.alerts.high, color: '#f97316' },
-        { name: 'Medium', value: metrics.alerts.medium, color: '#eab308' },
-        { name: 'Low', value: metrics.alerts.low, color: '#3b82f6' },
-        { name: 'Info', value: metrics.alerts.info ?? 0, color: '#64748b' },
-      ]
-    : [];
+  const volumeBuckets = buildVolumeBuckets(metrics?.alertsTrend ?? []);
+  const maxVolume = Math.max(1, ...volumeBuckets.map((b) => b.total));
+  const maxTactic = Math.max(1, ...topMitre.map((t) => t.count));
 
   // WS-F3: drag-and-drop widget reordering
   const { order, dragState, handleDragStart, handleDragOver, handleDrop } = useDashboardLayout();
@@ -570,91 +536,125 @@ export function DashboardView() {
   const widgetContent: Record<WidgetId, ReactNode> = {
     welcome: <Suspense fallback={null}><DashboardWelcome /></Suspense>,
 
-    // PR-3 / W1: Six-tile funnel KPI strip (events → correlations → alerts +
-    // signal/noise, MTTD, analyst queue) backed by /api/v1/metrics/funnel.
-    'funnel-kpis': <FunnelKpiBar period={timeWindow} />,
-
-    // PR-3 / W1+W9: Efficiency ratios (correlation efficiency, alert yield,
-    // MITRE coverage) alongside per-stage pipeline health.
-    'efficiency-and-pipeline': (
-      /* [HIDDEN-UI DASH-1 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">] */
-      <div className="grid grid-cols-1 gap-4">
-        <EfficiencyReport period={timeWindow} />
-        <PipelineHealth />
-      </div>
+    // Five-tile strip: open alerts, critical, MTTR, open cases, connected
+    // sources. Every figure comes from `metricsApi.getDashboard`; the MTTR
+    // tile keeps its "not measured · no cases closed" branch so a tenant that
+    // has resolved nothing does not score zero hours.
+    'overview-kpis': metrics ? (
+      <KpiStrip
+        cols={5}
+        items={[
+          {
+            label: 'Open Alerts',
+            value: metrics.alerts.active ?? metrics.alerts.total,
+            sub: `${metrics.alerts.total} in last ${periodLabel}`,
+            tone: 'info',
+          },
+          {
+            label: 'Critical',
+            value: metrics.alerts.criticalActive ?? metrics.alerts.critical,
+            sub: `${metrics.alerts.resolved ?? 0} resolved`,
+            tone: metrics.alerts.criticalActive ? 'bad' : 'default',
+          },
+          {
+            label: 'MTTR',
+            value:
+              metrics.alerts.mttr_sample_count === 0
+                ? '—'
+                : `${metrics.alerts.mttr.toFixed(1)}h`,
+            sub:
+              metrics.alerts.mttr_sample_count === 0
+                ? 'not measured · no cases closed'
+                : 'Mean time to resolve',
+            tone: 'ok',
+          },
+          {
+            label: 'Open Cases',
+            value: metrics.cases.open,
+            sub: `${metrics.cases.inProgress} in progress · ${metrics.cases.openedThisWeek ?? 0} opened / ${metrics.cases.closedThisWeek ?? 0} closed (7d)`,
+            tone: 'warn',
+          },
+          {
+            label: 'Connected Sources',
+            value: activeSourceCount,
+            sub: describeConnectedSources(sources),
+            tone: 'purple',
+          },
+        ]}
+      />
+    ) : (
+      <PanelUnavailable
+        error={metricsError}
+        pending={metricsPending}
+        onRetry={retryMetrics}
+        emptyTitle="No dashboard metrics yet"
+        emptyDescription="Connect a data source to start populating alert, case and MTTR counters."
+      />
     ),
 
-    'top-metrics': (
-      <div>
-        <PageHead
-          eyebrow="Overview"
-          title="Security Operations Center"
-          description={`Entity-risk alerting, confidence-scored triage, and ${metrics ? activeSourceCount : '—'} connected sources`}
-          className="mb-4"
-        />
-        {metrics ? (
-          <KpiStrip
-            cols={5}
-            items={[
-              {
-                label: 'Active Alerts',
-                value: metrics.alerts.active ?? metrics.alerts.total,
-                sub: `${metrics.alerts.total} in last ${periodLabel}`,
-                tone: 'info',
-              },
-              {
-                label: 'Critical Active',
-                value: metrics.alerts.criticalActive ?? metrics.alerts.critical,
-                sub: `${metrics.alerts.resolved ?? 0} resolved`,
-                tone: metrics.alerts.criticalActive ? 'bad' : 'default',
-              },
-              {
-                label: 'Open Cases',
-                value: metrics.cases.open,
-                sub: `${metrics.cases.inProgress} in progress · ${metrics.cases.openedThisWeek ?? 0} opened / ${metrics.cases.closedThisWeek ?? 0} closed (7d)`,
-                tone: 'warn',
-              },
-              {
-                label: 'MTTR',
-                value:
-                  metrics.alerts.mttr_sample_count === 0
-                    ? '—'
-                    : `${metrics.alerts.mttr.toFixed(1)}h`,
-                sub:
-                  metrics.alerts.mttr_sample_count === 0
-                    ? 'not measured · no cases closed'
-                    : 'Mean time to resolve',
-                tone: 'ok',
-              },
-              {
-                label: 'Connected Sources',
-                value: activeSourceCount,
-                sub: describeConnectedSources(sources),
-                tone: 'purple',
-              },
-            ]}
-          />
-        ) : (
-          <PanelUnavailable
-            error={metricsError}
-            pending={metricsPending}
-            onRetry={retryMetrics}
-            emptyTitle="No dashboard metrics yet"
-            emptyDescription="Connect a data source to start populating alert, case and MTTR counters."
-          />
-        )}
-      </div>
-    ),
+    pipeline: <PipelineHealth />,
 
-    'charts-row': (
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+    'volume-and-sources': (
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-card-title font-semibold text-fg-primary">Alert Volume ({periodLabel})</h3>
+          <div className="mb-4 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+            <h3 className="text-card-title font-semibold text-fg-primary">
+              Alert Volume by Severity
+            </h3>
             <span className="text-caption text-fg-muted">Last {periodLabel}</span>
           </div>
-          {trendData.length > 0 ? (
-            <RechartsArea data={trendData} />
+          {volumeBuckets.length > 0 ? (
+            <>
+              <div
+                className="flex h-36 items-end gap-1"
+                role="img"
+                aria-label="Alert volume by severity over the selected window"
+              >
+                {volumeBuckets.map((bucket) => {
+                  const height =
+                    bucket.total > 0
+                      ? Math.max((bucket.total / maxVolume) * 100, 4)
+                      : 0;
+                  return (
+                    <div
+                      key={bucket.key}
+                      className="flex min-w-0 flex-1 flex-col overflow-hidden rounded"
+                      style={{ height: `${height}%` }}
+                    >
+                      {SEVERITY_KEYS.map((key) =>
+                        bucket.counts[key] > 0 ? (
+                          <div
+                            key={key}
+                            className={clsx('w-full', SEVERITY_BAR[key])}
+                            style={{ flex: bucket.counts[key] }}
+                          />
+                        ) : null,
+                      )}
+                      {bucket.counts.unspecified > 0 ? (
+                        <div
+                          className="w-full bg-surface-border-strong"
+                          style={{ flex: bucket.counts.unspecified }}
+                        />
+                      ) : null}
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                {SEVERITY_LEGEND.map((entry) => (
+                  <span
+                    key={entry.key}
+                    className="inline-flex items-center gap-1.5 rounded-pill bg-surface-subtle px-2 py-0.5 text-caption text-fg-secondary"
+                  >
+                    <span
+                      aria-hidden="true"
+                      className={clsx('h-1.5 w-1.5 rounded-pill', SEVERITY_BAR[entry.key])}
+                    />
+                    {entry.label}
+                  </span>
+                ))}
+              </div>
+            </>
           ) : (
             <PanelUnavailable
               error={metricsError}
@@ -667,54 +667,14 @@ export function DashboardView() {
             />
           )}
         </Card>
-        <Card>
-          <h3 className="text-card-title font-semibold text-fg-primary mb-4">Severity Breakdown</h3>
-          {metrics ? (
-            <>
-              <RechartsPie data={SEVERITY_CHART_DATA} />
-              <div className="space-y-1.5 mt-2">
-                {SEVERITY_CHART_DATA.map((d) => (
-                  <div key={d.name} className="flex items-center justify-between text-control-sm">
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-pill" style={{ background: d.color }} />
-                      <span className="text-fg-secondary">{d.name}</span>
-                    </div>
-                    <span className="text-fg-primary font-mono font-semibold">{d.value}</span>
-                  </div>
-                ))}
-              </div>
-            </>
-          ) : (
-            <PanelUnavailable
-              error={metricsError}
-              pending={metricsPending}
-              onRetry={retryMetrics}
-              emptyTitle="No severity data"
-              emptyDescription="Severity counts appear once the API returns alert metrics."
-            />
-          )}
-        </Card>
-      </div>
-    ),
 
-    'bottom-row': (
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <Card>
-          <h3 className="text-card-title font-semibold text-fg-primary mb-4">Top MITRE ATT&CK Tactics</h3>
-          {topMitre.length > 0 ? (
-            <RechartsBar data={topMitre} />
-          ) : (
-            <PanelUnavailable
-              error={metricsError}
-              pending={metricsPending}
-              onRetry={retryMetrics}
-              emptyTitle="No tactic coverage yet"
-              emptyDescription="Ranks ATT&CK tactics by alert count. Alerts tagged only with technique IDs are counted under MITRE coverage in SOC Performance instead."
-            />
-          )}
-        </Card>
-        <Card>
-          <h3 className="text-card-title font-semibold text-fg-primary mb-4">Connected Sources</h3>
+          <div className="mb-4 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+            <h3 className="text-card-title font-semibold text-fg-primary">
+              Connected Sources
+            </h3>
+            <span className="text-caption text-fg-muted">Events</span>
+          </div>
           {sources.length === 0 ? (
             <PanelUnavailable
               error={metricsError}
@@ -732,47 +692,90 @@ export function DashboardView() {
               }
             />
           ) : (
-          <div className="space-y-3">
-            {sources.map((src) => {
-              const maxCount = Math.max(...sources.map(s => s.count), 1);
-              const pct = Math.round((src.count / maxCount) * 100);
-              return (
-                <div key={src.name}>
-                  <div className="flex items-center justify-between mb-1">
-                    <div className="flex items-center gap-2">
-                      <span className={clsx(
-                        'w-1.5 h-1.5 rounded-pill',
-                        src.status === 'active' ? 'bg-dot-success' : 'bg-dot-neutral'
-                      )} />
-                      <span className="text-control-sm text-fg-primary">{src.name}</span>
-                    </div>
-                    <span className="text-caption font-mono text-fg-muted">{src.count}</span>
-                  </div>
-                  <div className="h-1.5 bg-surface-subtle rounded-pill overflow-hidden">
-                    <div className="h-1.5 bg-accent rounded-pill" style={{ width: `${pct}%` }} />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+            <ul className="divide-y divide-surface-divider">
+              {sources.map((src) => {
+                const meta = sourceMeta(src.status);
+                return (
+                  <li
+                    key={src.name}
+                    className="flex items-center justify-between gap-3 py-2 first:pt-0 last:pb-0"
+                  >
+                    <span className="flex min-w-0 items-center gap-2">
+                      <span
+                        aria-hidden="true"
+                        className={clsx(
+                          'h-1.5 w-1.5 shrink-0 rounded-pill',
+                          src.status === 'active'
+                            ? 'bg-dot-success'
+                            : src.status === 'error'
+                              ? 'bg-dot-danger'
+                              : 'bg-dot-info',
+                        )}
+                      />
+                      <span className="truncate text-control-sm text-fg-primary">
+                        {src.name}
+                      </span>
+                    </span>
+                    <span className="flex shrink-0 items-center gap-2">
+                      <span className="font-mono text-caption tabular-nums text-fg-muted">
+                        {src.count.toLocaleString()}
+                      </span>
+                      <StatusPill status={meta.status} label={meta.label} />
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
           )}
         </Card>
-        <LiveFeedPanel />
       </div>
     ),
 
-    'soc-performance': (
-      <div className="pt-2">
-        <div className="flex items-center justify-between mb-3">
-          <div>
-            <h2 className="text-card-title font-semibold text-fg-primary">SOC Performance</h2>
-            <p className="text-caption text-fg-muted mt-0.5">
-              Outcome metrics, agent calibration, and technique coverage. Auto-computed every 30s.
-            </p>
-          </div>
+    // MITRE posture. `topMitre` ranks *tactics* by the alert counts tagged
+    // with them; it is not technique coverage (that lives on the coverage
+    // surfaces). The card says "alerts" so the two cannot be read as one
+    // number — see MitrePanelWording.test.tsx.
+    'mitre-posture': (
+      <Card>
+        <div className="mb-4 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+          <h3 className="text-card-title font-semibold text-fg-primary">
+            Top MITRE ATT&CK Tactics
+          </h3>
+          <span className="text-caption text-fg-muted">Alerts ranked by tactic</span>
         </div>
-        <SOCMetricsDashboard />
-      </div>
+        {topMitre.length === 0 ? (
+          <PanelUnavailable
+            error={metricsError}
+            pending={metricsPending}
+            onRetry={retryMetrics}
+            emptyTitle="No tactic coverage yet"
+            emptyDescription="Ranks ATT&CK tactics by alert count. Alerts tagged only with technique IDs do not appear here."
+          />
+        ) : (
+          <ul className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {topMitre.map((tactic) => (
+              <li key={tactic.tactic} className="min-w-0">
+                <div className="flex items-baseline justify-between gap-2">
+                  <span className="truncate text-control-sm text-fg-primary">
+                    {tactic.tactic}
+                  </span>
+                  <span className="font-mono text-caption tabular-nums text-fg-muted">
+                    {tactic.count}
+                  </span>
+                </div>
+                <div className="mt-1 h-1.5 overflow-hidden rounded-pill bg-surface-subtle">
+                  <div
+                    className="h-full rounded-pill bg-accent"
+                    style={{
+                      width: `${Math.round((tactic.count / maxTactic) * 100)}%`,
+                    }}
+                  />
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Card>
     ),
   };
 
@@ -807,3 +810,54 @@ export function DashboardView() {
     </DashboardErrorBoundary>
   );
 }
+
+/* [HIDDEN-UI UI-OVERHAUL-2 previous Overview widgets kept for restoration.
+   The retired layout rendered recharts area/pie/bar charts (dynamic imports
+   below), the funnel KPI strip, the efficiency report, the live feed, and the
+   SOC performance block. The components themselves are untouched on disk.
+
+const RechartsArea = dynamic(
+  () => import('recharts').then((m) => {
+    const { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } = m;
+    function RechartsAreaInner(props: { data: { time: string; count: number }[] }) {
+      return (
+        <ResponsiveContainer width="100%" height={180}>
+          <AreaChart data={props.data}> ... </AreaChart>
+        </ResponsiveContainer>
+      );
+    }
+    return RechartsAreaInner;
+  }),
+  { ssr: false, loading: () => <div className="h-44 bg-surface-hover animate-pulse rounded" /> },
+);
+
+const RechartsPie = dynamic( ... ) // severity breakdown pie
+const RechartsBar = dynamic( ... ) // top MITRE tactics bar
+
+function CustomTooltip({ active, payload, label }: any) {
+  return (
+    <div className="bg-surface-elevated border border-surface-border rounded-control px-3 py-2 text-caption">
+      <p className="text-fg-muted mb-1">{label}</p>
+      {payload.map((p: any, i: number) => (
+        <p key={i} style={{ color: p.color }} className="font-medium">
+          {p.name}: {p.value}
+        </p>
+      ))}
+    </div>
+  );
+}
+
+function RetiredWidgets() {
+  return (
+    <>
+      <FunnelKpiBar period={timeWindow} />
+      <div className="grid grid-cols-1 gap-4">
+        <EfficiencyReport period={timeWindow} />
+        <PipelineHealth />
+      </div>
+      <LiveFeedPanel />
+      <SOCMetricsDashboard />
+    </>
+  );
+}
+*/

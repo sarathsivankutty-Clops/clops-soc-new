@@ -3,9 +3,10 @@
 /**
  * PipelineHealth
  * ==============
- * Five-stage pipeline health strip (ingest → normalize → fuse → correlate → alert).
- * Each stage shows backlog, p95 latency, error rate, and an at-a-glance status
- * ({@link Status}). Mirrors the reference SOC console's pipeline-health rail.
+ * Five-stage pipeline health card (ingest → normalize → fuse → correlate → alert).
+ * Each stage shows a status pill, backlog with a share bar, p95 latency, and an
+ * error rate. Layout follows the reference SOC console's pipeline rail, now one
+ * card with five divided cells rather than five separate tiles.
  *
  * Data source: `GET /api/v1/health/pipeline` ({@link metricsApi.getPipelineHealth}).
  * Polls every 30 s; ignores SWR retries (the endpoint never throws under nominal
@@ -16,6 +17,7 @@
 
 import useSWR from 'swr';
 import { clsx } from 'clsx';
+import { StatusPill, type StatusKind } from '@/components/ui/StatusPill';
 import {
   metricsApi,
   type PipelineHealth as PipelineHealthData,
@@ -48,43 +50,56 @@ const STAGE_ORDER: PipelineStage['stage'][] = [
   'alert',
 ];
 
-function statusStyles(status: Status) {
-  switch (status) {
-    case 'green':
-      return {
-        dot: 'bg-green-500',
-        ring: 'ring-green-500/30',
-        text: 'text-green-400',
-        bar: 'bg-green-500/70',
-      };
-    case 'yellow':
-      return {
-        dot: 'bg-amber-500',
-        ring: 'ring-amber-500/30',
-        text: 'text-amber-400',
-        bar: 'bg-amber-500/70',
-      };
-    case 'red':
-      return {
-        dot: 'bg-red-500',
-        ring: 'ring-red-500/30',
-        text: 'text-red-400',
-        bar: 'bg-red-500/70',
-      };
-    default:
-      return {
-        dot: 'bg-gray-600',
-        ring: 'ring-gray-600/30',
-        text: 'text-gray-500',
-        bar: 'bg-gray-600/50',
-      };
-  }
+interface StatusMeta {
+  pill: StatusKind;
+  label: string;
+  text: string;
+  dot: string;
+  bar: string;
 }
+
+/**
+ * Status vocabulary, in semantic tokens.
+ *
+ * The previous implementation used raw `green-500` / `amber-500` / `red-500` /
+ * `gray-600` classes, which do not follow the light theme. The pill labels say
+ * what the colour means so the card is readable without relying on it.
+ */
+const STATUS_META: Record<Status, StatusMeta> = {
+  green: {
+    pill: 'completed',
+    label: 'Healthy',
+    text: 'text-tone-success',
+    dot: 'bg-dot-success',
+    bar: 'bg-dot-success',
+  },
+  yellow: {
+    pill: 'pending',
+    label: 'Backlog',
+    text: 'text-tone-warning',
+    dot: 'bg-dot-warning',
+    bar: 'bg-dot-warning',
+  },
+  red: {
+    pill: 'failed',
+    label: 'Error',
+    text: 'text-tone-danger',
+    dot: 'bg-dot-danger',
+    bar: 'bg-dot-danger',
+  },
+  unknown: {
+    pill: 'unknown',
+    label: 'Unknown',
+    text: 'text-fg-muted',
+    dot: 'bg-dot-neutral',
+    bar: 'bg-dot-neutral',
+  },
+};
 
 /** The pill an uninstrumented cell gets, so absence never reads as zero. */
 function NotMeasured() {
   return (
-    <span className="text-gray-500" title="Not instrumented on this stage yet">
+    <span className="text-fg-muted" title="Not instrumented on this stage yet">
       n/a
     </span>
   );
@@ -113,99 +128,123 @@ function formatErrorRate(ratio: number): string {
   return `${(ratio * 100).toFixed(2).replace(/\.?0+$/, '')}%`;
 }
 
-/**
- * `health.py` says of this panel: "The SOC Console UI renders zeros as 'n/a'
- * pills rather than zero-bars so operators don't read absence as 'all good'."
- * It did not. Four of the five stages ship at least one hardcoded `0` for a
- * cell nothing instruments -- ingest and correlate have no p95, normalize,
- * fuse, correlate and alert have no error rate -- and the formatters below
- * turned those into `< 1 ms` and `0%`, under a "Live" header. That is the
- * single most reassuring reading a pipeline panel can offer, for the cells
- * it knows least about.
- *
- * The stage now names its own unmeasured fields, so the backend that knows
- * which ones they are is the thing that says so.
- */
-function StageCard({ stage }: { stage: PipelineStage }) {
-  const styles = statusStyles(stage.status);
+/** One cell of the five-stage rail. */
+function StageCell({
+  stage,
+  maxBacklog,
+}: {
+  stage: PipelineStage;
+  maxBacklog: number;
+}) {
+  const meta = STATUS_META[stage.status];
   const unmeasured = new Set(stage.unmeasured ?? []);
+  const backlogUnmeasured = unmeasured.has('backlog');
+  const share =
+    backlogUnmeasured || maxBacklog <= 0
+      ? 0
+      : Math.max(0, Math.min(100, Math.round((stage.backlog / maxBacklog) * 100)));
+
   return (
-    /* [HIDDEN-UI DASH-1 use semantic surface tokens, wrap stage text, and add gap-2 between dt/dd] */
-    <div className="bg-surface-card border border-surface-border rounded-container p-4 min-w-0">
-      <div className="flex items-center justify-between gap-2 mb-1">
-        <p className="text-sm font-semibold text-fg-primary leading-snug">
+    <div className="min-w-0 bg-surface-card px-4 py-3.5">
+      <div className="flex items-center justify-between gap-2">
+        <p className="truncate text-control font-semibold text-fg-primary">
           {STAGE_LABELS[stage.stage]}
         </p>
-        <span
-          className={clsx('h-2.5 w-2.5 shrink-0 rounded-full ring-2', styles.dot, styles.ring)}
-          aria-label={`status ${stage.status}`}
-        />
+        <StatusPill status={meta.pill} label={meta.label} />
       </div>
-      <p className="text-caption text-fg-muted leading-snug">
-        {STAGE_DESCRIPTIONS[stage.stage]}
+      <p
+        className="mt-1 truncate text-caption text-fg-muted leading-snug"
+        title={STAGE_DESCRIPTIONS[stage.stage]}
+      >
+        {stage.detail ?? STAGE_DESCRIPTIONS[stage.stage]}
       </p>
 
-      <dl className="mt-3 space-y-1.5">
-        <div className="flex items-baseline justify-between gap-2 text-xs">
-          <dt className="text-fg-muted shrink-0">Backlog</dt>
-          <dd className="font-medium text-fg-primary tabular-nums text-right">
-            {unmeasured.has('backlog') ? <NotMeasured /> : formatBacklog(stage.backlog)}
+      <div className="mt-3">
+        <div className="flex items-baseline justify-between gap-2 text-caption">
+          <span className="text-fg-muted">Backlog</span>
+          <span className="text-right font-mono font-medium tabular-nums text-fg-primary">
+            {backlogUnmeasured ? <NotMeasured /> : formatBacklog(stage.backlog)}
+          </span>
+        </div>
+        <div className="mt-1 h-1.5 overflow-hidden rounded-pill bg-surface-subtle">
+          <div
+            className={clsx('h-full rounded-pill', meta.bar)}
+            style={{ width: `${share}%` }}
+          />
+        </div>
+      </div>
+
+      <dl className="mt-2 space-y-1 text-caption">
+        <div className="flex items-baseline justify-between gap-2">
+          <dt className="text-fg-muted">p95</dt>
+          <dd className="text-right font-mono font-medium tabular-nums text-fg-primary">
+            {unmeasured.has('p95_latency_ms') ? (
+              <NotMeasured />
+            ) : (
+              formatLatency(stage.p95_latency_ms)
+            )}
           </dd>
         </div>
-        <div className="flex items-baseline justify-between gap-2 text-xs">
-          <dt className="text-fg-muted shrink-0">p95</dt>
-          <dd className="font-medium text-fg-primary tabular-nums text-right">
-            {unmeasured.has('p95_latency_ms') ? <NotMeasured /> : formatLatency(stage.p95_latency_ms)}
-          </dd>
-        </div>
-        <div className="flex items-baseline justify-between gap-2 text-xs">
-          <dt className="text-fg-muted shrink-0">Errors</dt>
-          <dd className={clsx('font-medium tabular-nums text-right', unmeasured.has('error_rate') ? 'text-fg-muted' : styles.text)}>
-            {unmeasured.has('error_rate') ? <NotMeasured /> : formatErrorRate(stage.error_rate)}
+        <div className="flex items-baseline justify-between gap-2">
+          <dt className="text-fg-muted">Errors</dt>
+          <dd
+            className={clsx(
+              'text-right font-mono font-medium tabular-nums',
+              unmeasured.has('error_rate') ? 'text-fg-muted' : meta.text,
+            )}
+          >
+            {unmeasured.has('error_rate') ? (
+              <NotMeasured />
+            ) : (
+              formatErrorRate(stage.error_rate)
+            )}
           </dd>
         </div>
       </dl>
-
-      {/* What the stage did observe, when the observation is not a backlog.
-          `correlate` reported its single-event alert count as a backlog and
-          the strip rendered "Backlog 7" on an empty queue. */}
-      {stage.detail && (
-        <p className="mt-2 text-caption text-fg-muted leading-snug">{stage.detail}</p>
-      )}
     </div>
   );
 }
 
 function LoadingStage({ stage }: { stage: PipelineStage['stage'] }) {
   return (
-    <div className="bg-gray-900/60 border border-gray-800/60 rounded-xl p-4 min-w-0">
-      <div className="flex items-center justify-between mb-1">
-        <p className="text-sm font-semibold text-gray-100 truncate">
+    <div className="min-w-0 bg-surface-card px-4 py-3.5">
+      <div className="flex items-center justify-between gap-2">
+        <p className="truncate text-control font-semibold text-fg-primary">
           {STAGE_LABELS[stage]}
         </p>
-        <span className="h-2.5 w-2.5 rounded-full bg-gray-700 animate-pulse" />
+        <span className="h-2.5 w-2.5 shrink-0 animate-pulse rounded-pill bg-surface-hover" />
       </div>
-      <p className="text-[11px] text-gray-500 truncate">
+      <p className="mt-1 truncate text-caption text-fg-muted">
         {STAGE_DESCRIPTIONS[stage]}
       </p>
       <div className="mt-3 space-y-2">
-        <div className="h-3 w-full rounded bg-gray-800/60 animate-pulse" />
-        <div className="h-3 w-full rounded bg-gray-800/60 animate-pulse" />
-        <div className="h-3 w-2/3 rounded bg-gray-800/60 animate-pulse" />
+        <div className="h-3 w-full animate-pulse rounded bg-surface-hover" />
+        <div className="h-3 w-full animate-pulse rounded bg-surface-hover" />
+        <div className="h-3 w-2/3 animate-pulse rounded bg-surface-hover" />
       </div>
     </div>
   );
 }
 
-function MissingStage({ stage, reason }: { stage: PipelineStage['stage']; reason: string }) {
+function MissingStage({
+  stage,
+  reason,
+}: {
+  stage: PipelineStage['stage'];
+  reason: string;
+}) {
   return (
-    <div className="bg-gray-900/60 border border-gray-800/60 rounded-xl p-4 min-w-0">
-      <div className="flex items-center justify-between mb-1">
-        <p className="text-sm font-semibold text-gray-100 truncate">{STAGE_LABELS[stage]}</p>
-        <span className="h-2.5 w-2.5 rounded-full bg-gray-700 ring-2 ring-gray-700/30" role="img" aria-label="status unknown" />
+    <div className="min-w-0 bg-surface-card px-4 py-3.5">
+      <div className="flex items-center justify-between gap-2">
+        <p className="truncate text-control font-semibold text-fg-primary">
+          {STAGE_LABELS[stage]}
+        </p>
+        <StatusPill status="unknown" label="Not reported" />
       </div>
-      <p className="text-[11px] text-gray-500 truncate">{STAGE_DESCRIPTIONS[stage]}</p>
-      <p className="mt-3 text-xs text-gray-500">{reason}</p>
+      <p className="mt-1 truncate text-caption text-fg-muted">
+        {STAGE_DESCRIPTIONS[stage]}
+      </p>
+      <p className="mt-3 text-caption text-fg-muted">{reason}</p>
     </div>
   );
 }
@@ -226,38 +265,62 @@ export function PipelineHealth() {
   const stagesByName: Partial<Record<PipelineStage['stage'], PipelineStage>> = {};
   for (const s of data?.stages ?? []) stagesByName[s.stage] = s;
 
+  const maxBacklog = Math.max(
+    1,
+    ...(data?.stages ?? [])
+      .filter((s) => !(s.unmeasured ?? []).includes('backlog'))
+      .map((s) => s.backlog),
+  );
+
+  const overall = STATUS_META[data?.overall_status ?? 'unknown'];
+
   return (
-    <div>
-      <div className="flex items-center justify-between mb-3">
-        <div>
-          <h2 className="text-base font-semibold text-gray-100">
-            Pipeline Health
+    <div className="overflow-hidden rounded-container border border-surface-border bg-surface-card shadow-card">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-2 border-b border-surface-divider px-5 py-4">
+        <div className="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1">
+          <h2 className="text-card-title font-semibold text-fg-primary">
+            Ingestion &amp; Detection Flow
           </h2>
-          <p className="text-xs text-gray-500 mt-0.5">
-            Ingest → normalize → fuse → correlate → alert
-          </p>
+          <span className="text-caption text-fg-muted">
+            Events in to alerts out
+          </span>
         </div>
         {error ? (
-          <span className="text-xs text-red-400">unavailable</span>
+          <span className="text-caption font-medium text-tone-danger">
+            unavailable
+          </span>
         ) : data ? (
-          <span className="text-xs text-gray-500">Live</span>
+          <span className="inline-flex items-center gap-1.5 text-caption font-medium text-tone-success">
+            <span
+              aria-hidden="true"
+              className={clsx('h-1.5 w-1.5 rounded-pill', overall.dot)}
+            />
+            Live
+          </span>
         ) : (
           // `Live` was shown whenever `error` was falsy, which includes the
           // whole first-paint window: the header asserted liveness before a
           // single byte had arrived.
-          <span className="text-xs text-gray-500">Loading…</span>
+          <span className="text-caption text-fg-muted">Loading…</span>
         )}
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+      <div className="grid grid-cols-1 gap-px bg-surface-divider sm:grid-cols-2 lg:grid-cols-5">
         {STAGE_ORDER.map((name) => {
           const stage = stagesByName[name];
           if (isLoading) return <LoadingStage key={name} stage={name} />;
           // A stage absent from a *successful* response is not still loading.
           // It used to animate as a skeleton indefinitely, with no error and
           // no timeout, which reads as "nearly there" rather than "missing".
-          if (!stage) return <MissingStage key={name} stage={name} reason={error ? 'stage unavailable' : 'not reported'} />;
-          return <StageCard key={name} stage={stage} />;
+          if (!stage)
+            return (
+              <MissingStage
+                key={name}
+                stage={name}
+                reason={error ? 'stage unavailable' : 'not reported'}
+              />
+            );
+          return <StageCell key={name} stage={stage} maxBacklog={maxBacklog} />;
         })}
       </div>
     </div>
@@ -265,3 +328,30 @@ export function PipelineHealth() {
 }
 
 export default PipelineHealth;
+
+/* [HIDDEN-UI UI-OVERHAUL-2 previous five-tile layout kept for restoration.
+   It rendered each stage as its own bordered card in
+   `grid-cols-2 sm:grid-cols-3 lg:grid-cols-5` and styled statuses with raw
+   `bg-green-500` / `text-red-400` / `gray-*` classes. The new rail keeps the
+   same data contract (backlog, p95, errors, unmeasured, detail) in one card.
+
+function OldStageCard({ stage }: { stage: PipelineStage }) {
+  const styles = statusStyles(stage.status);
+  const unmeasured = new Set(stage.unmeasured ?? []);
+  return (
+    <div className="bg-surface-card border border-surface-border rounded-container p-4 min-w-0">
+      <div className="flex items-center justify-between gap-2 mb-1">
+        <p className="text-sm font-semibold text-fg-primary leading-snug">
+          {STAGE_LABELS[stage.stage]}
+        </p>
+        <span className="h-2.5 w-2.5 shrink-0 rounded-full ring-2"
+          aria-label={`status ${stage.status}`} />
+      </div>
+      <p className="text-caption text-fg-muted leading-snug">
+        {STAGE_DESCRIPTIONS[stage.stage]}
+      </p>
+      <dl className="mt-3 space-y-1.5"> ... </dl>
+    </div>
+  );
+}
+*/
