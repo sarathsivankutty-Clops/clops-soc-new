@@ -1305,6 +1305,7 @@ export interface KeycloakSyncResult {
   users_seen: number;
   users_updated: number;
   roles_changed: number;
+  users_disabled: number;
 }
 
 export interface AdminUserPage {

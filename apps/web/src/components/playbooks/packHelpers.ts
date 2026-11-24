@@ -54,14 +54,14 @@ const CATEGORY_LABELS: Record<PackCategory, string> = {
 };
 
 const CATEGORY_COLORS: Record<PackCategory, string> = {
-  'account-takeover':    'bg-orange-900/40 text-orange-300 border-orange-800',
-  'cloud-misconfig':     'bg-cyan-900/40 text-cyan-300 border-cyan-800',
-  'data-exfil':          'bg-pink-900/40 text-pink-300 border-pink-800',
-  'identity-compromise': 'bg-blue-900/40 text-blue-300 border-blue-800',
-  'malware-detection':   'bg-red-900/40 text-red-300 border-red-800',
-  'network-anomaly':     'bg-teal-900/40 text-teal-300 border-teal-800',
-  ransomware:            'bg-rose-900/40 text-rose-300 border-rose-800',
-  'supply-chain':        'bg-amber-900/40 text-amber-300 border-amber-800',
+  'account-takeover':    'bg-pill-warning-bg text-tone-warning border-transparent',
+  'cloud-misconfig':     'bg-pill-info-bg text-accent border-transparent',
+  'data-exfil':          'bg-pill-purple-bg text-tone-purple border-transparent',
+  'identity-compromise': 'bg-pill-info-bg text-accent border-transparent',
+  'malware-detection':   'bg-pill-danger-bg text-tone-danger border-transparent',
+  'network-anomaly':     'bg-pill-neutral-bg text-fg-secondary border-transparent',
+  ransomware:            'bg-pill-danger-bg text-tone-danger border-transparent',
+  'supply-chain':        'bg-pill-warning-bg text-tone-warning border-transparent',
 };
 
 /**
@@ -181,11 +181,11 @@ export const SEVERITY_LEVELS = ['info', 'low', 'medium', 'high', 'critical'] as 
 export type SeverityLevel = (typeof SEVERITY_LEVELS)[number];
 
 const SEVERITY_COLORS: Record<SeverityLevel, string> = {
-  info:     'bg-blue-900/40 text-blue-300 border-blue-800',
-  low:      'bg-gray-800/60 text-gray-400 border-gray-700',
-  medium:   'bg-yellow-900/40 text-yellow-300 border-yellow-800',
-  high:     'bg-orange-900/40 text-orange-300 border-orange-800',
-  critical: 'bg-red-900/40 text-red-300 border-red-800',
+  info:     'bg-severity-bg-info text-severity-ink-info border-transparent',
+  low:      'bg-severity-bg-low text-severity-ink-low border-transparent',
+  medium:   'bg-severity-bg-medium text-severity-ink-medium border-transparent',
+  high:     'bg-severity-bg-high text-severity-ink-high border-transparent',
+  critical: 'bg-severity-bg-critical text-severity-ink-critical border-transparent',
 };
 
 export function severityBadgeClass(sev: SeverityLevel): string {

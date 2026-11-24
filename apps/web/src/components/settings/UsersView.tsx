@@ -154,9 +154,9 @@ function EditRolesModal({ user, roles, isSelf, onClose, onSaved }: EditRolesModa
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-surface-overlay/60 p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
       <div
-        className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-surface-border bg-surface-card p-6 shadow-2xl"
+        className="max-h-full w-full max-w-lg overflow-y-auto rounded-2xl border border-surface-border bg-surface-card p-6 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <h3 className="text-base font-semibold text-fg-primary">Edit roles</h3>
@@ -327,7 +327,7 @@ export function UsersView() {
     try {
       const r = await adminUsersApi.keycloakSync();
       if (r.status === 'synced') {
-        toast.success(`Keycloak sync: ${r.users_seen} realm users, ${r.users_updated} linked accounts refreshed, ${r.roles_changed} role changes.`);
+        toast.success(`Keycloak sync: ${r.users_seen} realm users, ${r.users_updated} linked accounts refreshed, ${r.roles_changed} role changes, ${r.users_disabled} disabled.`);
       } else {
         toast.error(`Keycloak sync ${r.status}${r.detail ? `: ${r.detail}` : ''}`);
       }

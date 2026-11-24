@@ -81,7 +81,7 @@ const NAV_ITEMS: { label: string; href: string; keywords: string[]; adminOnly?: 
   { label: 'Detection',           href: '/detection',               keywords: ['rules', 'detections', 'sigma', 'catalog', 'mitre', 'coverage', 'tuning'] },
   */
   { label: 'Detection Rules',     href: '/detection',               keywords: ['rules', 'detections', 'sigma', 'catalog', 'mitre', 'coverage', 'tuning'] },
-  { label: 'Settings',            href: '/settings',                keywords: ['preferences', 'profile', 'tenant', 'connectors', 'users', 'rbac', 'mfa', 'compliance', 'audit'] },
+  { label: 'Settings',            href: '/settings',                keywords: ['preferences', 'profile', 'tenant', 'connectors', 'users', 'rbac', 'audit'] }, // [HIDDEN-UI UI-OVERHAUL-1 keywords 'mfa', 'compliance': pages retired]
   // Deep link into the AI tab. `SettingsTabs` selects on `?tab=`, so this used
   // to land on General while the TopBar title said "AI Settings".
   { label: 'AI Settings',         href: '/settings?tab=deployment', keywords: ['ai', 'llm', 'provider', 'model', 'byok'] },

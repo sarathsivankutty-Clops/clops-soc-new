@@ -329,29 +329,76 @@ export function PipelineHealth() {
 
 export default PipelineHealth;
 
-/* [HIDDEN-UI UI-OVERHAUL-2 previous five-tile layout kept for restoration.
-   It rendered each stage as its own bordered card in
-   `grid-cols-2 sm:grid-cols-3 lg:grid-cols-5` and styled statuses with raw
-   `bg-green-500` / `text-red-400` / `gray-*` classes. The new rail keeps the
-   same data contract (backlog, p95, errors, unmeasured, detail) in one card.
-
-function OldStageCard({ stage }: { stage: PipelineStage }) {
-  const styles = statusStyles(stage.status);
-  const unmeasured = new Set(stage.unmeasured ?? []);
-  return (
-    <div className="bg-surface-card border border-surface-border rounded-container p-4 min-w-0">
-      <div className="flex items-center justify-between gap-2 mb-1">
-        <p className="text-sm font-semibold text-fg-primary leading-snug">
-          {STAGE_LABELS[stage.stage]}
-        </p>
-        <span className="h-2.5 w-2.5 shrink-0 rounded-full ring-2"
-          aria-label={`status ${stage.status}`} />
-      </div>
-      <p className="text-caption text-fg-muted leading-snug">
-        {STAGE_DESCRIPTIONS[stage.stage]}
-      </p>
-      <dl className="mt-3 space-y-1.5"> ... </dl>
-    </div>
-  );
-}
-*/
+// [HIDDEN-UI UI-OVERHAUL-2 previous five-tile layout kept for restoration, verbatim from 02aaa9f7a.
+// Each stage was its own bordered card in `grid-cols-2 sm:grid-cols-3 lg:grid-cols-5`. The new rail keeps
+// the same data contract (backlog, p95, errors, unmeasured, detail) in one card.
+// function StageCard({ stage }: { stage: PipelineStage }) {
+//   const styles = statusStyles(stage.status);
+//   const unmeasured = new Set(stage.unmeasured ?? []);
+//   return (
+//     /* [HIDDEN-UI DASH-1 use semantic surface tokens, wrap stage text, and add gap-2 between dt/dd] */
+//     <div className="bg-surface-card border border-surface-border rounded-container p-4 min-w-0">
+//       <div className="flex items-center justify-between gap-2 mb-1">
+//         <p className="text-sm font-semibold text-fg-primary leading-snug">
+//           {STAGE_LABELS[stage.stage]}
+//         </p>
+//         <span
+//           className={clsx('h-2.5 w-2.5 shrink-0 rounded-full ring-2', styles.dot, styles.ring)}
+//           aria-label={`status ${stage.status}`}
+//         />
+//       </div>
+//       <p className="text-caption text-fg-muted leading-snug">
+//         {STAGE_DESCRIPTIONS[stage.stage]}
+//       </p>
+//
+//       <dl className="mt-3 space-y-1.5">
+//         <div className="flex items-baseline justify-between gap-2 text-xs">
+//           <dt className="text-fg-muted shrink-0">Backlog</dt>
+//           <dd className="font-medium text-fg-primary tabular-nums text-right">
+//             {unmeasured.has('backlog') ? <NotMeasured /> : formatBacklog(stage.backlog)}
+//           </dd>
+//         </div>
+//         <div className="flex items-baseline justify-between gap-2 text-xs">
+//           <dt className="text-fg-muted shrink-0">p95</dt>
+//           <dd className="font-medium text-fg-primary tabular-nums text-right">
+//             {unmeasured.has('p95_latency_ms') ? <NotMeasured /> : formatLatency(stage.p95_latency_ms)}
+//           </dd>
+//         </div>
+//         <div className="flex items-baseline justify-between gap-2 text-xs">
+//           <dt className="text-fg-muted shrink-0">Errors</dt>
+//           <dd className={clsx('font-medium tabular-nums text-right', unmeasured.has('error_rate') ? 'text-fg-muted' : styles.text)}>
+//             {unmeasured.has('error_rate') ? <NotMeasured /> : formatErrorRate(stage.error_rate)}
+//           </dd>
+//         </div>
+//       </dl>
+//
+//       {/* What the stage did observe, when the observation is not a backlog.
+//           `correlate` reported its single-event alert count as a backlog and
+//           the strip rendered "Backlog 7" on an empty queue. */}
+//       {stage.detail && (
+//         <p className="mt-2 text-caption text-fg-muted leading-snug">{stage.detail}</p>
+//       )}
+//     </div>
+//   );
+// }
+//
+// function LoadingStage({ stage }: { stage: PipelineStage['stage'] }) {
+//   return (
+//     <div className="bg-gray-900/60 border border-gray-800/60 rounded-xl p-4 min-w-0">
+//       <div className="flex items-center justify-between mb-1">
+//         <p className="text-sm font-semibold text-gray-100 truncate">
+//           {STAGE_LABELS[stage]}
+//         </p>
+//         <span className="h-2.5 w-2.5 rounded-full bg-gray-700 animate-pulse" />
+//       </div>
+//       <p className="text-[11px] text-gray-500 truncate">
+//         {STAGE_DESCRIPTIONS[stage]}
+//       </p>
+//       <div className="mt-3 space-y-2">
+//         <div className="h-3 w-full rounded bg-gray-800/60 animate-pulse" />
+//         <div className="h-3 w-full rounded bg-gray-800/60 animate-pulse" />
+//         <div className="h-3 w-2/3 rounded bg-gray-800/60 animate-pulse" />
+//       </div>
+//     </div>
+//   );
+// }

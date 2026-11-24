@@ -239,7 +239,7 @@ function EditConnectorDialog({
           role="dialog"
           aria-modal="true"
           aria-labelledby="edit-connector-title"
-          className="pointer-events-auto w-full max-w-2xl max-h-[85vh] overflow-hidden rounded-2xl border border-surface-border bg-surface-base shadow-2xl flex flex-col"
+          className="pointer-events-auto w-full max-w-2xl max-h-full overflow-hidden rounded-2xl border border-surface-border bg-surface-base shadow-2xl flex flex-col"
         >
           <div className="flex items-start justify-between gap-4 px-6 py-4 border-b border-surface-border">
             <div className="min-w-0">

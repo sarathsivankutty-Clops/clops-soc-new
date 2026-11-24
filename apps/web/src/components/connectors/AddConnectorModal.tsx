@@ -183,7 +183,7 @@ export function FieldInput({ field, value, onChange, id }: FieldInputProps) {
           onChange={(e) => onChange(e.target.value)}
           placeholder={field.placeholder}
           rows={6}
-          className={clsx(baseClass, 'font-mono text-xs resize-y min-h-[120px]')}
+          className={clsx(baseClass, 'font-mono text-xs resize-y min-h-32')}
           required={field.required}
         />
       );
@@ -1517,7 +1517,7 @@ export function AddConnectorModal({
               role="dialog"
               aria-modal="true"
               aria-labelledby="add-connector-title"
-              className="pointer-events-auto w-full max-w-3xl max-h-[85vh] overflow-hidden rounded-2xl border border-surface-border bg-surface-base shadow-2xl flex flex-col"
+              className="pointer-events-auto w-full max-w-3xl max-h-full overflow-hidden rounded-2xl border border-surface-border bg-surface-base shadow-2xl flex flex-col"
             >
               {/* Header */}
               <div className="flex items-start justify-between gap-4 px-6 py-4 border-b border-surface-border">
