@@ -164,7 +164,13 @@ function ConfidencePill({ label }: { label: ConfidenceLabel }) {
       {cfg.label}
     </span>
   ); */
-  return <Badge tone={cfg.tone} title={`Detection confidence: ${cfg.label}`}>{cfg.label}</Badge>;
+  // [HIDDEN-UI AUDIT-P1 a third coloured chip next to severity and status; confidence is plain labelled text now]
+  // return <Badge tone={cfg.tone} title={`Detection confidence: ${cfg.label}`}>{cfg.label}</Badge>;
+  return (
+    <span className="text-caption text-fg-muted whitespace-nowrap" title={`Detection confidence: ${cfg.label}`}>
+      {cfg.label} confidence
+    </span>
+  );
 }
 
 const SEVERITY_BADGE_TONES: Record<string, BadgeTone> = {
@@ -266,8 +272,42 @@ function FiltersBar({
   */
 
   return (
-    <div className="space-y-1.5 py-3 px-4 bg-surface-card border border-surface-border rounded-container">
-      <div className="flex items-center gap-3 flex-wrap">
+    <div className="py-2 px-4 bg-surface-card border border-surface-border rounded-container">
+      <div className="flex items-center gap-2 flex-wrap">
+        <input
+          type="search"
+          aria-label="Search alerts"
+          placeholder="Search title, rule, entity..."
+          value={filters.search ?? ''}
+          onChange={(e) =>
+            onChange({ ...filters, search: e.target.value || undefined, page: 1 })
+          }
+          className="text-control-sm bg-surface-elevated text-fg-primary placeholder:text-fg-subtle border border-surface-border rounded-control px-2.5 py-1.5 min-h-8 w-40 focus:outline-none focus:border-accent"
+        />
+
+        <label className="inline-flex items-center gap-1.5 text-control-sm text-fg-muted">
+          <span>Severity</span>
+          <select
+            aria-label="Filter by severity"
+            value={filters.severity ?? 'all'}
+            onChange={(e) =>
+              onChange({
+                ...filters,
+                severity: e.target.value === 'all' ? undefined : (e.target.value as AlertFilters['severity']),
+                page: 1,
+              })
+            }
+            className="text-control-sm bg-surface-elevated text-fg-primary border border-surface-border rounded-control px-2 py-1 min-h-8 focus:outline-none focus:border-accent"
+          >
+            {severities.map((s) => (
+              <option key={s} value={s}>
+                {s === 'all' ? 'All severities' : SEVERITY_CONFIG[s].label}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        {/* [HIDDEN-UI AUDIT-P1 six severity pills; replaced by the Severity select above]
         <div className="flex items-center gap-1 flex-wrap">
           {severities.map((s) => (
             <button
@@ -287,6 +327,7 @@ function FiltersBar({
         </div>
 
         <div className="w-px h-4 bg-surface-border" />
+        */}
 
         <label className="inline-flex items-center gap-1.5 text-control-sm text-fg-muted">
           <span>Status</span>
@@ -296,7 +337,7 @@ function FiltersBar({
             onChange={(e) =>
               onChange({ ...filters, status: e.target.value || undefined, page: 1 })
             }
-            className="text-control-sm bg-surface-elevated text-fg-primary border border-surface-border rounded-control px-2 py-1 focus:outline-none focus:border-accent"
+            className="text-control-sm bg-surface-elevated text-fg-primary border border-surface-border rounded-control px-2 py-1 min-h-8 focus:outline-none focus:border-accent"
           >
             <option value="">All statuses</option>
             {ALERT_STATUS_GROUPS.map((group) => (
@@ -317,7 +358,7 @@ function FiltersBar({
             aria-label="Time window"
             value={timeWindow}
             onChange={(e) => onTimeWindowChange(e.target.value as AlertsTimeWindow)}
-            className="text-control-sm bg-surface-elevated text-fg-primary border border-surface-border rounded-control px-2 py-1 focus:outline-none focus:border-accent"
+            className="text-control-sm bg-surface-elevated text-fg-primary border border-surface-border rounded-control px-2 py-1 min-h-8 focus:outline-none focus:border-accent"
           >
             <option value="all">All time</option>
             {TIME_WINDOWS.map((w) => (
@@ -332,6 +373,7 @@ function FiltersBar({
           <span>Sort</span>
           <select
             aria-label="Sort alerts"
+            title={SORT_EXPLANATION[activeSort]}
             value={activeSort}
             onChange={(e) =>
               onChange({
@@ -340,7 +382,7 @@ function FiltersBar({
                 page: 1,
               })
             }
-            className="text-control-sm bg-surface-elevated text-fg-primary border border-surface-border rounded-control px-2 py-1 focus:outline-none focus:border-accent"
+            className="text-control-sm bg-surface-elevated text-fg-primary border border-surface-border rounded-control px-2 py-1 min-h-8 focus:outline-none focus:border-accent"
           >
             <option value="priority">Priority</option>
             <option value="newest">Newest</option>
@@ -356,7 +398,7 @@ function FiltersBar({
             onChange={(e) =>
               onChange({ ...filters, connectorType: e.target.value || undefined, page: 1 })
             }
-            className="text-control-sm bg-surface-elevated text-fg-primary border border-surface-border rounded-control px-2 py-1 focus:outline-none focus:border-accent"
+            className="text-control-sm bg-surface-elevated text-fg-primary border border-surface-border rounded-control px-2 py-1 min-h-8 focus:outline-none focus:border-accent"
           >
             <option value="">All sources</option>
             <option value="aws_cloudtrail">AWS CloudTrail</option>
@@ -370,20 +412,10 @@ function FiltersBar({
           </select>
         </label>
 
-        <input
-          type="search"
-          aria-label="Search alerts"
-          placeholder="Search title, rule, entity..."
-          value={filters.search ?? ''}
-          onChange={(e) =>
-            onChange({ ...filters, search: e.target.value || undefined, page: 1 })
-          }
-          className="text-control-sm bg-surface-elevated text-fg-primary placeholder:text-fg-subtle border border-surface-border rounded-control px-2.5 py-1 w-48 focus:outline-none focus:border-accent"
-        />
-
         <span className="ml-auto text-caption font-mono text-fg-muted">{total} total</span>
       </div>
-      <p className="text-caption text-fg-muted" data-testid="alerts-sort-explanation">
+      {/* [HIDDEN-UI AUDIT-P1 the sort helper sentence cost a third toolbar line; it is read by screen readers and shown as the Sort tooltip] */}
+      <p className="sr-only" data-testid="alerts-sort-explanation">
         {SORT_EXPLANATION[activeSort]}
       </p>
     </div>
@@ -442,7 +474,7 @@ function AlertRow({
         }}
         aria-current={selected ? 'true' : undefined}
         className={clsx(
-          'flex flex-1 min-w-0 px-4 py-3',
+          'flex flex-1 min-w-0 px-4 py-2',
           compact ? 'items-start gap-3' : 'items-center gap-4',
         )}
       >
@@ -627,11 +659,8 @@ export function AlertsView() {
       <PageHead
         className="mb-0"
         title={t('alerts.title')}
-        description={
-          viewMode === 'entities'
-            ? 'Risk-Based Alerting · entity-centric triage queue'
-            : 'Real-time security event monitoring and triage'
-        }
+        // [HIDDEN-UI AUDIT-P1 the alerts description repeated the top bar title; only entities keeps one]
+        description={viewMode === 'entities' ? 'Risk-Based Alerting · entity-centric triage queue' : undefined}
         actions={
           <div className="flex items-center gap-2 flex-wrap">
             <div
@@ -775,6 +804,7 @@ function AlertsTable({
       <div role="group" aria-label="Alert counts">
         <KpiStrip
           cols={4}
+          dense
           items={[
             { label: 'Total', value: total, tone: 'default' },
             {

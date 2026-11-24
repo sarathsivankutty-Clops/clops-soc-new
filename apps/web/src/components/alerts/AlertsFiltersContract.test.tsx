@@ -60,7 +60,7 @@ describe('PR1a: AlertsView ordering, filters, and status coverage', () => {
     swrData.value = { alerts: [], total: 0, page: 1, pageSize: 25 };
     render(<AlertsView />);
 
-    await userEvent.click(screen.getByRole('button', { name: 'Critical' }));
+    await userEvent.selectOptions(screen.getByLabelText('Filter by severity'), 'critical');
     expect(latestFilters()?.severity).toBe('critical');
     expect(latestFilters()?.sort).toBe('priority');
 

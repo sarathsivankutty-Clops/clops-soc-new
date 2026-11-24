@@ -34,13 +34,15 @@ export interface KpiStripProps {
   items: readonly KpiItem[];
   cols?: 2 | 3 | 4 | 5;
   className?: string;
+  /** One line per tile (label and value side by side) for list pages that need the vertical space. */
+  dense?: boolean;
 }
 
 /**
  * Framed KPI strip rendered with 1px `surface-border` dividers between cells
  * instead of per-tile shadows or outer gaps.
  */
-export function KpiStrip({ items, cols = 4, className }: KpiStripProps) {
+export function KpiStrip({ items, cols = 4, className, dense = false }: KpiStripProps) {
   return (
     <div
       className={clsx(
@@ -58,7 +60,8 @@ export function KpiStrip({ items, cols = 4, className }: KpiStripProps) {
             key={item.id ?? `${item.label}-${idx}`}
             {...(clickable ? { type: 'button' as const, onClick: item.onClick } : {})}
             className={clsx(
-              'relative bg-surface-card p-5 text-left flex flex-col justify-between gap-1.5 min-w-0 transition-colors',
+              'relative bg-surface-card text-left flex min-w-0 transition-colors',
+              dense ? 'items-baseline justify-between gap-3 px-4 py-2.5' : 'flex-col justify-between gap-1.5 p-5',
               clickable && 'cursor-pointer hover:bg-surface-elevated',
               item.active && 'bg-nav-active-bg',
             )}
@@ -75,7 +78,8 @@ export function KpiStrip({ items, cols = 4, className }: KpiStripProps) {
               {item.value}
             </p>
             {item.sub && (
-              <div className={clsx('text-caption truncate', TONE_TEXT[tone])}>
+              /* [HIDDEN-UI AUDIT-P2 `truncate` clipped sub-lines such as "1 in progress · 0 opened / ..."] */
+              <div className={clsx('text-caption break-words', TONE_TEXT[tone])}>
                 {item.sub}
               </div>
             )}

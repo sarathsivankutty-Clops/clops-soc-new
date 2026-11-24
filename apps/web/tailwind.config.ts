@@ -193,8 +193,9 @@ const config: Config = {
         'detail-grid': 'minmax(0, 1fr) 340px',
       },
       fontSize: {
-        eyebrow: ['0.65625rem', { lineHeight: '1.35' }],    // 10.5px
-        caption: ['0.6875rem', { lineHeight: '1.35' }],     // 11px
+        // [HIDDEN-UI AUDIT-P4 eyebrow was 0.65625rem (10.5px) and caption 0.6875rem (11px); 12px is the readable floor]
+        eyebrow: ['0.75rem', { lineHeight: '1.35' }],       // 12px
+        caption: ['0.75rem', { lineHeight: '1.35' }],       // 12px
         'control-sm': ['0.75rem', { lineHeight: '1.45' }],  // 12px
         control: ['0.78125rem', { lineHeight: '1.45' }],    // 12.5px
         body: ['0.8125rem', { lineHeight: '1.5' }],         // 13px
