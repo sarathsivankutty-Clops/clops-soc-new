@@ -299,4 +299,10 @@ Preserved inside `[HIDDEN-UI CHROME-2 ...]` comments:
 - `FunnelKpiBar.test.tsx`: pipeline-title assertion updated to `Ingestion & Detection Flow`.
 - Verification: `type-check` → 0 errors; `lint` → 0 errors, 94 warnings; full Vitest → 138/139 files, 1,293/1,295 tests passed (the two failures are the pre-existing CRLF `MitrePanelWording` `indexOf('\n')` assertions); `next build` → passed.
 
+### 12.3 Phase 3 — Runbooks filter dropdowns
+- `PlaybooksGallery.tsx`: replaced the four stacked Category / MITRE / Severity / Uses chip rows with labelled native dropdowns in a single toolbar card. Search, All / Shipped Packs / Custom controls, and clear-filters behavior remain.
+- Dropdown options include the existing facet counts; the Category dropdown remains hidden for Custom runbooks. Previous chip markup and helpers are retained with `[HIDDEN-UI UI-OVERHAUL-3]`.
+- Replaced the raw palette classes in `TRIGGER_COLORS` with semantic pill and tone tokens; updated the component/helper descriptions to match the dropdown UI.
+- Added `PlaybooksGallery.test.tsx` to cover filter selection/count labels, clearing filters, and the Custom source behavior.
+- Verification: `pnpm --filter @aisoc/web test -- src/components/playbooks/PlaybooksGallery.test.tsx` → 1 file / 2 tests passed; `pnpm --filter @aisoc/web type-check` → passed; `pnpm --filter @aisoc/web exec eslint src/components/playbooks/PlaybooksGallery.tsx src/components/playbooks/PlaybooksGallery.test.tsx` → passed.
 

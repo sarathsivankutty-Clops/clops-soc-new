@@ -7,10 +7,10 @@
  * reference packs alongside any user-created playbooks with:
  *
  *   • Source filter pills      ("All" / "Shipped Packs" / "Custom")
- *   • Category facet chips     (account-takeover, ransomware, …)
- *   • MITRE tactic filter      (Initial Access, Lateral Movement, …)
- *   • Severity filter          (info / low / medium / high / critical)
- *   • Integration filter       (EDR, IAM, Ticketing, SIEM, …)
+ *   • Category dropdown       (account-takeover, ransomware, …)
+ *   • MITRE tactic dropdown   (Initial Access, Lateral Movement, …)
+ *   • Severity dropdown       (info / low / medium / high / critical)
+ *   • Integration dropdown    (EDR, IAM, Ticketing, SIEM, …)
  *   • Free-text search         (matches name, description, tags)
  *   • Per-row PACK badge       (purple) + colored category badge
  *   • One-click "Preview"      (read-only DAG drawer)
@@ -55,10 +55,12 @@ import { DAGPreviewDrawer } from './DAGPreviewDrawer';
 import { EnabledToggle, RunButton, deletePlaybook } from './rowActions';
 
 const TRIGGER_COLORS: Record<string, string> = {
-  alert:    'bg-red-900/40 text-red-300 border-red-800',
-  case:     'bg-blue-900/40 text-blue-300 border-blue-800',
-  manual:   'bg-gray-800 text-gray-400 border-gray-700',
-  schedule: 'bg-purple-900/40 text-purple-300 border-purple-800',
+  // [UI-OVERHAUL-3] Raw palette classes replaced with semantic tokens so
+  // trigger badges follow the active theme.
+  alert:    'bg-pill-danger-bg text-tone-danger',
+  case:     'bg-pill-info-bg text-accent',
+  manual:   'bg-pill-neutral-bg text-fg-muted',
+  schedule: 'bg-pill-purple-bg text-tone-purple',
 };
 
 /** Filter snapshot that can be saved as a named preset via SavedViewsBar. */
@@ -197,56 +199,127 @@ export function PlaybooksGallery({ playbooks, initialFilters }: PlaybooksGallery
 
   return (
     <div className="space-y-4">
-      {/* Toolbar — search + source pills */}
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="flex flex-1 min-w-56 gap-2">
-          <input
-            type="search"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search runbooks by name, tag, description…"
-            aria-label="Search runbooks"
-            className="flex-1 rounded-control border border-surface-border bg-surface-card px-3 py-2 text-body text-fg-primary placeholder:text-fg-subtle focus:border-accent focus:outline-none"
-          />
-        </div>
+      {/* [UI-OVERHAUL-3] One toolbar card. The four stacked chip rows
+          (Category / MITRE / Severity / Uses) became dropdowns so the facet
+          bar no longer pushes the first runbook below the fold. */}
+      <div className="space-y-3 rounded-container border border-surface-border bg-surface-card p-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex min-w-56 flex-1 gap-2">
+            <input
+              type="search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search runbooks…"
+              aria-label="Search runbooks"
+              className="flex-1 rounded-control border border-surface-border bg-surface-elevated px-3 py-2 text-body text-fg-primary placeholder:text-fg-subtle focus:border-accent focus:outline-none"
+            />
+          </div>
 
-        <div
-          className="flex gap-1 rounded-control border border-surface-border bg-surface-card p-1"
-          role="tablist"
-          aria-label="Runbook source"
-        >
-          <SourcePill
-            label="All"
-            count={sourceCounts.all}
-            active={source === 'all'}
-            onClick={() => handleSetSource('all')}
-          />
-          <SourcePill
-            label="Shipped Packs"
-            count={sourceCounts.pack}
-            active={source === 'pack'}
-            onClick={() => handleSetSource('pack')}
-            tone="pack"
-          />
-          <SourcePill
-            label="Custom"
-            count={sourceCounts.custom}
-            active={source === 'custom'}
-            onClick={() => handleSetSource('custom')}
-          />
-        </div>
-
-        {hasActiveFilters && (
-          <button
-            onClick={clearAllFilters}
-            className="text-xs text-fg-muted hover:text-tone-danger transition-colors px-2 py-1 rounded-control border border-surface-border hover:border-severity-critical-ink/40"
+          <div
+            className="flex gap-1 rounded-control border border-surface-border bg-surface-card p-1"
+            role="tablist"
+            aria-label="Runbook source"
           >
-            Clear filters
-          </button>
-        )}
+            <SourcePill
+              label="All"
+              count={sourceCounts.all}
+              active={source === 'all'}
+              onClick={() => handleSetSource('all')}
+            />
+            <SourcePill
+              label="Shipped Packs"
+              count={sourceCounts.pack}
+              active={source === 'pack'}
+              onClick={() => handleSetSource('pack')}
+              tone="pack"
+            />
+            <SourcePill
+              label="Custom"
+              count={sourceCounts.custom}
+              active={source === 'custom'}
+              onClick={() => handleSetSource('custom')}
+            />
+          </div>
+
+          {hasActiveFilters && (
+            <button
+              onClick={clearAllFilters}
+              className="rounded-control border border-surface-border px-2 py-1 text-xs text-fg-muted transition-colors hover:border-tone-danger/40 hover:text-tone-danger"
+            >
+              Clear filters
+            </button>
+          )}
+        </div>
+
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
+          {showCategoryRow && (
+            <FilterSelect
+              label="Category"
+              value={category}
+              onChange={(value) => setCategory(value as PackCategory | 'all')}
+            >
+              <option value="all">All categories</option>
+              {PACK_CATEGORIES.filter(
+                (cat) => categoryCounts[cat] > 0 || category === cat,
+              ).map((cat) => (
+                <option key={cat} value={cat}>
+                  {categoryLabel(cat)} ({categoryCounts[cat]})
+                </option>
+              ))}
+            </FilterSelect>
+          )}
+
+          <FilterSelect
+            label="MITRE tactic"
+            value={mitreTactic}
+            onChange={(value) => setMitreTactic(value as MitreTactic | 'all')}
+          >
+            <option value="all">All tactics</option>
+            {MITRE_TACTICS.filter(
+              (tactic) => mitreCounts[tactic] > 0 || mitreTactic === tactic,
+            ).map((tactic) => (
+              <option key={tactic} value={tactic}>
+                {tactic} ({mitreCounts[tactic]})
+              </option>
+            ))}
+          </FilterSelect>
+
+          <FilterSelect
+            label="Severity"
+            value={severity}
+            onChange={(value) => setSeverity(value as SeverityLevel | 'all')}
+          >
+            <option value="all">All severities</option>
+            {SEVERITY_LEVELS.filter(
+              (sev) => severityCounts[sev] > 0 || severity === sev,
+            ).map((sev) => (
+              <option key={sev} value={sev}>
+                {sev} ({severityCounts[sev]})
+              </option>
+            ))}
+          </FilterSelect>
+
+          <FilterSelect
+            label="Uses"
+            value={integration}
+            onChange={(value) => setIntegration(value as IntegrationType | 'all')}
+          >
+            <option value="all">All integrations</option>
+            {INTEGRATION_TYPES.filter(
+              (intType) =>
+                integrationCounts[intType] > 0 || integration === intType,
+            ).map((intType) => (
+              <option key={intType} value={intType}>
+                {intType} ({integrationCounts[intType]})
+              </option>
+            ))}
+          </FilterSelect>
+        </div>
       </div>
 
-      {/* Category facet (only when a category is meaningful) */}
+      {/* [HIDDEN-UI UI-OVERHAUL-3 the four stacked chip rows (Category / MITRE /
+          Severity / Uses) were replaced by the FilterSelect dropdowns above.
+          Kept verbatim so the chip layout can be restored.
       {showCategoryRow && (
         <div className="flex flex-wrap items-center gap-2" aria-label="Filter by category">
           <span className="text-xs text-fg-subtle w-16 shrink-0">Category</span>
@@ -271,7 +344,6 @@ export function PlaybooksGallery({ playbooks, initialFilters }: PlaybooksGallery
         </div>
       )}
 
-      {/* MITRE Tactic filter */}
       <div className="flex flex-wrap items-center gap-2" aria-label="Filter by MITRE tactic">
         <span className="text-xs text-fg-subtle w-16 shrink-0">MITRE</span>
         <FacetPill
@@ -294,7 +366,6 @@ export function PlaybooksGallery({ playbooks, initialFilters }: PlaybooksGallery
         })}
       </div>
 
-      {/* Severity filter */}
       <div className="flex flex-wrap items-center gap-2" aria-label="Filter by severity">
         <span className="text-xs text-fg-subtle w-16 shrink-0">Severity</span>
         <FacetPill
@@ -324,7 +395,6 @@ export function PlaybooksGallery({ playbooks, initialFilters }: PlaybooksGallery
         })}
       </div>
 
-      {/* Integration filter */}
       <div className="flex flex-wrap items-center gap-2" aria-label="Filter by integration">
         <span className="text-xs text-fg-subtle w-16 shrink-0">Uses</span>
         <FacetPill
@@ -346,6 +416,7 @@ export function PlaybooksGallery({ playbooks, initialFilters }: PlaybooksGallery
           );
         })}
       </div>
+      */}
 
       {forkError && (
         <div
@@ -397,7 +468,43 @@ export function PlaybooksGallery({ playbooks, initialFilters }: PlaybooksGallery
   );
 }
 
-/* ─────────────────────────── Generic facet pill ─────────────────────────── */
+/* ─────────────────────────── Filter dropdown ─────────────────────────── */
+
+/**
+ * Labelled `<select>` used by the runbook toolbar. Native select keeps the
+ * keyboard and screen-reader behaviour the chip rows never had, and the
+ * `<option>` labels carry the live counts the pills used to show.
+ */
+function FilterSelect({
+  label,
+  value,
+  onChange,
+  children,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <label className="flex min-w-0 flex-col gap-1">
+      <span className="text-eyebrow font-medium uppercase tracking-wide text-fg-subtle">
+        {label}
+      </span>
+      <select
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        aria-label={label}
+        className="w-full rounded-control border border-surface-border bg-surface-elevated px-3 py-2 text-control-sm text-fg-primary focus:border-accent focus:outline-none"
+      >
+        {children}
+      </select>
+    </label>
+  );
+}
+
+/* [HIDDEN-UI UI-OVERHAUL-3 the pill facets were replaced by FilterSelect.
+   Kept so the chip layout can be restored without rewriting it.
 
 function FacetPill({
   label,
@@ -424,6 +531,7 @@ function FacetPill({
     </button>
   );
 }
+*/
 
 /* ─────────────────────────── Source / Category pills ─────────────────────────── */
 
@@ -459,6 +567,7 @@ function SourcePill({
   );
 }
 
+/* [HIDDEN-UI UI-OVERHAUL-3 category chips replaced by the Category dropdown.
 function CategoryPill({
   label,
   active,
@@ -483,6 +592,7 @@ function CategoryPill({
     </button>
   );
 }
+*/
 
 /* ─────────────────────────── Row ─────────────────────────── */
 

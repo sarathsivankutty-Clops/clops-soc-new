@@ -349,7 +349,7 @@ export function countBySource(playbooks: Playbook[]): { all: number; pack: numbe
 }
 
 /**
- * Counts of pack playbooks per category (used to render the category pills).
+ * Counts of playbooks per category (used to render the category dropdown).
  */
 export function countByCategory(playbooks: Playbook[]): Record<PackCategory, number> {
   const out: Record<PackCategory, number> = {
