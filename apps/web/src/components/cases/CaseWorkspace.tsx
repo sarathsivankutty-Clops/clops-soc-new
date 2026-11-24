@@ -1099,8 +1099,23 @@ export function CaseWorkspace({ caseId }: { caseId: string }) {
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex items-center gap-1 border-b border-slate-800/70 text-xs">
+      {/* Tabs. [AUDIT-P5] Sticky strip: severity, title and status stay visible while the analyst scrolls the findings. */}
+      {/* [HIDDEN-UI AUDIT-P5 <div className="flex items-center gap-1 border-b border-slate-800/70 text-xs"> */}
+      <div className="sticky top-0 z-20 -mx-1 flex items-center gap-1 border-b border-slate-800/70 bg-surface-base px-1 text-xs">
+        <div className="mr-3 flex min-w-0 max-w-[45%] items-center gap-2 py-1.5" data-testid="case-sticky-strip">
+          <span
+            className={clsx(
+              "inline-flex shrink-0 items-center rounded px-2 py-0.5 text-caption font-bold uppercase tracking-wide ring-1",
+              SEVERITY_BADGE[caseRecord.severity]
+            )}
+          >
+            {caseRecord.severity}
+          </span>
+          <span className="truncate font-semibold text-fg-primary" title={caseRecord.title}>
+            {caseRecord.title}
+          </span>
+          <span className="shrink-0 text-fg-muted">{STATUS_LABEL[caseRecord.status]}</span>
+        </div>
         {VALID_TABS.map((tab) => (
           <button
             key={tab}

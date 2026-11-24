@@ -161,7 +161,7 @@ describe('CaseWorkspace', () => {
     expect(
       screen.getByRole('heading', { level: 1, name: /lateral movement from finance subnet/i }),
     ).toBeInTheDocument();
-    expect(screen.getByText('critical')).toBeInTheDocument();
+    expect(screen.getAllByText('critical').length).toBeGreaterThan(0);
 
     // MITRE techniques should render as outbound links to attack.mitre.org.
     const t1021 = screen.getByRole('link', { name: /T1021\.002/ });

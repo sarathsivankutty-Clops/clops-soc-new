@@ -211,7 +211,7 @@ describe('a failed case load does not invent the case', () => {
 
     renderWorkspace();
 
-    expect(screen.getByText('Suspected lateral movement from finance subnet')).toBeTruthy();
+    expect(screen.getAllByRole('heading', { name: 'Suspected lateral movement from finance subnet' })).toHaveLength(1);
   });
 });
 
