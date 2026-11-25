@@ -415,8 +415,7 @@ function FiltersBar({
           </select>
         </label>
 
-        {/* [HIDDEN-UI AUDIT-A visible count wrapped the toolbar to a second line at 1366px; shown in the list header row instead] */}
-        <span className="sr-only">{total} total</span>
+        {/* [HIDDEN-UI AUDIT-A <span className="ml-auto text-caption font-mono text-fg-muted">{total} total</span> wrapped the toolbar at 1366px; the count is in the list header row] */}
       </div>
       {/* [HIDDEN-UI AUDIT-P1 the sort helper sentence cost a third toolbar line; it is read by screen readers and shown as the Sort tooltip] */}
       <p className="sr-only" data-testid="alerts-sort-explanation">
@@ -992,7 +991,7 @@ function AlertsTableGrid({
         </label>
         <span className="text-eyebrow font-bold uppercase tracking-wider text-fg-muted flex-1">
           ALERT
-          <span aria-hidden="true" className="ml-2 font-mono font-normal normal-case tracking-normal">{total} total</span>
+          <span className="ml-2 font-mono font-normal normal-case tracking-normal">{total} total</span>
         </span>
         {!selectedAlertId && (
           <>

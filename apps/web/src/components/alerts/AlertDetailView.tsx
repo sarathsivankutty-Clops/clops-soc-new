@@ -29,7 +29,6 @@ import { demoFallback } from '@/lib/demoFallback';
 import {
   investigateLabel,
   useInvestigationLauncher,
-  type InvestigationLauncher,
 } from './useInvestigationLauncher';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -454,15 +453,8 @@ function useInvestigationLauncher({
 type InvestigationLauncher = ReturnType<typeof useInvestigationLauncher>;
 */
 
-function AIInvestigation({
-  launcher,
-  caseId,
-}: {
-  launcher: InvestigationLauncher;
-  caseId?: string;
-}) {
-  // [HIDDEN-UI AUDIT-D const { error } = launcher;]
-  void launcher;
+function AIInvestigation({ caseId }: { caseId?: string }) {
+  // [HIDDEN-UI AUDIT-D const { error } = launcher; the launcher prop was dropped when the error moved to the header button]
   return (
     <div className="py-2">
       <p className="text-control font-medium text-fg-secondary mb-1">Agent investigation</p>
@@ -1314,7 +1306,7 @@ export function AlertDetailView({ alertId }: { alertId: string }) {
           )}
 
           <Section title="AI Investigation">
-            <AIInvestigation launcher={launcher} caseId={alert?.caseId} />
+            <AIInvestigation caseId={alert?.caseId} />
           </Section>
 
           <Section title="Verdict & feedback">

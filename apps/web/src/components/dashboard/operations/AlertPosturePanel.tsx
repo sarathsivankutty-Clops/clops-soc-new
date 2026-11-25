@@ -171,7 +171,7 @@ function StackedBar({
   return (
     <div>
       {/* [HIDDEN-UI AUDIT-B text-[11px] text-gray-500 under the 12px floor] */}
-        <p className="mb-1.5 text-caption uppercase tracking-wider text-fg-muted">{label}</p>
+      <p className="mb-1.5 text-caption uppercase tracking-wider text-fg-muted">{label}</p>
       <div className="flex h-2 overflow-hidden rounded-full bg-gray-800">
         {entries.map(([key, n]) => (
           <div

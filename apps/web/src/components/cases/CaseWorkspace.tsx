@@ -371,15 +371,8 @@ export function CaseWorkspace({ caseId }: { caseId: string }) {
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const [confirmingRerun, setConfirmingRerun] = useState(false);
-  // [AUDIT-P5] The sticky strip repeats the header, so show it only once the header has scrolled away.
+  // [AUDIT-P5] Observed by CaseStickyStrip, which shows only once this header has scrolled away.
   const [headerEl, setHeaderEl] = useState<HTMLDivElement | null>(null);
-  const [headerVisible, setHeaderVisible] = useState(true);
-  useEffect(() => {
-    if (!headerEl || typeof IntersectionObserver === "undefined") return;
-    const io = new IntersectionObserver(([entry]) => setHeaderVisible(entry.isIntersecting));
-    io.observe(headerEl);
-    return () => io.disconnect();
-  }, [headerEl]);
 
   const stopPolling = useCallback(() => {
     if (pollRef.current) {
@@ -1111,17 +1104,7 @@ export function CaseWorkspace({ caseId }: { caseId: string }) {
       {/* Tabs. [AUDIT-P5] Sticky strip: severity, title and status stay visible while the analyst scrolls the findings. */}
       {/* [HIDDEN-UI AUDIT-P5 <div className="flex items-center gap-1 border-b border-slate-800/70 text-xs"> */}
       <div className="sticky top-0 z-20 -mx-1 flex items-center gap-1 border-b border-slate-800/70 bg-surface-base px-1 text-xs">
-        {!headerVisible && (
-        <div className="mr-3 flex min-w-0 max-w-[45%] items-center gap-2 py-1.5" data-testid="case-sticky-strip">
-          <Badge tone={`severity-${caseRecord.severity}`} className="shrink-0 font-bold uppercase tracking-wide">
-            {caseRecord.severity}
-          </Badge>
-          <span className="truncate font-semibold text-fg-primary" title={caseRecord.title}>
-            {caseRecord.title}
-          </span>
-          <span className="shrink-0 text-fg-muted">{STATUS_LABEL[caseRecord.status]}</span>
-        </div>
-        )}
+        <CaseStickyStrip headerEl={headerEl} caseRecord={caseRecord} />
         {VALID_TABS.map((tab) => (
           <button
             key={tab}
@@ -1416,11 +1399,44 @@ type LiveStep = { seq?: number; kind: string; agent: string; summary: string; ts
 
 const SECTIONS = ["Verdict", "Recon", "Forensic", "Response"] as const;
 
+// Smoothness comes from globals.css (`scroll-behavior: smooth`, off under reduced motion).
 function jumpToSection(id: string) {
   const el = document.getElementById(id);
   if (el instanceof HTMLDetailsElement) el.open = true;
-  const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-  el?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+  el?.scrollIntoView({ block: "start" });
+}
+
+function SectionHeading({ title, tone }: { title: string; tone: string }) {
+  return (
+    <span className="flex items-center gap-2">
+      <span aria-hidden="true" className="text-fg-muted transition-transform group-open:rotate-90">›</span>
+      <h4 className={clsx("text-eyebrow font-semibold uppercase tracking-wider", tone)}>{title}</h4>
+    </span>
+  );
+}
+
+/** Severity, title and status in the sticky tab bar, rendered only once the case header scrolls away.
+ *  Its own component so the visibility flips re-render the strip, not the whole workspace. */
+function CaseStickyStrip({ headerEl, caseRecord }: { headerEl: HTMLElement | null; caseRecord: Case }) {
+  const [headerVisible, setHeaderVisible] = useState(true);
+  useEffect(() => {
+    if (!headerEl || typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver(([entry]) => setHeaderVisible(entry.isIntersecting));
+    io.observe(headerEl);
+    return () => io.disconnect();
+  }, [headerEl]);
+  if (headerVisible) return null;
+  return (
+    <div className="mr-3 flex min-w-0 max-w-[45%] items-center gap-2 py-1.5" data-testid="case-sticky-strip">
+      <Badge tone={`severity-${caseRecord.severity}`} className="shrink-0 font-bold uppercase tracking-wide">
+        {caseRecord.severity}
+      </Badge>
+      <span className="truncate font-semibold text-fg-primary" title={caseRecord.title}>
+        {caseRecord.title}
+      </span>
+      <span className="shrink-0 text-fg-muted">{STATUS_LABEL[caseRecord.status]}</span>
+    </div>
+  );
 }
 
 function InvestigationPanel({
@@ -1666,10 +1682,7 @@ function InvestigationPanel({
           {/* Recon */}
           <details open id="case-recon" className="group scroll-mt-12 rounded-container border border-surface-border bg-surface-card p-5 space-y-4">
             <summary className="flex cursor-pointer list-none items-center justify-between gap-2">
-              <span className="flex items-center gap-2">
-                <span aria-hidden="true" className="text-fg-muted transition-transform group-open:rotate-90">›</span>
-                <h4 className="text-eyebrow font-semibold uppercase tracking-wider text-accent">Recon</h4>
-              </span>
+              <SectionHeading title="Recon" tone="text-accent" />
               {reconSeq !== null && onViewLedger && (
                 <button
                   type="button"
@@ -1794,10 +1807,7 @@ function InvestigationPanel({
           {/* Forensic */}
           <details open id="case-forensic" className="group scroll-mt-12 rounded-container border border-surface-border bg-surface-card p-5 space-y-4">
             <summary className="flex cursor-pointer list-none items-center justify-between gap-2">
-              <span className="flex items-center gap-2">
-                <span aria-hidden="true" className="text-fg-muted transition-transform group-open:rotate-90">›</span>
-                <h4 className="text-eyebrow font-semibold uppercase tracking-wider text-tone-purple">Forensic</h4>
-              </span>
+              <SectionHeading title="Forensic" tone="text-tone-purple" />
               {forensicSeq !== null && onViewLedger && (
                 <button
                   type="button"
@@ -1859,10 +1869,7 @@ function InvestigationPanel({
         {/* Right 5 cols — Response Plan */}
         <details open id="case-response" className="group scroll-mt-12 lg:col-span-5 rounded-container border border-surface-border bg-surface-card p-5 space-y-4">
           <summary className="flex cursor-pointer list-none flex-wrap items-center justify-between gap-2">
-            <span className="flex items-center gap-2">
-              <span aria-hidden="true" className="text-fg-muted transition-transform group-open:rotate-90">›</span>
-              <h4 className="text-eyebrow font-semibold uppercase tracking-wider text-tone-warning">Response</h4>
-            </span>
+            <SectionHeading title="Response" tone="text-tone-warning" />
             <div className="flex items-center gap-2">
               <span className="rounded-control bg-surface-elevated px-2 py-0.5 text-caption font-mono text-fg-muted border border-surface-border">
                 {isDryRun ? "dry-run" : "live"}

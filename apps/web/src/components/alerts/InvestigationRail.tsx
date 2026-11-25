@@ -191,9 +191,6 @@ export function InvestigationRail({ alertId, onClose, onNavigate }: Investigatio
 
   */
   // [HIDDEN-UI AUDIT-D const activeLaunchError = launchError?.alertId === alert.id ? launchError.message : null;]
-  const activeLaunchError = launcher.error;
-  const isLaunching = launcher.isRunning;
-  const handleInvestigateWithAgent = launcher.startInvestigation;
 
   return (
     <>
@@ -237,9 +234,9 @@ export function InvestigationRail({ alertId, onClose, onNavigate }: Investigatio
         <RailHeader
           alert={alert}
           onDeepExplain={() => setDeepExplainOpen(true)}
-          onInvestigate={() => void handleInvestigateWithAgent()}
-          isLaunching={isLaunching}
-          launchError={activeLaunchError}
+          onInvestigate={() => void launcher.startInvestigation()}
+          isLaunching={launcher.isRunning}
+          launchError={launcher.error}
         />
         {/*
          * Story first, detail behind a toggle. An analyst holds "what
