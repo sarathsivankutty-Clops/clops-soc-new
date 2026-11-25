@@ -49,6 +49,7 @@ export function OperationsDashboard() {
 
       <FunnelKpiBar period="24h" />
 
+      {/* [HIDDEN-UI AUDIT-B Rejected events sat under the pipeline table, leaving ~300px empty under Connector fleet]
       <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-2">
         <ConnectorFleetPanel />
         <div className="space-y-4">
@@ -56,18 +57,33 @@ export function OperationsDashboard() {
           <RejectedEventsPanel />
         </div>
       </div>
+      */}
+      <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-2">
+        <div className="space-y-4">
+          <ConnectorFleetPanel />
+          <RejectedEventsPanel />
+        </div>
+        <PipelineHealth variant="table" />
+      </div>
 
       <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-2">
         <AlertPosturePanel />
         <DetectionCoveragePanel />
       </div>
 
+      {/* [HIDDEN-UI AUDIT-B Agreement had its own full-width row under a 2-col Throughput/Actions grid; three columns cut about 350px]
       <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-2">
         <AgentThroughputPanel />
         <ResponseActionsPanel />
       </div>
 
       <AgreementPanel />
+      */}
+      <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-3">
+        <AgentThroughputPanel />
+        <ResponseActionsPanel />
+        <AgreementPanel />
+      </div>
     </div>
   );
 }

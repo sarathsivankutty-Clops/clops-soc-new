@@ -17,6 +17,8 @@ interface EmptyStateProps {
   action?: ReactNode;
   className?: string;
   variant?: EmptyStateVariant;
+  /** `compact` is for a panel that is one of many on a page: less padding, no icon. */
+  size?: 'default' | 'compact';
   /**
    * Override the default badge text. Only renders for non-default variants.
    * Defaults to "Planned for v1.1" for the planned-v1.1 variant.
@@ -77,7 +79,9 @@ export function EmptyState({
   variant = 'default',
   badge,
   headingLevel: Heading = 'h3',
+  size = 'default',
 }: EmptyStateProps) {
+  const compact = size === 'compact';
   const styles = VARIANT_STYLES[variant];
   const badgeText = badge ?? styles.badgeLabel;
   const showBadge = variant !== 'default' && badgeText.length > 0;
@@ -85,13 +89,14 @@ export function EmptyState({
   return (
     <div
       className={clsx(
-        'flex flex-col items-center justify-center rounded-container border border-dashed px-6 py-10 text-center',
+        'flex flex-col items-center justify-center rounded-container border border-dashed text-center',
+        compact ? 'px-4 py-4' : 'px-6 py-10',
         styles.container,
         className,
       )}
       role="status"
     >
-      {icon && (
+      {icon && !compact && (
         <div
           className={clsx(
             'mb-3 flex h-10 w-10 items-center justify-center',

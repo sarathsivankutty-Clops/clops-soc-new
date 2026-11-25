@@ -63,6 +63,7 @@ export function RejectedEventsPanel() {
         />
       ) : data && data.total === 0 ? (
         <EmptyState
+          size="compact"
           title="Nothing rejected"
           description={`Every event the pipeline received in the last ${WINDOW_HOURS} hours was accepted.`}
           className="m-4"

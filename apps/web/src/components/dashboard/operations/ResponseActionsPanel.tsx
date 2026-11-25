@@ -97,6 +97,7 @@ export function ResponseActionsPanel() {
         />
       ) : sorted.length === 0 ? (
         <EmptyState
+          size="compact"
           title="Nothing waiting on a human"
           description="No response action is currently paused for approval."
           className="m-4"

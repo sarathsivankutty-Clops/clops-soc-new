@@ -83,6 +83,7 @@ export function AgreementPanel() {
     return (
       <Shell>
         <EmptyState
+          size="compact"
           title="No graded decisions yet"
           description={
             'Agreement is measured on alerts the agent triaged in shadow mode and an analyst later closed. ' +
@@ -132,7 +133,7 @@ export function AgreementPanel() {
       </p>
 
       <div className="mt-4 rounded-md border border-gray-800 bg-gray-950/60 p-3">
-        <p className="text-[11px] uppercase tracking-wide text-gray-500">
+        <p className="text-caption uppercase tracking-wide text-fg-muted">
           Most recent {recent.labelled} decision{recent.labelled === 1 ? '' : 's'}
         </p>
         <p className="mt-1 text-sm text-gray-300">

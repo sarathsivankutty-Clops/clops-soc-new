@@ -161,7 +161,8 @@ function StackedBar({
   if (entries.length === 0 || total === 0) {
     return (
       <div>
-        <p className="mb-1.5 text-[11px] uppercase tracking-wider text-gray-500">{label}</p>
+        {/* [HIDDEN-UI AUDIT-B text-[11px] text-gray-500 under the 12px floor] */}
+        <p className="mb-1.5 text-caption uppercase tracking-wider text-fg-muted">{label}</p>
         <p className="text-xs text-gray-600">No breakdown reported.</p>
       </div>
     );
@@ -169,7 +170,8 @@ function StackedBar({
 
   return (
     <div>
-      <p className="mb-1.5 text-[11px] uppercase tracking-wider text-gray-500">{label}</p>
+      {/* [HIDDEN-UI AUDIT-B text-[11px] text-gray-500 under the 12px floor] */}
+        <p className="mb-1.5 text-caption uppercase tracking-wider text-fg-muted">{label}</p>
       <div className="flex h-2 overflow-hidden rounded-full bg-gray-800">
         {entries.map(([key, n]) => (
           <div
@@ -185,10 +187,10 @@ function StackedBar({
       </div>
       <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
         {entries.map(([key, n]) => (
-          <li key={key} className="flex items-center gap-1.5 text-[11px]">
+          <li key={key} className="flex items-center gap-1.5 text-caption">
             <span className={clsx('h-1.5 w-1.5 rounded-full', colorFor(key))} aria-hidden="true" />
-            <span className="text-gray-400">{humanise(key)}</span>
-            <span className="text-gray-300">{n.toLocaleString()}</span>
+            <span className="text-fg-muted">{humanise(key)}</span>
+            <span className="text-fg-secondary">{n.toLocaleString()}</span>
           </li>
         ))}
       </ul>
