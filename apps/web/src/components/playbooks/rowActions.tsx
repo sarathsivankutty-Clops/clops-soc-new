@@ -8,27 +8,68 @@
  * URLs, same SWR cache keys, same UX).
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { mutate } from 'swr';
+import toast from 'react-hot-toast';
+import { clsx } from 'clsx';
 import type { Playbook } from './types';
 import { apiFetch } from '@/lib/api';
 
-/** Small toggle that flips Playbook.enabled via PUT /api/v1/playbooks/<id>. */
+/**
+ * Switch that flips Playbook.enabled via PUT /api/v1/playbooks/<id>.
+ * Shipped packs are toggled per tenant by the agents store. The flip is shown at once and
+ * rolled back with a toast if the save fails; the old version ignored the response, so a
+ * refused save looked like a dead switch.
+ */
 export function EnabledToggle({ playbook }: { playbook: Playbook }) {
   const [loading, setLoading] = useState(false);
+  const [on, setOn] = useState(playbook.enabled);
+  useEffect(() => setOn(playbook.enabled), [playbook.enabled]);
+
   async function toggle() {
+    const next = !on;
+    setOn(next);
     setLoading(true);
     try {
-      await apiFetch(`/api/v1/playbooks/${playbook.id}`, {
+      const res = await apiFetch(`/api/v1/playbooks/${playbook.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ enabled: !playbook.enabled }),
+        body: JSON.stringify({ enabled: next }),
       });
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.detail ?? `HTTP ${res.status}`);
+      }
       await mutate('/api/v1/playbooks');
+    } catch (err) {
+      setOn(!next);
+      toast.error(`Could not ${next ? 'enable' : 'disable'} ${playbook.name}: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setLoading(false);
     }
   }
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={on}
+      onClick={toggle}
+      disabled={loading}
+      title={on ? 'Enabled. Click to disable' : 'Disabled. Click to enable'}
+      aria-label={`${on ? 'Disable' : 'Enable'} ${playbook.name}`}
+      className="inline-flex min-h-8 min-w-8 items-center justify-center rounded-control focus:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:opacity-50"
+    >
+      <span
+        aria-hidden
+        className={clsx('relative inline-flex h-5 w-9 items-center rounded-pill transition-colors', on ? 'bg-dot-success' : 'bg-surface-border-strong')}
+      >
+        <span
+          className={clsx('inline-block h-3.5 w-3.5 rounded-full bg-white transition-transform', on ? 'translate-x-4' : 'translate-x-1')}
+        />
+      </span>
+    </button>
+  );
+  /* [HIDDEN-UI RUNBOOK-G5 previous switch: raw palette classes, aria-pressed, 20px hit area]
   return (
     <button
       onClick={toggle}
@@ -47,6 +88,7 @@ export function EnabledToggle({ playbook }: { playbook: Playbook }) {
       />
     </button>
   );
+  */
 }
 
 /** "Run" / dry-run button that POSTs to /api/v1/playbooks/<id>/run. */

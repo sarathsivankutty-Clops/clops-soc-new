@@ -86,6 +86,10 @@ class PlaybookStore:
         self._pack_root = pack_root or Path(os.getenv("PLAYBOOK_PACK_ROOT", str(_DEFAULT_PACK_ROOT)))
         self._manifest_path = self._dir / "index.json"
         self._playbooks: dict[str, Playbook] = {}
+        # Per-tenant on/off for shipped pack playbooks: {tenant_id: {playbook_id: enabled}}.
+        # Packs are shared and read-only, so a tenant's toggle lives here, not on the row.
+        self._overrides_path = self._dir / "pack_overrides.json"
+        self._pack_enabled: dict[str, dict[str, bool]] = {}
         self._load()
 
     # ------------------------------------------------------------------
@@ -131,6 +135,12 @@ class PlaybookStore:
                     pack_count,
                     self._pack_root,
                 )
+
+        if self._overrides_path.exists():
+            try:
+                self._pack_enabled = json.loads(self._overrides_path.read_text())
+            except Exception as exc:
+                logger.error("Failed to load pack overrides: %s", exc)
 
         # 3) Load/merge from the mutable index.json (user-created / API-created playbooks)
         if not self._manifest_path.exists():
@@ -181,8 +191,13 @@ class PlaybookStore:
         """
         return pb.tenant_id is not None and pb.tenant_id == tenant_id
 
+    def _effective(self, pb: Playbook, tenant_id: str) -> Playbook:
+        """*pb* as *tenant_id* sees it: a shipped pack carries that tenant's on/off override."""
+        enabled = self._pack_enabled.get(tenant_id, {}).get(pb.id) if pb.tenant_id is None else None
+        return pb if enabled is None or enabled == pb.enabled else pb.model_copy(update={"enabled": enabled})
+
     def list(self, *, tenant_id: str, enabled_only: bool = False) -> list[Playbook]:
-        pbs = [p for p in self._playbooks.values() if self._visible(p, tenant_id)]
+        pbs = [self._effective(p, tenant_id) for p in self._playbooks.values() if self._visible(p, tenant_id)]
         if enabled_only:
             pbs = [p for p in pbs if p.enabled]
         return pbs
@@ -193,7 +208,7 @@ class PlaybookStore:
             # One answer for "no such playbook" and "somebody else's", so the
             # store cannot be used to learn which ids exist in other tenants.
             return None
-        return pb
+        return self._effective(pb, tenant_id)
 
     def create(self, playbook: Playbook, *, tenant_id: str) -> Playbook:
         now = datetime.now(UTC).isoformat()
@@ -209,6 +224,11 @@ class PlaybookStore:
 
     def update(self, playbook_id: str, data: dict[str, Any], *, tenant_id: str) -> Playbook | None:
         pb = self._playbooks.get(playbook_id)
+        if pb is not None and pb.tenant_id is None and data.keys() - {"tenant_id"} == {"enabled"}:
+            # A pack stays read-only; switching it on or off is this tenant's setting alone.
+            self._pack_enabled.setdefault(tenant_id, {})[playbook_id] = bool(data["enabled"])
+            self._overrides_path.write_text(json.dumps(self._pack_enabled, indent=2))
+            return self._effective(pb, tenant_id)
         if pb is None or not self._owned(pb, tenant_id):
             return None
         now = datetime.now(UTC).isoformat()
@@ -242,7 +262,10 @@ class PlaybookStore:
         """
         matches: list[Playbook] = []
         for pb in self._playbooks.values():
-            if not pb.enabled or not self._visible(pb, tenant_id):
+            if not self._visible(pb, tenant_id):
+                continue
+            pb = self._effective(pb, tenant_id)
+            if not pb.enabled:
                 continue
             trigger = pb.trigger
             if trigger.get("on") != event:

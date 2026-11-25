@@ -420,6 +420,54 @@ def test_the_shipped_pack_library_stays_readable_by_every_tenant(client: TestCli
         assert fetched.status_code == 200, f"tenant {tenant} cannot read a shipped pack playbook"
 
 
+def _a_pack_playbook_id() -> str:
+    from app.playbook.store import PlaybookStore
+
+    packs = [pb for pb in PlaybookStore.default().list(tenant_id=str(TENANT_A)) if pb.tenant_id is None and pb.enabled]
+    if not packs:
+        pytest.skip("no enabled pack playbooks are present in this checkout")
+    return packs[0].id
+
+
+def test_a_tenant_can_switch_a_shipped_pack_off_for_itself_only(client: TestClient) -> None:
+    """The Runbooks toggle: a pack is shared, so disabling it is a per-tenant setting.
+
+    It used to 404 (packs are writable by nobody) and the console ignored the
+    error, so the switch silently did nothing. Tenant B must be unaffected, the
+    trigger matcher must honour it, and it must survive a restart.
+    """
+    from app.playbook.store import PlaybookStore
+
+    pack_id = _a_pack_playbook_id()
+    response = client.put(f"/api/v1/playbooks/{pack_id}", json={"enabled": False}, headers=auth(TENANT_A))
+    assert response.status_code == 200, response.text
+    assert response.json()["enabled"] is False
+
+    def enabled_for(tenant: uuid.UUID) -> bool:
+        rows = client.get("/api/v1/playbooks", headers=auth(tenant)).json()
+        return next(row["enabled"] for row in rows if row["id"] == pack_id)
+
+    assert enabled_for(TENANT_A) is False
+    assert enabled_for(TENANT_B) is True, "tenant A's toggle leaked into tenant B"
+
+    store = PlaybookStore.default()
+    pb = store.get(pack_id, tenant_id=str(TENANT_B))
+    assert pb is not None
+    event = pb.trigger.get("on", "")
+    context = {"severity": (pb.trigger.get("severity") or [None])[0], "tags": list(pb.trigger.get("tags", []))}
+    assert pack_id in {m.id for m in store.find_matching(event, context, tenant_id=str(TENANT_B))}
+    assert pack_id not in {m.id for m in store.find_matching(event, context, tenant_id=str(TENANT_A))}
+
+    PlaybookStore._instance = None  # reload from disk
+    assert enabled_for(TENANT_A) is False, "the pack override did not survive a reload"
+
+
+def test_a_tenant_still_cannot_edit_a_shipped_packs_content(client: TestClient) -> None:
+    pack_id = _a_pack_playbook_id()
+    response = client.put(f"/api/v1/playbooks/{pack_id}", json={"enabled": False, "name": "renamed"}, headers=auth(TENANT_A))
+    assert response.status_code == 404, f"a tenant edited shared pack content: {response.text[:300]}"
+
+
 def test_an_unauthenticated_caller_is_refused_before_any_lookup(client: TestClient) -> None:
     """The router-level guard still applies; this pins it from the route's side."""
     playbook_id = create_playbook(client, TENANT_A, "guarded")
