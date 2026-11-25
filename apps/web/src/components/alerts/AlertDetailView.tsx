@@ -26,6 +26,11 @@ import { CreateCaseModal, alertSeverityToCaseSeverity } from '@/components/alert
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { demoFallback } from '@/lib/demoFallback';
+import {
+  investigateLabel,
+  useInvestigationLauncher,
+  type InvestigationLauncher,
+} from './useInvestigationLauncher';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -377,6 +382,7 @@ function LedgerEvidenceChain({ runId }: { runId: string }) {
  * the primary button can sit in the page header while the AI Investigation
  * card keeps the explanation and any error.
  */
+/* [HIDDEN-UI AUDIT-D moved to ./useInvestigationLauncher.ts, shared with InvestigationRail]
 function useInvestigationLauncher({
   alertId,
   alertTitle,
@@ -446,6 +452,7 @@ function useInvestigationLauncher({
 }
 
 type InvestigationLauncher = ReturnType<typeof useInvestigationLauncher>;
+*/
 
 function AIInvestigation({
   launcher,
@@ -454,7 +461,8 @@ function AIInvestigation({
   launcher: InvestigationLauncher;
   caseId?: string;
 }) {
-  const { error } = launcher;
+  // [HIDDEN-UI AUDIT-D const { error } = launcher;]
+  void launcher;
   return (
     <div className="py-2">
       <p className="text-control font-medium text-fg-secondary mb-1">Agent investigation</p>
@@ -464,11 +472,13 @@ function AIInvestigation({
         step by step. Use Investigate in the page header; you&apos;ll be taken to the case when it starts.
       </p>
 
+      {/* [HIDDEN-UI AUDIT-D the error now shows beside the header Investigate button; a second copy here doubled it
       {error && (
         <div className="mb-4 rounded-control border border-severity-critical-ink/30 bg-severity-critical-bg px-3 py-2 text-xs text-severity-critical-ink">
           {error}
         </div>
       )}
+      */}
 
       {/* [HIDDEN-UI UX-2 promote AI investigation CTA to primary (RD6)]
       <Button
@@ -935,11 +945,15 @@ export function AlertDetailView({ alertId }: { alertId: string }) {
     { fallbackData: demoFallback({ ...MOCK_ALERT, id: alertId, status }) }
   );
 
+  const router = useRouter();
   const launcher = useInvestigationLauncher({
     alertId,
     alertTitle: alert?.title,
     alertSeverity: alert?.severity,
     caseId: alert?.caseId,
+    tab: 'ledger',
+    note: 'Opened from the alert detail view by an analyst.',
+    navigate: router.push,
   });
 
   const handleStatusChange = async (newStatus: Alert['status']) => {
@@ -1034,12 +1048,14 @@ export function AlertDetailView({ alertId }: { alertId: string }) {
             disabled={launcher.isRunning}
             loading={launcher.isRunning}
           >
-            {launcher.isRunning
-              ? 'Starting investigation…'
-              : alert.caseId
-                ? 'View investigation'
-                : 'Investigate'}
+            {investigateLabel(launcher.isRunning, Boolean(alert.caseId))}
           </Button>
+          {/* [AUDIT-D] The failure shows next to the button that caused it, once (it was a card in another tab plus a toast). */}
+          {launcher.error && (
+            <p role="alert" className="max-w-xs text-xs text-tone-danger">
+              {launcher.error}
+            </p>
+          )}
           <Button
             type="button"
             variant="secondary"

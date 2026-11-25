@@ -13,6 +13,9 @@ import type { Config } from 'tailwindcss';
  * Migration playbook for un-themed surfaces lives in
  * `apps/docs/docs/operations/theming.md`.
  */
+// The 12px readable floor, shared by three semantic size names (labels, captions, small controls).
+const SMALL_TEXT = '0.75rem';
+
 const config: Config = {
   content: [
     './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
@@ -194,9 +197,9 @@ const config: Config = {
       },
       fontSize: {
         // [HIDDEN-UI AUDIT-P4 eyebrow was 0.65625rem (10.5px) and caption 0.6875rem (11px); 12px is the readable floor]
-        eyebrow: ['0.75rem', { lineHeight: '1.35' }],       // 12px
-        caption: ['0.75rem', { lineHeight: '1.35' }],       // 12px
-        'control-sm': ['0.75rem', { lineHeight: '1.45' }],  // 12px
+        eyebrow: [SMALL_TEXT, { lineHeight: '1.35' }],
+        caption: [SMALL_TEXT, { lineHeight: '1.35' }],
+        'control-sm': [SMALL_TEXT, { lineHeight: '1.45' }],
         control: ['0.78125rem', { lineHeight: '1.45' }],    // 12.5px
         body: ['0.8125rem', { lineHeight: '1.5' }],         // 13px
         'card-title': ['1rem', { lineHeight: '1.35' }],     // 16px

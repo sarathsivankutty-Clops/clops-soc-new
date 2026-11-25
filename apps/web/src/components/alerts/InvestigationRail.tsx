@@ -39,7 +39,6 @@ import { clsx } from 'clsx';
 import { format, formatDistanceToNow } from 'date-fns';
 import {
   alertsApi,
-  casesApi,
   type Alert,
   type BusinessContextRail,
   type MiniTimelineEvent,
@@ -47,7 +46,7 @@ import {
   type RelatedEntity,
 } from '@/lib/api';
 import { AttackStory } from './AttackStory';
-import { alertSeverityToCaseSeverity } from './CreateCaseModal';
+import { investigateLabel, useInvestigationLauncher } from './useInvestigationLauncher';
 import { ExplainDrawer } from './ExplainDrawer';
 import { NarrativeMarkdown } from './NarrativeMarkdown';
 import { Button } from '@/components/ui/Button';
@@ -101,8 +100,9 @@ export function InvestigationRail({ alertId, onClose, onNavigate }: Investigatio
   // The drawer is mounted on demand and closed by default; we don't
   // burn the LLM call until the analyst explicitly asks for it.
   const [deepExplainOpen, setDeepExplainOpen] = useState(false);
-  const [isLaunching, setIsLaunching] = useState(false);
-  const [launchError, setLaunchError] = useState<{ alertId: string; message: string } | null>(null);
+  // [HIDDEN-UI AUDIT-D launch state now lives in useInvestigationLauncher]
+  // const [isLaunching, setIsLaunching] = useState(false);
+  // const [launchError, setLaunchError] = useState<{ alertId: string; message: string } | null>(null);
 
   const { data: alert, error, isLoading } = useSWR(
     alertId ? (['alerts', alertId, 'rail'] as const) : null,
@@ -115,6 +115,16 @@ export function InvestigationRail({ alertId, onClose, onNavigate }: Investigatio
       shouldRetryOnError: false,
     },
   );
+
+  const launcher = useInvestigationLauncher({
+    alertId: alert?.id,
+    alertTitle: alert?.title,
+    alertSeverity: alert?.severity,
+    caseId: alert?.caseId,
+    tab: 'investigation',
+    note: 'Opened from the alert investigation rail by an analyst.',
+    navigate: (href) => navigateTo(href),
+  });
 
   if (!alertId) {
     return <RailPlaceholder />;
@@ -146,6 +156,7 @@ export function InvestigationRail({ alertId, onClose, onNavigate }: Investigatio
     }
   };
 
+  /* [HIDDEN-UI AUDIT-D moved to ./useInvestigationLauncher.ts, shared with AlertDetailView]
   const handleInvestigateWithAgent = async () => {
     if (!alert || isLaunching) return;
     setIsLaunching(true);
@@ -178,7 +189,11 @@ export function InvestigationRail({ alertId, onClose, onNavigate }: Investigatio
     }
   };
 
-  const activeLaunchError = launchError?.alertId === alert.id ? launchError.message : null;
+  */
+  // [HIDDEN-UI AUDIT-D const activeLaunchError = launchError?.alertId === alert.id ? launchError.message : null;]
+  const activeLaunchError = launcher.error;
+  const isLaunching = launcher.isRunning;
+  const handleInvestigateWithAgent = launcher.startInvestigation;
 
   return (
     <>
@@ -491,7 +506,7 @@ function RailHeader({
           disabled={isLaunching}
           loading={isLaunching}
         >
-          {isLaunching ? 'Starting investigation…' : alert.caseId ? 'View investigation' : 'Investigate'}
+          {investigateLabel(isLaunching, Boolean(alert.caseId))}
         </Button>
         <button
           type="button"
