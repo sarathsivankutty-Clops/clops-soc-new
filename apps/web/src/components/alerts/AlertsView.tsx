@@ -415,7 +415,8 @@ function FiltersBar({
           </select>
         </label>
 
-        <span className="ml-auto text-caption font-mono text-fg-muted">{total} total</span>
+        {/* [HIDDEN-UI AUDIT-A visible count wrapped the toolbar to a second line at 1366px; shown in the list header row instead] */}
+        <span className="sr-only">{total} total</span>
       </div>
       {/* [HIDDEN-UI AUDIT-P1 the sort helper sentence cost a third toolbar line; it is read by screen readers and shown as the Sort tooltip] */}
       <p className="sr-only" data-testid="alerts-sort-explanation">
@@ -477,7 +478,8 @@ function AlertRow({
         }}
         aria-current={selected ? 'true' : undefined}
         className={clsx(
-          'flex flex-1 min-w-0 px-4 py-2',
+          /* [HIDDEN-UI AUDIT-A row py-2 (63px rows) left 6 rows at 1366x768] */
+          'flex flex-1 min-w-0 px-4 py-1.5',
           compact ? 'items-start gap-3' : 'items-center gap-4',
         )}
       >
@@ -487,6 +489,17 @@ function AlertRow({
         alert, which is the single most irritating way to break a bulk
         selection.
       */}
+      {/* [AUDIT-A] 32px hit area around the checkbox. A click on the padding
+          toggles too; preventDefault keeps it from following the row Link. */}
+      <span
+        data-hit-target
+        className="-m-2 inline-flex min-h-8 min-w-8 shrink-0 cursor-pointer items-center justify-center"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          onToggleChecked(alert.id);
+        }}
+      >
       <input
         type="checkbox"
         checked={checked}
@@ -498,6 +511,7 @@ function AlertRow({
         }}
         className={clsx('accent-accent shrink-0', compact && 'mt-1')}
       />
+      </span>
 
       <div className={clsx('shrink-0', compact && 'mt-1.5')}>
         <SeverityDot severity={alert.severity} />
@@ -596,7 +610,7 @@ function AlertRow({
       {alert.caseId && (
         <Link
           href={`/cases/${alert.caseId}`}
-          className="mr-3 shrink-0 rounded-control border border-surface-border bg-surface-elevated px-2 py-0.5 text-caption font-medium text-accent hover:bg-surface-hover"
+          className="mr-3 inline-flex min-h-8 shrink-0 items-center rounded-control border border-surface-border bg-surface-elevated px-2 py-0.5 text-caption font-medium text-accent hover:bg-surface-hover"
           title="Open linked case"
         >
           Case
@@ -678,7 +692,7 @@ export function AlertsView() {
                 aria-selected={viewMode === 'entities'}
                 onClick={() => setViewMode('entities')}
                 className={clsx(
-                  'text-control-sm font-medium px-3 py-1 rounded-control transition-colors',
+                  'text-control-sm font-medium px-3 py-1 min-h-8 rounded-control transition-colors',
                   viewMode === 'entities'
                     ? 'bg-surface-subtle text-fg-primary font-semibold'
                     : 'text-fg-muted hover:text-fg-primary',
@@ -693,7 +707,7 @@ export function AlertsView() {
                 aria-selected={viewMode === 'alerts'}
                 onClick={() => setViewMode('alerts')}
                 className={clsx(
-                  'text-control-sm font-medium px-3 py-1 rounded-control transition-colors',
+                  'text-control-sm font-medium px-3 py-1 min-h-8 rounded-control transition-colors',
                   viewMode === 'alerts'
                     ? 'bg-surface-subtle text-fg-primary font-semibold'
                     : 'text-fg-muted hover:text-fg-primary',
@@ -707,7 +721,7 @@ export function AlertsView() {
                 aria-selected={viewMode === 'entities'}
                 onClick={() => setViewMode('entities')}
                 className={clsx(
-                  'text-control-sm font-medium px-3 py-1 rounded-control transition-colors',
+                  'text-control-sm font-medium px-3 py-1 min-h-8 rounded-control transition-colors',
                   viewMode === 'entities'
                     ? 'bg-surface-subtle text-fg-primary font-semibold'
                     : 'text-fg-muted hover:text-fg-primary',
@@ -892,6 +906,7 @@ function AlertsTable({
             checkedIds={checkedIds}
             onToggleChecked={toggleChecked}
             onSetChecked={setCheckedIds}
+            total={total}
           />
           <AlertsPagination
             alerts={alerts}
@@ -929,8 +944,10 @@ function AlertsTableGrid({
   checkedIds,
   onToggleChecked,
   onSetChecked,
+  total,
 }: {
   alerts: Alert[];
+  total: number;
   isLoading: boolean;
   error: unknown;
   filters: AlertFilters;
@@ -956,7 +973,9 @@ function AlertsTableGrid({
 
   return (
     <div className="bg-surface-card border border-surface-border rounded-container overflow-hidden">
-      <div className="flex items-center gap-4 px-4 py-3 border-b border-surface-border bg-surface-elevated">
+      {/* [HIDDEN-UI AUDIT-A header row py-3; py-2 keeps it 48px now that the sort buttons are 32px] */}
+      <div className="flex items-center gap-4 px-4 py-2 border-b border-surface-border bg-surface-elevated">
+        <label data-hit-target className="-m-2 inline-flex min-h-8 min-w-8 shrink-0 cursor-pointer items-center justify-center">
         <input
           type="checkbox"
           aria-label="Select all alerts on this page"
@@ -970,14 +989,18 @@ function AlertsTableGrid({
           }}
           className="accent-accent"
         />
-        <span className="text-eyebrow font-bold uppercase tracking-wider text-fg-muted flex-1">ALERT</span>
+        </label>
+        <span className="text-eyebrow font-bold uppercase tracking-wider text-fg-muted flex-1">
+          ALERT
+          <span aria-hidden="true" className="ml-2 font-mono font-normal normal-case tracking-normal">{total} total</span>
+        </span>
         {!selectedAlertId && (
           <>
             <button
               type="button"
               onClick={() => onFilterChange({ ...filters, sort: 'priority', page: 1 })}
               className={clsx(
-                'text-eyebrow font-bold uppercase tracking-wider w-20 text-left transition-colors',
+                'text-eyebrow font-bold uppercase tracking-wider w-20 min-h-8 text-left transition-colors',
                 activeSort === 'priority' ? 'text-accent' : 'text-fg-muted hover:text-fg-primary',
               )}
               title="Sort by priority (severity, then newest)"
@@ -997,7 +1020,7 @@ function AlertsTableGrid({
             })
           }
           className={clsx(
-            'text-eyebrow font-bold uppercase tracking-wider w-28 text-end transition-colors',
+            'text-eyebrow font-bold uppercase tracking-wider w-28 min-h-8 text-end transition-colors',
             activeSort !== 'priority' ? 'text-accent' : 'text-fg-muted hover:text-fg-primary',
           )}
           title="Toggle chronological sort (newest / oldest)"
@@ -1096,7 +1119,7 @@ function AlertsPagination({
           type="button"
           onClick={() => onFilterChange({ ...filters, page: Math.max(1, (filters.page || 1) - 1) })}
           disabled={(filters.page || 1) <= 1}
-          className="px-2 py-1 rounded-control border border-surface-border bg-surface-card text-fg-primary hover:bg-surface-hover disabled:opacity-40 disabled:cursor-not-allowed"
+          className="px-2 py-1 min-h-8 rounded-control border border-surface-border bg-surface-card text-fg-primary hover:bg-surface-hover disabled:opacity-40 disabled:cursor-not-allowed"
         >
           Prev
         </button>
@@ -1105,7 +1128,7 @@ function AlertsPagination({
           type="button"
           onClick={() => onFilterChange({ ...filters, page: (filters.page || 1) + 1 })}
           disabled={alerts.length < (filters.pageSize || 25)}
-          className="px-2 py-1 rounded-control border border-surface-border bg-surface-card text-fg-primary hover:bg-surface-hover disabled:opacity-40 disabled:cursor-not-allowed"
+          className="px-2 py-1 min-h-8 rounded-control border border-surface-border bg-surface-card text-fg-primary hover:bg-surface-hover disabled:opacity-40 disabled:cursor-not-allowed"
         >
           Next
         </button>
