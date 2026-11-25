@@ -311,7 +311,7 @@ function ViewToggle({
           aria-selected={view === tab.id}
           onClick={() => onChange(tab.id)}
           className={clsx(
-            'rounded px-2.5 py-1 text-xs transition-colors',
+            'min-h-8 rounded px-2.5 py-1 text-xs transition-colors',
             view === tab.id
               ? 'bg-gray-800 text-gray-100'
               : 'text-gray-500 hover:bg-gray-800/40 hover:text-gray-300',
@@ -343,14 +343,15 @@ function RailShell({
       aria-label="Investigation rail"
     >
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800/60 bg-gray-900/80">
-        <h2 className="text-sm font-semibold text-gray-100 truncate" title={title}>
+        {/* [HIDDEN-UI AUDIT-E <h2 className="text-sm font-semibold text-gray-100 truncate"> cut long alert titles; two lines show them] */}
+        <h2 className="min-w-0 text-sm font-semibold text-gray-100 line-clamp-2 break-words" title={title}>
           {title}
         </h2>
         <button
           type="button"
           onClick={onClose}
           aria-label="Close investigation rail"
-          className="text-xs text-gray-500 hover:text-gray-300 px-2 py-0.5 rounded hover:bg-gray-800/60 transition-colors"
+          className="min-h-8 shrink-0 text-xs text-gray-500 hover:text-gray-300 px-2 py-0.5 rounded hover:bg-gray-800/60 transition-colors"
         >
           Close
         </button>
@@ -407,20 +408,20 @@ function CorrelatedAlertsSection({ alert }: { alert: Alert }) {
       aria-label="Correlated alerts"
     >
       <div className="flex items-center justify-between gap-2">
-        <h3 className="text-[11px] font-semibold uppercase tracking-wide text-fg-muted">
+        <h3 className="text-caption font-semibold uppercase tracking-wide text-fg-muted">
           Correlated alerts {siblings.length > 0 ? `(${siblings.length})` : ''}
         </h3>
         {alert.caseId && (
           <Link
             href={`/cases/${alert.caseId}`}
-            className="text-[11px] font-medium text-accent hover:underline"
+            className="inline-flex min-h-8 items-center text-caption font-medium text-accent hover:underline"
           >
             Open case →
           </Link>
         )}
       </div>
       {reasons.length > 0 && (
-        <div className="text-[11px] text-fg-secondary">
+        <div className="text-caption text-fg-secondary">
           <span className="font-medium text-fg-primary">Why grouped: </span>
           {reasons.join(' · ')}
         </div>
@@ -513,13 +514,13 @@ function RailHeader({
           onClick={onDeepExplain}
           aria-label="Open AI deep explain drawer"
           title="Run the LLM deep-explain for this alert"
-          className="text-xs font-medium px-2.5 py-1 rounded border border-violet-500/40 bg-violet-500/10 text-violet-300 hover:bg-violet-500/20 hover:border-violet-500/60 transition-colors"
+          className="min-h-8 text-xs font-medium px-2.5 py-1 rounded border border-violet-500/40 bg-violet-500/10 text-violet-300 hover:bg-violet-500/20 hover:border-violet-500/60 transition-colors"
         >
           ✦ Deep Explain
         </button>
         <Link
           href={`/alerts/${alert.id}`}
-          className="text-xs text-blue-300 hover:text-blue-200 transition-colors"
+          className="inline-flex min-h-8 items-center text-xs text-blue-300 hover:text-blue-200 transition-colors"
         >
           Open full detail →
         </Link>
@@ -532,7 +533,7 @@ function RailHeader({
 
 function SectionHeader({ title, count }: { title: string; count?: number }) {
   return (
-    <h3 className="text-[11px] uppercase tracking-wider text-gray-500 mb-2 font-medium">
+    <h3 className="text-caption uppercase tracking-wider text-gray-500 mb-2 font-medium">
       {title}
       {typeof count === 'number' && (
         <span className="ml-1.5 text-gray-600">({count})</span>
@@ -648,7 +649,7 @@ function SourceAddressClassSection({ alert }: { alert: Alert }) {
           {cfg.label}
         </span>
         {alert.srcIpClassDatasetVersion && (
-          <span className="text-[11px] text-gray-500">
+          <span className="text-caption text-gray-500">
             dataset {alert.srcIpClassDatasetVersion}
           </span>
         )}

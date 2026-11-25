@@ -369,7 +369,8 @@ function DraggableWidget({ id, dragState, onDragStart, onDragOver, onDrop, child
         title="Drag to reorder"
         className={clsx(
           'absolute top-2 right-2 z-10 cursor-grab active:cursor-grabbing',
-          'px-1.5 py-0.5 rounded text-fg-subtle hover:text-fg-muted',
+          'inline-flex min-h-8 min-w-8 items-center justify-center rounded text-fg-subtle hover:text-fg-muted',
+          // [HIDDEN-UI AUDIT-E 'px-1.5 py-0.5' gave a 20px drag handle]
           'opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity',
           'select-none text-base leading-none',
         )}

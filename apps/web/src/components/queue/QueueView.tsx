@@ -194,7 +194,7 @@ function OwnerToggle({
             aria-selected={active}
             onClick={() => onChange(opt.value)}
             className={clsx(
-              'text-control-sm font-medium px-3 py-1 rounded-control transition-colors flex items-center gap-1.5',
+              'text-control-sm font-medium px-3 py-1 min-h-8 rounded-control transition-colors flex items-center gap-1.5',
               active ? 'bg-surface-subtle text-fg-primary font-semibold' : 'text-fg-muted hover:text-fg-primary',
             )}
           >
@@ -233,7 +233,7 @@ function PeriodFilter({
           onClick={() => onChange(opt.value)}
           aria-pressed={value === opt.value}
           className={clsx(
-            'text-control-sm font-medium px-2.5 py-1 rounded-control transition-colors',
+            'text-control-sm font-medium px-2.5 py-1 min-h-8 rounded-control transition-colors',
             value === opt.value
               ? 'bg-surface-subtle text-fg-primary font-semibold'
               : 'text-fg-muted hover:text-fg-primary',

@@ -376,11 +376,17 @@ Measured with `playwright/layout-audit.cjs` and the new `playwright/case-fixture
 - **C. Case page (Phase 5).** The sticky strip renders only after the header scrolls out of view (`IntersectionObserver`). The meta line now sits on the button row. Recon, Forensic and Response are `<details open>` with a rotating chevron. A section index (Verdict, Recon, Forensic, Response) sits in the sticky tab bar, shown only for a completed run; it opens a collapsed section, then scrolls to it. The 8px tab badges are now 12px. Title to verdict: 228 to 198px (target 200, verdict counts as the first finding).
 - **D. Cleanup.** `alerts/useInvestigationLauncher.ts` (hook plus `investigateLabel`) is shared by AlertDetailView and InvestigationRail; each keeps its landing tab. A failed launch shows once, next to the header button (the toast and the card copy are hidden). The case severity chip is `<Badge tone="severity-*">`. `tailwind.config.ts` defines `SMALL_TEXT` once for `eyebrow`, `caption` and `control-sm`. `PipelineHealth` keeps `variant`: the Overview rail and the Operations table differ by placement, not viewport, so one responsive component would still need the prop.
 - Tests: affected suites pass; only the known MitrePanelWording CRLF failures remain. Under parallel load a few suites time out at 5s and pass serially.
+- **E. 32px / 12px floor on the remaining screens.** These got `min-h-8`:
+  - case header buttons (Run again and its confirm/cancel, Investigate with agent, Summary, Jira), the status select, View full report, the breadcrumb, Show all and Request Approval;
+  - alert side panel: Close, Story/Details, Deep Explain, Open full detail and Open case;
+  - alert detail: breadcrumb, assignee input and Assign;
+  - queue owner and period pills;
+  - Overview drag handle (now 32x32).
+
+  The side panel's `text-[11px]` labels are now `text-caption`, and its title wraps to two lines instead of truncating. The audit now reports 0 short controls, 0 sub-12px text and 0 truncations on all 21 measured screens.
 
 ### 13.5 Pending
 - `/operations` is still 1898px against the old 1300 target; reaching it needs tabs or collapsed panels (product decision).
-- The case header buttons (Run again, Summary, Create Jira Issue, status select, View full report) are 30px, and the breadcrumb, "Show all" and Request Approval are under 32px. These are outside the audit targets.
-- The alerts rail measures 4 small-text and 6 short-control hits (not part of this audit).
 - Decide whether to merge `ui/audit-fixes-p1-p5`.
 - Local-only, do not commit: `apps/web/next-env.d.ts`, `infra/nginx/snippets/server-name-soc.conf`, `.env.secrets` (dummy values, gitignored).
 - Local stack: rebuild web with `docker compose --env-file .env --env-file .env.secrets up -d --build --no-deps web`. After a Docker restart, start existing containers with `docker start` (keeps Keycloak's original passwords). `agents` and `clickhouse` are not running, so `/api/v1/contextual/actions`, `/api/v1/playbooks` and the investigation run GET return 500/503.

@@ -847,7 +847,7 @@ export function CaseWorkspace({ caseId }: { caseId: string }) {
           {/* [HIDDEN-UI UX-1 make first breadcrumb segment a Link to /alerts]
           <span className="text-slate-500">Cases</span>
           */}
-          <Link href="/alerts" className="text-fg-muted hover:text-fg-primary transition-colors">
+          <Link href="/alerts" className="inline-flex min-h-8 items-center text-fg-muted hover:text-fg-primary transition-colors">
             Cases
           </Link>
           <span className="text-slate-600">/</span>
@@ -906,7 +906,7 @@ export function CaseWorkspace({ caseId }: { caseId: string }) {
               value={caseRecord.status}
               onChange={(e) => void updateStatus(e.target.value as CaseStatus)}
               disabled={statusUpdating}
-              className="rounded-md border border-slate-700/70 bg-slate-900/60 px-2 py-1.5 text-xs text-slate-200 focus:border-emerald-500/40 focus:outline-none"
+              className="min-h-8 rounded-md border border-slate-700/70 bg-slate-900/60 px-2 py-1.5 text-xs text-slate-200 focus:border-emerald-500/40 focus:outline-none"
             >
               {/*
                   The three it used to offer -- open, in_progress, pending --
@@ -933,7 +933,7 @@ export function CaseWorkspace({ caseId }: { caseId: string }) {
               onClick={() => void startInvestigation()}
               disabled={investigating}
               className={clsx(
-                "inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-semibold transition-colors",
+                "inline-flex min-h-8 items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-semibold transition-colors",
                 investigating
                   ? "cursor-not-allowed border-slate-700/40 bg-slate-800/40 text-slate-500"
                   : "border-emerald-500/40 bg-emerald-500/10 text-emerald-200 hover:bg-emerald-500/20"
@@ -978,14 +978,14 @@ export function CaseWorkspace({ caseId }: { caseId: string }) {
                           setConfirmingRerun(false);
                           void startInvestigation();
                         }}
-                        className="rounded-md border border-surface-border bg-surface-elevated px-2 py-0.5 text-xs font-semibold text-fg-primary transition-colors hover:border-surface-border-strong hover:bg-surface-hover"
+                        className="min-h-8 rounded-md border border-surface-border bg-surface-elevated px-2 py-0.5 text-xs font-semibold text-fg-primary transition-colors hover:border-surface-border-strong hover:bg-surface-hover"
                       >
                         Confirm
                       </button>
                       <button
                         type="button"
                         onClick={() => setConfirmingRerun(false)}
-                        className="rounded-md px-2 py-0.5 text-xs text-fg-muted transition-colors hover:text-fg-primary"
+                        className="min-h-8 rounded-md px-2 py-0.5 text-xs text-fg-muted transition-colors hover:text-fg-primary"
                       >
                         Cancel
                       </button>
@@ -997,7 +997,7 @@ export function CaseWorkspace({ caseId }: { caseId: string }) {
                   <button
                     type="button"
                     onClick={() => setConfirmingRerun(true)}
-                    className="inline-flex items-center gap-1.5 rounded-md border border-surface-border bg-surface-card px-3 py-1.5 text-xs font-semibold text-fg-primary transition-colors hover:border-surface-border-strong hover:bg-surface-hover"
+                    className="inline-flex min-h-8 items-center gap-1.5 rounded-md border border-surface-border bg-surface-card px-3 py-1.5 text-xs font-semibold text-fg-primary transition-colors hover:border-surface-border-strong hover:bg-surface-hover"
                   >
                     Run again
                   </button>
@@ -1008,7 +1008,7 @@ export function CaseWorkspace({ caseId }: { caseId: string }) {
                 <button
                   type="button"
                   onClick={() => void startInvestigation()}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-tone-success/40 bg-pill-success-bg px-3 py-1.5 text-xs font-semibold text-tone-success transition-colors hover:bg-surface-hover"
+                  className="inline-flex min-h-8 items-center gap-1.5 rounded-md border border-tone-success/40 bg-pill-success-bg px-3 py-1.5 text-xs font-semibold text-tone-success transition-colors hover:bg-surface-hover"
                 >
                   Investigate with agent
                 </button>
@@ -1028,7 +1028,7 @@ export function CaseWorkspace({ caseId }: { caseId: string }) {
               onClick={() => void downloadSummary()}
               disabled={summaryDownloading || !caseRecord}
               className={clsx(
-                "inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-semibold transition-colors",
+                "inline-flex min-h-8 items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-semibold transition-colors",
                 summaryDownloading || !caseRecord
                   ? "cursor-not-allowed border-slate-700/40 bg-slate-800/40 text-slate-500"
                   : "border-indigo-500/40 bg-indigo-500/10 text-indigo-200 hover:bg-indigo-500/20"
@@ -1047,7 +1047,7 @@ export function CaseWorkspace({ caseId }: { caseId: string }) {
                   href={ref.external_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 rounded-md border border-accent/40 bg-accent/10 px-3 py-1.5 text-xs font-semibold text-accent hover:bg-accent/20 transition-colors"
+                  className="inline-flex min-h-8 items-center gap-1.5 rounded-md border border-accent/40 bg-accent/10 px-3 py-1.5 text-xs font-semibold text-accent hover:bg-accent/20 transition-colors"
                   title={ref.external_status ? `Jira status: ${ref.external_status}` : "Open Jira issue"}
                 >
                   <span>Jira: {ref.external_id}</span>
@@ -1058,7 +1058,7 @@ export function CaseWorkspace({ caseId }: { caseId: string }) {
               ) : (
                 <span
                   key={ref.id}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-surface-border bg-surface-subtle px-3 py-1.5 text-xs font-semibold text-fg-primary"
+                  className="inline-flex min-h-8 items-center gap-1.5 rounded-md border border-surface-border bg-surface-subtle px-3 py-1.5 text-xs font-semibold text-fg-primary"
                 >
                   Jira: {ref.external_id}
                 </span>
@@ -1069,7 +1069,7 @@ export function CaseWorkspace({ caseId }: { caseId: string }) {
                 onClick={() => void handlePushToJira()}
                 disabled={pushingJira || !caseRecord}
                 className={clsx(
-                  "inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-semibold transition-colors",
+                  "inline-flex min-h-8 items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-semibold transition-colors",
                   pushingJira || !caseRecord
                     ? "cursor-not-allowed border-surface-border bg-surface-subtle text-fg-muted"
                     : "border-surface-border bg-surface-card text-fg-primary hover:border-border-strong"
@@ -1632,7 +1632,7 @@ function InvestigationPanel({
             <button
               type="button"
               onClick={onViewReport}
-              className="rounded-control border border-surface-border bg-surface-elevated px-3 py-1.5 text-caption font-medium text-fg-primary hover:bg-surface-hover transition-colors"
+              className="min-h-8 rounded-control border border-surface-border bg-surface-elevated px-3 py-1.5 text-caption font-medium text-fg-primary hover:bg-surface-hover transition-colors"
             >
               View full report
             </button>
@@ -1720,7 +1720,7 @@ function InvestigationPanel({
                       <button
                         type="button"
                         onClick={() => setShowAllIocs((v) => !v)}
-                        className="mt-1 text-caption font-medium text-accent hover:underline"
+                        className="mt-1 min-h-8 text-caption font-medium text-accent hover:underline"
                       >
                         {showAllIocs ? "Show fewer" : `Show all ${iocs.length}`}
                       </button>
@@ -1980,7 +1980,7 @@ function InvestigationPanel({
                                 setRequestingKey(null);
                               }
                             }}
-                            className="rounded-control border border-surface-border bg-surface-card px-2.5 py-1 text-caption font-medium text-accent hover:bg-surface-hover disabled:opacity-50 transition-colors"
+                            className="min-h-8 rounded-control border border-surface-border bg-surface-card px-2.5 py-1 text-caption font-medium text-accent hover:bg-surface-hover disabled:opacity-50 transition-colors"
                           >
                             {requestingKey === actionKey ? "Requesting…" : "Request Approval"}
                           </button>

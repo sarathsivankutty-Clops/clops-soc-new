@@ -995,7 +995,7 @@ export function AlertDetailView({ alertId }: { alertId: string }) {
     <div className="space-y-5">
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-caption text-fg-muted">
-        <Link href="/alerts" className="hover:text-fg-primary transition-colors">Alerts</Link>
+        <Link href="/alerts" className="inline-flex min-h-8 items-center hover:text-fg-primary transition-colors">Alerts</Link>
         <span>›</span>
         <span className="font-mono text-fg-secondary">{alert.id}</span>
       </div>
@@ -1232,13 +1232,13 @@ export function AlertDetailView({ alertId }: { alertId: string }) {
                   placeholder="Assign email or user…"
                   value={assigneeInput}
                   onChange={(e) => setAssigneeInput(e.target.value)}
-                  className="flex-1 min-w-0 rounded-control border border-surface-border bg-surface-elevated px-2 py-1 text-xs text-fg-primary placeholder:text-fg-subtle focus:outline-none focus:border-accent"
+                  className="flex-1 min-w-0 min-h-8 rounded-control border border-surface-border bg-surface-elevated px-2 py-1 text-xs text-fg-primary placeholder:text-fg-subtle focus:outline-none focus:border-accent"
                 />
                 <button
                   type="button"
                   disabled={assigning || !assigneeInput.trim()}
                   onClick={() => void handleAssign(assigneeInput.trim())}
-                  className="rounded-control border border-surface-border bg-surface-card px-2 py-1 text-xs font-medium text-accent hover:bg-surface-hover disabled:opacity-50"
+                  className="min-h-8 rounded-control border border-surface-border bg-surface-card px-2 py-1 text-xs font-medium text-accent hover:bg-surface-hover disabled:opacity-50"
                 >
                   Assign
                 </button>
