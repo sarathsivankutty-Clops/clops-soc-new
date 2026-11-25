@@ -42,6 +42,7 @@ import {
   realtimeApi,
 } from "@/lib/api";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { Badge } from "@/components/ui/Badge";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SafeMarkdown } from "@/components/ui/SafeMarkdown";
@@ -156,12 +157,14 @@ function buildDemoCase(id: string): Case {
 
 // ─── Style maps ───────────────────────────────────────────────────────────────
 
+/* [HIDDEN-UI AUDIT-D raw palette severity chips replaced by <Badge tone="severity-*"> (design tokens)
 const SEVERITY_BADGE: Record<CaseSeverity, string> = {
   critical: "bg-red-500/15 text-red-300 ring-red-500/30",
   high: "bg-orange-500/15 text-orange-300 ring-orange-500/30",
   medium: "bg-yellow-500/15 text-yellow-300 ring-yellow-500/30",
   low: "bg-blue-500/15 text-blue-300 ring-blue-500/30",
 };
+*/
 
 // Keyed on the six states the database actually permits. These used to name
 // `open`, `in_progress` and `pending` -- none of which `aisoc_cases` allows --
@@ -368,6 +371,15 @@ export function CaseWorkspace({ caseId }: { caseId: string }) {
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const [confirmingRerun, setConfirmingRerun] = useState(false);
+  // [AUDIT-P5] The sticky strip repeats the header, so show it only once the header has scrolled away.
+  const [headerEl, setHeaderEl] = useState<HTMLDivElement | null>(null);
+  const [headerVisible, setHeaderVisible] = useState(true);
+  useEffect(() => {
+    if (!headerEl || typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver(([entry]) => setHeaderVisible(entry.isIntersecting));
+    io.observe(headerEl);
+    return () => io.disconnect();
+  }, [headerEl]);
 
   const stopPolling = useCallback(() => {
     if (pollRef.current) {
@@ -850,18 +862,14 @@ export function CaseWorkspace({ caseId }: { caseId: string }) {
       </div>
 
       {/* Header */}
-      <div className="rounded-xl border border-slate-800/80 bg-slate-900/40 p-5">
+      <div ref={setHeaderEl} className="rounded-xl border border-slate-800/80 bg-slate-900/40 p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <span
-                className={clsx(
-                  "inline-flex items-center rounded px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide ring-1",
-                  SEVERITY_BADGE[caseRecord.severity]
-                )}
-              >
+              {/* [HIDDEN-UI AUDIT-D <span className={clsx("inline-flex items-center rounded px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide ring-1", SEVERITY_BADGE[caseRecord.severity])}>{caseRecord.severity}</span>] */}
+              <Badge tone={`severity-${caseRecord.severity}`} className="font-bold uppercase tracking-wide">
                 {caseRecord.severity}
-              </span>
+              </Badge>
               <StatusPill status={caseRecord.status} />
               {caseRecord.tags?.map((t) => (
                 <span
@@ -1072,50 +1080,48 @@ export function CaseWorkspace({ caseId }: { caseId: string }) {
               </button>
             )}
           </div>
-        </div>
-
-        {/* Meta row */}
-        <div className="mt-4 grid grid-cols-2 gap-2 border-t border-slate-800/60 pt-4 text-xs text-slate-400 sm:grid-cols-4">
-          <Meta label="Assignee" value={caseRecord.assignee?.split("@")[0] ?? "—"} />
-          <Meta
-            label="Created"
-            value={format(new Date(caseRecord.createdAt), "MMM d, HH:mm")}
-            suppressHydrationWarning
-          />
-          <Meta
-            label="Updated"
-            value={formatDistanceToNow(new Date(caseRecord.updatedAt), {
-              addSuffix: true,
-            })}
-            suppressHydrationWarning
-          />
-          <Meta
-            label="SLA"
-            value={
-              caseRecord.dueAt ? `${formatDistanceToNow(new Date(caseRecord.dueAt))} left` : "—"
-            }
-            suppressHydrationWarning
-          />
+          {/* Meta row */}
+          {/* [HIDDEN-UI AUDIT-P5 <div className="mt-4 grid grid-cols-2 gap-2 border-t border-slate-800/60 pt-4 text-xs text-slate-400 sm:grid-cols-4"> two-line meta grid pushed the verdict down] */}
+          {/* [HIDDEN-UI AUDIT-P5 <div className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-xs text-slate-400"> own row under the buttons; it now shares the button row] */}
+          <div className="ml-auto flex min-h-8 flex-wrap items-center gap-x-6 gap-y-1 text-xs text-slate-400">
+            <Meta label="Assignee" value={caseRecord.assignee?.split("@")[0] ?? "—"} />
+            <Meta
+              label="Created"
+              value={format(new Date(caseRecord.createdAt), "MMM d, HH:mm")}
+              suppressHydrationWarning
+            />
+            <Meta
+              label="Updated"
+              value={formatDistanceToNow(new Date(caseRecord.updatedAt), {
+                addSuffix: true,
+              })}
+              suppressHydrationWarning
+            />
+            <Meta
+              label="SLA"
+              value={
+                caseRecord.dueAt ? `${formatDistanceToNow(new Date(caseRecord.dueAt))} left` : "—"
+              }
+              suppressHydrationWarning
+            />
+          </div>
         </div>
       </div>
 
       {/* Tabs. [AUDIT-P5] Sticky strip: severity, title and status stay visible while the analyst scrolls the findings. */}
       {/* [HIDDEN-UI AUDIT-P5 <div className="flex items-center gap-1 border-b border-slate-800/70 text-xs"> */}
       <div className="sticky top-0 z-20 -mx-1 flex items-center gap-1 border-b border-slate-800/70 bg-surface-base px-1 text-xs">
+        {!headerVisible && (
         <div className="mr-3 flex min-w-0 max-w-[45%] items-center gap-2 py-1.5" data-testid="case-sticky-strip">
-          <span
-            className={clsx(
-              "inline-flex shrink-0 items-center rounded px-2 py-0.5 text-caption font-bold uppercase tracking-wide ring-1",
-              SEVERITY_BADGE[caseRecord.severity]
-            )}
-          >
+          <Badge tone={`severity-${caseRecord.severity}`} className="shrink-0 font-bold uppercase tracking-wide">
             {caseRecord.severity}
-          </span>
+          </Badge>
           <span className="truncate font-semibold text-fg-primary" title={caseRecord.title}>
             {caseRecord.title}
           </span>
           <span className="shrink-0 text-fg-muted">{STATUS_LABEL[caseRecord.status]}</span>
         </div>
+        )}
         {VALID_TABS.map((tab) => (
           <button
             key={tab}
@@ -1133,7 +1139,7 @@ export function CaseWorkspace({ caseId }: { caseId: string }) {
               <span className="inline-flex items-center gap-1">
                 Ledger
                 <span
-                  className="rounded bg-emerald-500/15 px-1 py-0.5 text-[8px] font-bold uppercase tracking-wider text-emerald-300 ring-1 ring-emerald-500/30"
+                  className="rounded bg-emerald-500/15 px-1 py-0.5 text-caption font-bold uppercase tracking-wider text-emerald-300 ring-1 ring-emerald-500/30"
                   title="Auditable agent decision log — every prompt, tool call, and decision is durably stored and replayable forever"
                 >
                   audit
@@ -1143,7 +1149,7 @@ export function CaseWorkspace({ caseId }: { caseId: string }) {
               <span className="inline-flex items-center gap-1">
                 Attack path
                 <span
-                  className="rounded bg-orange-500/15 px-1 py-0.5 text-[8px] font-bold uppercase tracking-wider text-orange-300 ring-1 ring-orange-500/30"
+                  className="rounded bg-orange-500/15 px-1 py-0.5 text-caption font-bold uppercase tracking-wider text-orange-300 ring-1 ring-orange-500/30"
                   title="Reconstructed attack graph from the Attack-Path Investigation Agent"
                 >
                   graph
@@ -1153,7 +1159,7 @@ export function CaseWorkspace({ caseId }: { caseId: string }) {
               <span className="inline-flex items-center gap-1">
                 Attack chain
                 <span
-                  className="rounded bg-rose-500/15 px-1 py-0.5 text-[8px] font-bold uppercase tracking-wider text-rose-300 ring-1 ring-rose-500/30"
+                  className="rounded bg-rose-500/15 px-1 py-0.5 text-caption font-bold uppercase tracking-wider text-rose-300 ring-1 ring-rose-500/30"
                   title="Ranked temporal timeline of related alerts that form the attack chain"
                 >
                   timeline
@@ -1167,6 +1173,21 @@ export function CaseWorkspace({ caseId }: { caseId: string }) {
             )}
           </button>
         ))}
+        {/* [AUDIT-P5] Section index in the sticky tab bar: opens a collapsed section, then scrolls to it. */}
+        {activeTab === "investigation" && investigationStatus === "completed" && investigationData && (
+          <nav aria-label="Investigation sections" className="ml-auto flex items-center gap-0.5">
+            {SECTIONS.map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => jumpToSection(`case-${s.toLowerCase()}`)}
+                className="min-h-8 rounded-control px-2 text-caption text-fg-muted transition-colors hover:bg-surface-hover hover:text-fg-primary"
+              >
+                {s}
+              </button>
+            ))}
+          </nav>
+        )}
       </div>
 
       {/* Investigation tab */}
@@ -1393,6 +1414,15 @@ export function CaseWorkspace({ caseId }: { caseId: string }) {
 
 type LiveStep = { seq?: number; kind: string; agent: string; summary: string; ts: string };
 
+const SECTIONS = ["Verdict", "Recon", "Forensic", "Response"] as const;
+
+function jumpToSection(id: string) {
+  const el = document.getElementById(id);
+  if (el instanceof HTMLDetailsElement) el.open = true;
+  const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+  el?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+}
+
 function InvestigationPanel({
   caseId,
   status,
@@ -1565,12 +1595,13 @@ function InvestigationPanel({
   return (
     <div className="space-y-4">
       {/* Executive Verdict Strip */}
-      <div className="rounded-container border border-surface-border bg-surface-card p-5 space-y-4">
+      <div id="case-verdict" data-testid="case-verdict" className="scroll-mt-12 rounded-container border border-surface-border bg-surface-card p-5 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center gap-1.5 rounded-pill bg-pill-success-bg px-3 py-1 text-caption font-semibold text-tone-success">
               Investigation complete
             </span>
+            {/* [HIDDEN-UI AUDIT-P5 section index sat here and wrapped the verdict row onto two lines; it now lives in the sticky tab bar] */}
             {responder?.risk_level != null && (
               <span
                 className={clsx(
@@ -1633,9 +1664,12 @@ function InvestigationPanel({
         {/* Left 7 cols — Evidence & Analysis (Recon + Forensic) */}
         <div className="lg:col-span-7 space-y-4">
           {/* Recon */}
-          <div className="rounded-container border border-surface-border bg-surface-card p-5 space-y-4">
-            <div className="flex items-center justify-between gap-2">
-              <h4 className="text-eyebrow font-semibold uppercase tracking-wider text-accent">Recon</h4>
+          <details open id="case-recon" className="group scroll-mt-12 rounded-container border border-surface-border bg-surface-card p-5 space-y-4">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-2">
+              <span className="flex items-center gap-2">
+                <span aria-hidden="true" className="text-fg-muted transition-transform group-open:rotate-90">›</span>
+                <h4 className="text-eyebrow font-semibold uppercase tracking-wider text-accent">Recon</h4>
+              </span>
               {reconSeq !== null && onViewLedger && (
                 <button
                   type="button"
@@ -1646,7 +1680,7 @@ function InvestigationPanel({
                   ledger #{reconSeq}
                 </button>
               )}
-            </div>
+            </summary>
 
             {recon?.summary != null && (
               <p className="text-body leading-relaxed text-fg-secondary break-words">{String(recon.summary)}</p>
@@ -1755,12 +1789,15 @@ function InvestigationPanel({
                 </span>
               </div>
             </div>
-          </div>
+          </details>
 
           {/* Forensic */}
-          <div className="rounded-container border border-surface-border bg-surface-card p-5 space-y-4">
-            <div className="flex items-center justify-between gap-2">
-              <h4 className="text-eyebrow font-semibold uppercase tracking-wider text-tone-purple">Forensic</h4>
+          <details open id="case-forensic" className="group scroll-mt-12 rounded-container border border-surface-border bg-surface-card p-5 space-y-4">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-2">
+              <span className="flex items-center gap-2">
+                <span aria-hidden="true" className="text-fg-muted transition-transform group-open:rotate-90">›</span>
+                <h4 className="text-eyebrow font-semibold uppercase tracking-wider text-tone-purple">Forensic</h4>
+              </span>
               {forensicSeq !== null && onViewLedger && (
                 <button
                   type="button"
@@ -1771,7 +1808,7 @@ function InvestigationPanel({
                   ledger #{forensicSeq}
                 </button>
               )}
-            </div>
+            </summary>
 
             {forensic?.summary != null && (
               <p className="text-body leading-relaxed text-fg-secondary break-words">{String(forensic.summary)}</p>
@@ -1816,13 +1853,16 @@ function InvestigationPanel({
                 </ul>
               )}
             </div>
-          </div>
+          </details>
         </div>
 
         {/* Right 5 cols — Response Plan */}
-        <div className="lg:col-span-5 rounded-container border border-surface-border bg-surface-card p-5 space-y-4">
-          <div className="flex items-center justify-between gap-2 flex-wrap">
-            <h4 className="text-eyebrow font-semibold uppercase tracking-wider text-tone-warning">Response</h4>
+        <details open id="case-response" className="group scroll-mt-12 lg:col-span-5 rounded-container border border-surface-border bg-surface-card p-5 space-y-4">
+          <summary className="flex cursor-pointer list-none flex-wrap items-center justify-between gap-2">
+            <span className="flex items-center gap-2">
+              <span aria-hidden="true" className="text-fg-muted transition-transform group-open:rotate-90">›</span>
+              <h4 className="text-eyebrow font-semibold uppercase tracking-wider text-tone-warning">Response</h4>
+            </span>
             <div className="flex items-center gap-2">
               <span className="rounded-control bg-surface-elevated px-2 py-0.5 text-caption font-mono text-fg-muted border border-surface-border">
                 {isDryRun ? "dry-run" : "live"}
@@ -1838,7 +1878,7 @@ function InvestigationPanel({
                 </button>
               )}
             </div>
-          </div>
+          </summary>
 
           {recActions.length > 0 && (
             <div className="flex items-center justify-between gap-2 rounded-control bg-pill-warning-bg px-3 py-1.5 text-caption font-medium text-tone-warning">
@@ -1973,7 +2013,7 @@ function InvestigationPanel({
               </div>
             ))}
           </div>
-        </div>
+        </details>
       </div>
 
       {auditLog.length > 0 && (
@@ -2743,12 +2783,13 @@ function Meta({
   suppressHydrationWarning?: boolean;
 }) {
   return (
-    <div>
-      <p className="text-[11px] uppercase tracking-wide text-slate-500">{label}</p>
-      <p className="mt-0.5 text-sm text-slate-200" suppressHydrationWarning={shw}>
+    /* [HIDDEN-UI AUDIT-P5 stacked label (text-[11px]) over value; now one line] */
+    <p className="flex items-baseline gap-1.5">
+      <span className="text-caption uppercase tracking-wide text-fg-muted">{label}</span>
+      <span className="text-sm text-fg-primary" suppressHydrationWarning={shw}>
         {value}
-      </p>
-    </div>
+      </span>
+    </p>
   );
 }
 
