@@ -1645,10 +1645,7 @@ export function DeploymentAIPanel() {
           />
         ) : (
           <>
-            {airgap.data ? <AirgapCard status={airgap.data} /> : null}
-            {llm.data ? (
-              <LlmCard llm={llm.data} airgap={airgap.data ?? null} />
-            ) : null}
+            {/* [HIDDEN-UI SETTINGS-G6 order was Air-gap, LLM provider, then BYOK last: the one control on the page sat below two read-only snapshots] */}
             <BYOKCard
               credential={credential.data ?? null}
               isLoading={credential.isLoading}
@@ -1660,6 +1657,12 @@ export function DeploymentAIPanel() {
                 llm.mutate();
               }}
             />
+            <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
+              {llm.data ? (
+                <LlmCard llm={llm.data} airgap={airgap.data ?? null} />
+              ) : null}
+              {airgap.data ? <AirgapCard status={airgap.data} /> : null}
+            </div>
             <p className="text-xs text-gray-500">
               The air-gap policy and provider snapshot above are sampled live
               from this pod and mirror the egress gate exactly. To change them
@@ -1684,7 +1687,7 @@ export function DeploymentAIPanel() {
 function AirgapCard({ status }: { status: AirgapStatus }) {
   return (
     <section
-      className="rounded-xl border border-gray-800 bg-gray-950/40 p-5"
+      className="h-full rounded-xl border border-gray-800 bg-gray-950/40 p-5"
       aria-label="Air-gap policy"
     >
       <header className="flex items-start justify-between gap-3">
@@ -1708,7 +1711,7 @@ function AirgapCard({ status }: { status: AirgapStatus }) {
               {status.allowlist.map((host) => (
                 <code
                   key={host}
-                  className="rounded bg-gray-900 px-1.5 py-0.5 font-mono text-[11px] text-gray-200"
+                  className="rounded bg-gray-900 px-1.5 py-0.5 font-mono text-caption text-gray-200"
                 >
                   {host}
                 </code>
@@ -1723,7 +1726,7 @@ function AirgapCard({ status }: { status: AirgapStatus }) {
             {status.implicit_private_suffixes.map((suffix) => (
               <code
                 key={suffix}
-                className="rounded bg-gray-900 px-1.5 py-0.5 font-mono text-[11px] text-gray-400"
+                className="rounded bg-gray-900 px-1.5 py-0.5 font-mono text-caption text-gray-400"
               >
                 {suffix}
               </code>
@@ -1756,7 +1759,7 @@ function LlmCard({
 
   return (
     <section
-      className="rounded-xl border border-gray-800 bg-gray-950/40 p-5"
+      className="h-full rounded-xl border border-gray-800 bg-gray-950/40 p-5"
       aria-label="LLM provider"
     >
       <header className="flex items-start justify-between gap-3">
@@ -1826,31 +1829,24 @@ function LlmCard({
 
       <dl className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
         <KeyValue label="Provider">{providerLabel}</KeyValue>
-        {/* Shown whenever the alert block above is not already carrying it, so
-            the evidence behind the badge is visible in every state — including
-            `unknown`. A panel that shows a badge and hides what it rests on is
-            how "Live" came to mean "configured" without anyone noticing. */}
-        {isDegraded ? null : (
-          <KeyValue label="Recent calls">
-            <span className="text-xs text-gray-300">{llm.recent_note}</span>
-          </KeyValue>
-        )}
+        {/* [SETTINGS-G6] Recent calls moved to the last, full-width row so the short facts pair up in two even columns. */}
         <KeyValue label="Model">
           {llm.model ? (
-            <code className="font-mono text-xs text-gray-100">{llm.model}</code>
+            <code className="font-mono text-caption text-gray-100">{llm.model}</code>
           ) : (
             <span className="text-gray-500">—</span>
           )}
         </KeyValue>
         <KeyValue label="Base URL">
           {llm.base_url ? (
-            <code className="break-all font-mono text-xs text-gray-200">
+            <code className="break-all font-mono text-caption text-gray-200">
               {llm.base_url}
             </code>
           ) : (
             <span className="text-gray-500">—</span>
           )}
         </KeyValue>
+        {/* [HIDDEN-UI SETTINGS-G6 Host row: repeats the host already inside Base URL]
         <KeyValue label="Host">
           {llm.host ? (
             <code className="font-mono text-xs text-gray-200">{llm.host}</code>
@@ -1858,6 +1854,7 @@ function LlmCard({
             <span className="text-gray-500">—</span>
           )}
         </KeyValue>
+        */}
         <KeyValue label="API key">
           <span
             className={clsx(
@@ -1875,6 +1872,7 @@ function LlmCard({
             {llm.key_set ? 'Set' : 'Not set'}
           </span>
         </KeyValue>
+        {/* [HIDDEN-UI SETTINGS-G6 Air-gap compliant row: the Air-gap policy card beside this one carries the same state]
         <KeyValue label="Air-gap compliant">
           <span
             className={clsx(
@@ -1896,6 +1894,16 @@ function LlmCard({
               : 'No'}
           </span>
         </KeyValue>
+        */}
+        {/* Shown whenever the alert block above is not already carrying it, so
+            the evidence behind the badge is visible in every state — including
+            `unknown`. A panel that shows a badge and hides what it rests on is
+            how "Live" came to mean "configured" without anyone noticing. */}
+        {isDegraded ? null : (
+          <KeyValue label="Recent calls" className="sm:col-span-2">
+            <span className="text-xs text-gray-300">{llm.recent_note}</span>
+          </KeyValue>
+        )}
       </dl>
 
       {!blockedByAirgap && !isFallback && llm.policy_note ? (
@@ -2339,14 +2347,14 @@ function BYOKCard({
             </h3>
             <p className="mt-1 text-xs text-gray-500">
               No tenant override configured. Investigations use the pod-level
-              defaults shown above. Configure BYOK to point this tenant at
+              defaults shown below. Configure BYOK to point this tenant at
               your own provider — keys are stored vault-encrypted.
             </p>
           </div>
           <button
             type="button"
             onClick={() => setEditing(true)}
-            className="shrink-0 rounded-md border border-blue-500/50 bg-blue-500/15 px-3 py-1.5 text-xs font-medium text-blue-200 hover:bg-blue-500/25"
+            className="min-h-8 shrink-0 rounded-md border border-blue-500/50 bg-blue-500/15 px-3 py-1.5 text-xs font-medium text-blue-200 hover:bg-blue-500/25"
           >
             Configure BYOK
           </button>
@@ -2540,12 +2548,14 @@ function BYOKCard({
 function KeyValue({
   label,
   children,
+  className,
 }: {
   label: string;
   children: React.ReactNode;
+  className?: string;
 }) {
   return (
-    <div className="flex flex-col gap-1">
+    <div className={clsx('flex flex-col gap-1', className)}>
       <dt className="text-caption uppercase tracking-wide text-fg-muted">
         {label}
       </dt>
