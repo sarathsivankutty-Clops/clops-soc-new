@@ -159,6 +159,35 @@ const CurrencyIcon = () => (
   </svg>
 );
 
+const OverviewGridIcon = () => (
+  <svg className="w-5 h-5" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <rect x="3.5" y="3.5" width="7" height="7" rx="1.75" strokeWidth={1.75} />
+    <rect x="13.5" y="3.5" width="7" height="7" rx="1.75" strokeWidth={1.75} />
+    <rect x="3.5" y="13.5" width="7" height="7" rx="1.75" strokeWidth={1.75} />
+    <rect x="13.5" y="13.5" width="7" height="7" rx="1.75" strokeWidth={1.75} />
+  </svg>
+);
+
+const SocOperationsIcon = () => (
+  <svg className="w-5 h-5" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 4.5l5.5 2v4.75c0 3.7-2.35 6.85-5.5 8.25-3.15-1.4-5.5-4.55-5.5-8.25V6.5L12 4.5z" />
+    <path d="M10.25 11.25h3.5a.75.75 0 01.75.75v2.25a.75.75 0 01-.75.75h-3.5a.75.75 0 01-.75-.75V12a.75.75 0 01.75-.75z" />
+    <path d="M10.75 11.25v-1a1.25 1.25 0 012.5 0v1" />
+    <path d="M7.5 6.5L5 4.25M16.5 6.5L19 4.25" />
+    <circle cx="4" cy="3.5" r="1" />
+    <circle cx="20" cy="3.5" r="1" />
+    <path d="M6.5 9.75H4.25M17.5 9.75h2.25" />
+    <circle cx="3" cy="9.75" r="1" />
+    <circle cx="21" cy="9.75" r="1" />
+    <path d="M6.5 13.75H4.25M17.5 13.75h2.25" />
+    <circle cx="3" cy="13.75" r="1" />
+    <circle cx="21" cy="13.75" r="1" />
+    <path d="M8.5 17.25L5 19.75M15.5 17.25l3.5 2.5" />
+    <circle cx="4" cy="20.5" r="1" />
+    <circle cx="20" cy="20.5" r="1" />
+  </svg>
+);
+
 const UsersIcon = () => (
   <svg className="w-5 h-5" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4zm6-4a3 3 0 11-3-3" />
@@ -174,10 +203,12 @@ const navSections: NavSection[] = [
       // the operations views moved to their own rail destination below.]
       // { label: 'Dashboards', href: '/dashboards', icon: <ChartBarIcon /> },
       // [HIDDEN-UI OVERVIEW-G1 { label: 'Overview', href: '/dashboards', icon: <ChartBarIcon /> }, chart glyph read as analytics]
-      { label: 'Overview', href: '/dashboards', icon: <HomeIcon /> },
+      // [HIDDEN-UI OVERVIEW-ICON { label: 'Overview', href: '/dashboards', icon: <HomeIcon /> }, replaced by 2x2 grid icon]
+      { label: 'Overview', href: '/dashboards', icon: <OverviewGridIcon /> },
       // [HIDDEN-UI OVERVIEW-FIX-1 SOC Operations shared Overview's ChartBarIcon]
       // { label: 'SOC Operations', href: '/operations', icon: <ChartBarIcon /> },
-      { label: 'SOC Operations', href: '/operations', icon: <ClockIcon /> },
+      // [HIDDEN-UI OPS-ICON { label: 'SOC Operations', href: '/operations', icon: <ClockIcon /> }, replaced by cyber-shield circuit icon]
+      { label: 'SOC Operations', href: '/operations', icon: <SocOperationsIcon /> },
       { label: 'Alerts', href: '/alerts', icon: <BellIcon /> },
       {
         label: 'Investigation Queue',

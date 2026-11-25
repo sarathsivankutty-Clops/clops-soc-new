@@ -19,6 +19,7 @@
 import { clsx } from 'clsx';
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
 import { forwardRef } from 'react';
+import { Spinner } from './Spinner';
 
 export type ButtonVariant =
   | 'primary'
@@ -99,10 +100,13 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       {...rest}
     >
       {loading ? (
+        /* [HIDDEN-UI SPINNER-1 replaced border-spinner with 8-dot orbital Spinner]
         <span
           aria-hidden="true"
           className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-r-transparent"
         />
+        */
+        <Spinner size="sm" />
       ) : (
         leadingIcon
       )}

@@ -24,6 +24,7 @@ import useSWR from "swr";
 import { clsx } from "clsx";
 import { format, formatDistanceToNow } from "date-fns";
 import toast from "react-hot-toast";
+import { Spinner } from "@/components/ui/Spinner";
 import {
   apiFetch,
   type AttackChainTimeline,
@@ -954,7 +955,10 @@ export function CaseWorkspace({ caseId }: { caseId: string }) {
                     disabled
                     className="inline-flex cursor-not-allowed items-center gap-1.5 rounded-md border border-surface-border bg-surface-subtle px-3 py-1.5 text-xs font-semibold text-fg-muted"
                   >
+                    {/* [HIDDEN-UI SPINNER-1 replaced border-spinner with 8-dot orbital Spinner]
                     <span className="h-3 w-3 animate-spin rounded-full border border-surface-border border-t-fg-muted" />
+                    */}
+                    <Spinner size="sm" className="text-accent" />
                     Investigation in progress
                   </button>
                 );
@@ -1504,7 +1508,10 @@ function InvestigationPanel({
           </div>
           */}
           <div className="flex items-center gap-3">
+            {/* [HIDDEN-UI SPINNER-1 replaced border-spinner with 8-dot orbital Spinner]
             <span className="h-7 w-7 animate-spin rounded-full border-2 border-accent/30 border-t-accent shrink-0" />
+            */}
+            <Spinner size="lg" className="text-accent shrink-0" />
             <div>
               <p className="text-sm font-medium text-fg-primary">Investigation in progress…</p>
               <p className="text-xs text-fg-muted">
