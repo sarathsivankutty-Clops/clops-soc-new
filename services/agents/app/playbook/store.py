@@ -191,13 +191,25 @@ class PlaybookStore:
         """
         return pb.tenant_id is not None and pb.tenant_id == tenant_id
 
-    def _effective(self, pb: Playbook, tenant_id: str) -> Playbook:
-        """*pb* as *tenant_id* sees it: a shipped pack carries that tenant's on/off override."""
-        enabled = self._pack_enabled.get(tenant_id, {}).get(pb.id) if pb.tenant_id is None else None
-        return pb if enabled is None or enabled == pb.enabled else pb.model_copy(update={"enabled": enabled})
+    @staticmethod
+    def _enabled(pb: Playbook, overrides: dict[str, bool]) -> bool:
+        """Whether *pb* is on for the tenant whose pack *overrides* these are."""
+        return overrides.get(pb.id, pb.enabled) if pb.tenant_id is None else pb.enabled
+
+    def _effective(self, pb: Playbook, overrides: dict[str, bool]) -> Playbook:
+        """*pb* as that tenant sees it; copied only when an override changes it."""
+        enabled = self._enabled(pb, overrides)
+        return pb if enabled == pb.enabled else pb.model_copy(update={"enabled": enabled})
+
+    def _save_overrides(self) -> None:
+        # Atomic: a torn write would reset every tenant's pack toggles on the next load.
+        tmp = self._overrides_path.with_suffix(".tmp")
+        tmp.write_text(json.dumps(self._pack_enabled))
+        os.replace(tmp, self._overrides_path)
 
     def list(self, *, tenant_id: str, enabled_only: bool = False) -> list[Playbook]:
-        pbs = [self._effective(p, tenant_id) for p in self._playbooks.values() if self._visible(p, tenant_id)]
+        overrides = self._pack_enabled.get(tenant_id, {})
+        pbs = [self._effective(p, overrides) for p in self._playbooks.values() if self._visible(p, tenant_id)]
         if enabled_only:
             pbs = [p for p in pbs if p.enabled]
         return pbs
@@ -208,7 +220,7 @@ class PlaybookStore:
             # One answer for "no such playbook" and "somebody else's", so the
             # store cannot be used to learn which ids exist in other tenants.
             return None
-        return self._effective(pb, tenant_id)
+        return self._effective(pb, self._pack_enabled.get(tenant_id, {}))
 
     def create(self, playbook: Playbook, *, tenant_id: str) -> Playbook:
         now = datetime.now(UTC).isoformat()
@@ -224,11 +236,12 @@ class PlaybookStore:
 
     def update(self, playbook_id: str, data: dict[str, Any], *, tenant_id: str) -> Playbook | None:
         pb = self._playbooks.get(playbook_id)
-        if pb is not None and pb.tenant_id is None and data.keys() - {"tenant_id"} == {"enabled"}:
+        if pb is not None and pb.tenant_id is None and "enabled" in data and set(data) <= {"enabled", "tenant_id"}:
             # A pack stays read-only; switching it on or off is this tenant's setting alone.
-            self._pack_enabled.setdefault(tenant_id, {})[playbook_id] = bool(data["enabled"])
-            self._overrides_path.write_text(json.dumps(self._pack_enabled, indent=2))
-            return self._effective(pb, tenant_id)
+            overrides = self._pack_enabled.setdefault(tenant_id, {})
+            overrides[playbook_id] = bool(data["enabled"])
+            self._save_overrides()
+            return self._effective(pb, overrides)
         if pb is None or not self._owned(pb, tenant_id):
             return None
         now = datetime.now(UTC).isoformat()
@@ -261,11 +274,9 @@ class PlaybookStore:
         which already knows the alert's tenant and had nowhere to pass it.
         """
         matches: list[Playbook] = []
+        overrides = self._pack_enabled.get(tenant_id, {})
         for pb in self._playbooks.values():
-            if not self._visible(pb, tenant_id):
-                continue
-            pb = self._effective(pb, tenant_id)
-            if not pb.enabled:
+            if not self._visible(pb, tenant_id) or not self._enabled(pb, overrides):
                 continue
             trigger = pb.trigger
             if trigger.get("on") != event:
@@ -281,7 +292,7 @@ class PlaybookStore:
                 ctx_tags = set(context.get("tags", []))
                 if not required_tags.intersection(ctx_tags):
                     continue
-            matches.append(pb)
+            matches.append(self._effective(pb, overrides))
         return matches
 
     # ------------------------------------------------------------------

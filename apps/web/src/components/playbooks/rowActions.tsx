@@ -8,7 +8,7 @@
  * URLs, same SWR cache keys, same UX).
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { mutate } from 'swr';
 import toast from 'react-hot-toast';
 import { clsx } from 'clsx';
@@ -22,14 +22,13 @@ import { apiFetch } from '@/lib/api';
  * refused save looked like a dead switch.
  */
 export function EnabledToggle({ playbook }: { playbook: Playbook }) {
-  const [loading, setLoading] = useState(false);
-  const [on, setOn] = useState(playbook.enabled);
-  useEffect(() => setOn(playbook.enabled), [playbook.enabled]);
+  // Optimistic value while a save is in flight; otherwise the prop is the truth.
+  const [pending, setPending] = useState<boolean | null>(null);
+  const on = pending ?? playbook.enabled;
 
   async function toggle() {
     const next = !on;
-    setOn(next);
-    setLoading(true);
+    setPending(next);
     try {
       const res = await apiFetch(`/api/v1/playbooks/${playbook.id}`, {
         method: 'PUT',
@@ -42,10 +41,9 @@ export function EnabledToggle({ playbook }: { playbook: Playbook }) {
       }
       await mutate('/api/v1/playbooks');
     } catch (err) {
-      setOn(!next);
       toast.error(`Could not ${next ? 'enable' : 'disable'} ${playbook.name}: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
-      setLoading(false);
+      setPending(null);
     }
   }
   return (
@@ -54,7 +52,7 @@ export function EnabledToggle({ playbook }: { playbook: Playbook }) {
       role="switch"
       aria-checked={on}
       onClick={toggle}
-      disabled={loading}
+      disabled={pending !== null}
       title={on ? 'Enabled. Click to disable' : 'Disabled. Click to enable'}
       aria-label={`${on ? 'Disable' : 'Enable'} ${playbook.name}`}
       className="inline-flex min-h-8 min-w-8 items-center justify-center rounded-control focus:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:opacity-50"

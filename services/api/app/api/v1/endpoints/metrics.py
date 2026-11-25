@@ -28,7 +28,7 @@ from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter, Query
 from pydantic import BaseModel, Field
-from sqlalchemy import and_, func, select, text
+from sqlalchemy import and_, func, or_, select, text
 
 from app.api.v1.deps import AuthUser, DBSession
 from app.core.config import settings
@@ -41,7 +41,7 @@ from app.models.sla import AlertSLAEvent
 from app.services import case_status
 from app.services.alert_disposition import decided_filter
 from app.services.alert_status import resolved_filter, unresolved_filter
-from app.services.attack_tactics import tactics_for_techniques
+from app.services.attack_tactics import TECHNIQUE_TACTICS, display_tactic, parent_technique, tactics_for_techniques
 from app.services.resolution_time import (
     MTTR_WINDOW,
     tenant_case_mttr_minutes,
@@ -509,9 +509,18 @@ async def get_dashboard_metrics(
     # jsonb_array_elements_text + GROUP BY in the same SELECT 500s on some
     # Postgres builds.
     # Detection engines tag techniques only, so an alert without tactics gets
-    # them derived from its techniques; otherwise this panel is always empty.
+    # them derived from its techniques (stopgap; see app.services.attack_tactics).
+    # The columns default to '[]', not NULL, so skip rows with neither in SQL.
     tactic_rows = (
-        await db.execute(select(Alert.mitre_tactics, Alert.mitre_techniques).where(and_(Alert.tenant_id == tenant_id, _in_window)))
+        await db.execute(
+            select(Alert.mitre_tactics, Alert.mitre_techniques).where(
+                and_(
+                    Alert.tenant_id == tenant_id,
+                    _in_window,
+                    or_(func.jsonb_array_length(Alert.mitre_tactics) > 0, func.jsonb_array_length(Alert.mitre_techniques) > 0),
+                )
+            )
+        )
     ).all()
 
     tactic_counts: dict[str, int] = {}
@@ -519,6 +528,7 @@ async def get_dashboard_metrics(
         tactics = tactics or tactics_for_techniques(techniques or [])
         for t in tactics:
             if isinstance(t, str) and t:
+                t = display_tactic(t)
                 tactic_counts[t] = tactic_counts.get(t, 0) + 1
 
     top_mitre = [
@@ -860,7 +870,7 @@ async def get_soc_metrics(
             select(Alert.mitre_tactics, Alert.mitre_techniques).where(
                 and_(
                     Alert.tenant_id == tenant_id,
-                    Alert.mitre_techniques.isnot(None),
+                    func.jsonb_array_length(Alert.mitre_techniques) > 0,
                 )
             )
         )
@@ -875,10 +885,10 @@ async def get_soc_metrics(
                 continue
             # Tagged tactics pair with every technique (as before); derived ones
             # only with the technique they came from.
-            for tactic in tactics or tactics_for_techniques([technique]):
+            for tactic in tactics or TECHNIQUE_TACTICS.get(parent_technique(technique), ()):
                 if not isinstance(tactic, str) or not tactic:
                     continue
-                key = (tactic, technique)
+                key = (display_tactic(tactic), technique)
                 pair_counts[key] = pair_counts.get(key, 0) + 1
 
     heatmap = [

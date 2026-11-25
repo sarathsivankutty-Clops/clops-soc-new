@@ -12,3 +12,9 @@ def test_unknown_and_junk_are_ignored() -> None:
 
 def test_ids_are_parent_techniques() -> None:
     assert all(tid.startswith("T") and "." not in tid and tactics for tid, tactics in TECHNIQUE_TACTICS.items())
+
+
+def test_sigma_tactic_spellings_collapse_to_one_name() -> None:
+    from app.services.attack_tactics import display_tactic
+
+    assert {display_tactic(t) for t in ["TA0005", "defense_evasion", "defense-evasion", "Defense Evasion"]} == {"Defense Evasion"}

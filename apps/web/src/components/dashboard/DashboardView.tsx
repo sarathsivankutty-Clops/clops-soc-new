@@ -450,10 +450,6 @@ function useDashboardLayout() {
  * nothing does not — otherwise the tile silently becomes a count of
  * configured integrations, which answers a different question.
  */
-// `healthy` is the health_status value the API sends; `active` the older poller value.
-const isConnected = (s: DashboardMetrics['sources'][number]) =>
-  s.status === 'active' || s.status === 'healthy' || s.count > 0;
-
 export function countConnectedSources(
   sources: DashboardMetrics['sources'],
 ): number {
@@ -478,6 +474,13 @@ export function describeConnectedSources(
   if (named.length === 0) return 'no source has produced an alert yet';
   if (named.length <= 3) return named.join(', ');
   return `${named.slice(0, 3).join(', ')} +${named.length - 3} more`;
+}
+
+// A source counts once it is healthy (whatever word the API used) or has delivered.
+// shortcut: the API sends raw health_status (healthy/unhealthy/configuring/unknown);
+// normalising it in /metrics/dashboard would let sourceMeta drop the duplicate words.
+function isConnected(s: DashboardMetrics['sources'][number]): boolean {
+  return sourceMeta(s.status).status === 'completed' || s.count > 0;
 }
 
 // ─── Main Dashboard ───────────────────────────────────────────────────────────

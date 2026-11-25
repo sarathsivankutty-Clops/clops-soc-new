@@ -5,7 +5,8 @@ import { describe, expect, it, vi } from 'vitest';
 const apiFetch = vi.fn();
 const toastError = vi.fn();
 vi.mock('@/lib/api', () => ({ apiFetch: (...args: unknown[]) => apiFetch(...args) }));
-vi.mock('swr', () => ({ mutate: vi.fn() }));
+const mutate = vi.fn();
+vi.mock('swr', () => ({ mutate: (...args: unknown[]) => mutate(...args) }));
 vi.mock('react-hot-toast', () => ({ default: { error: (msg: string) => toastError(msg) } }));
 
 import { EnabledToggle } from './rowActions';
@@ -26,11 +27,13 @@ describe('EnabledToggle', () => {
     expect(toggle).toHaveAttribute('aria-checked', 'true');
   });
 
-  it('keeps the new state when the save succeeds', async () => {
+  it('refreshes the list on success and then follows the refreshed prop', async () => {
     apiFetch.mockResolvedValue({ ok: true, status: 200, json: async () => ({}) });
-    render(<EnabledToggle playbook={playbook} />);
+    const { rerender } = render(<EnabledToggle playbook={playbook} />);
 
     await userEvent.click(screen.getByRole('switch'));
-    await waitFor(() => expect(screen.getByRole('switch')).toHaveAttribute('aria-checked', 'false'));
+    await waitFor(() => expect(mutate).toHaveBeenCalledWith('/api/v1/playbooks'));
+    rerender(<EnabledToggle playbook={{ ...playbook, enabled: false }} />);
+    expect(screen.getByRole('switch')).toHaveAttribute('aria-checked', 'false');
   });
 });

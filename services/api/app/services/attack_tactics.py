@@ -5,13 +5,18 @@ ids only), so anything that ranks alerts by tactic has to derive them. A
 technique can sit under several tactics; the first listed is its primary one.
 
 Static on purpose: deterministic, works air-gapped, no STIX bundle download.
-shortcut: covers the common parent techniques, not every ATT&CK entry; extend
-the table when a rule ships a technique that lands in "unmapped".
+shortcut: covers the common parent techniques, not every ATT&CK entry, and
+derives at read time. The deeper fix is fusion stamping ``mitre_tactics`` when
+it creates an alert (from ingest's STIX index), after which the read-time
+fallback in /metrics can go. The web's apps/web/src/lib/mitreTactics.ts keeps
+a parallel table; keep the two in step.
 """
 
 from __future__ import annotations
 
 from collections.abc import Iterable
+
+from app.services.detections.sigma_import import _MITRE_TACTIC_LOOKUP
 
 IA, EXE, PER, PE, DE = "Initial Access", "Execution", "Persistence", "Privilege Escalation", "Defense Evasion"
 CA, DIS, LM, COL = "Credential Access", "Discovery", "Lateral Movement", "Collection"
@@ -67,6 +72,20 @@ TECHNIQUE_TACTICS: dict[str, tuple[str, ...]] = {
     "T1529": (IMP,), "T1657": (IMP,),
 }
 # fmt: on
+
+
+# Imported Sigma rules store tactics as TA-codes (TA0005) or tag form
+# (defense_evasion); derived ones are display names. One spelling per tactic.
+_TACTIC_DISPLAY: dict[str, str] = {
+    **{key: name for key, (_, name) in _MITRE_TACTIC_LOOKUP.items()},
+    **dict(_MITRE_TACTIC_LOOKUP.values()),
+}
+
+
+def display_tactic(tactic: str) -> str:
+    """``TA0005`` / ``defense_evasion`` / ``defense-evasion`` -> ``Defense Evasion``; names pass through."""
+    key = tactic.strip()
+    return _TACTIC_DISPLAY.get(key.upper()) or _TACTIC_DISPLAY.get(key.lower().replace("-", "_")) or key
 
 
 def parent_technique(technique: str) -> str:

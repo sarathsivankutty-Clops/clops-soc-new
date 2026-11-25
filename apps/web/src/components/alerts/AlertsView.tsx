@@ -591,13 +591,13 @@ function AlertRow({
       {/* [HIDDEN-UI ALERTS-G2 free flex cluster: rows with/without a confidence pill or Case link shifted every chip, so columns did not line up] */}
       {!compact && (
         <div className="flex items-center gap-2 shrink-0">
-          <span className="flex w-32 justify-end">
+          <span className={clsx('flex justify-end', COL.confidence)}>
             {alert.confidenceLabel && <ConfidencePill label={alert.confidenceLabel} />}
           </span>
-          <span className="flex w-20">
+          <span className={clsx('flex', COL.severity)}>
             <SeverityBadge severity={alert.severity} />
           </span>
-          <span className="flex w-28">
+          <span className={clsx('flex', COL.status)}>
             <StatusBadge status={alert.status} />
           </span>
           <span
@@ -627,6 +627,9 @@ function AlertRow({
     </div>
   );
 }
+
+// [ALERTS-G2] Shared by the row's column cluster and the list header so they stay aligned.
+const COL = { confidence: 'w-32', severity: 'w-20', status: 'w-28' } as const;
 
 // ─── Main View ────────────────────────────────────────────────────────────────
 
@@ -1006,19 +1009,20 @@ function AlertsTableGrid({
         <div className="flex shrink-0 items-center gap-2">
         {!selectedAlertId && (
           <>
-            <span className="w-32" aria-hidden />
+            <span className={COL.confidence} aria-hidden />
             <button
               type="button"
               onClick={() => onFilterChange({ ...filters, sort: 'priority', page: 1 })}
               className={clsx(
-                'text-eyebrow font-bold uppercase tracking-wider w-20 min-h-8 text-left transition-colors',
+                'text-eyebrow font-bold uppercase tracking-wider min-h-8 text-left transition-colors',
+                COL.severity,
                 activeSort === 'priority' ? 'text-accent' : 'text-fg-muted hover:text-fg-primary',
               )}
               title="Sort by priority (severity, then newest)"
             >
               {t('alerts.severity')} {activeSort === 'priority' ? '↓' : ''}
             </button>
-            <span className="text-eyebrow font-bold uppercase tracking-wider text-fg-muted w-28">{t('alerts.status')}</span>
+            <span className={clsx('text-eyebrow font-bold uppercase tracking-wider text-fg-muted', COL.status)}>{t('alerts.status')}</span>
           </>
         )}
         <button

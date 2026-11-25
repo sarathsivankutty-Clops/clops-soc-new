@@ -212,10 +212,9 @@ class CaseSummaryInputs:
 # ---------------------------------------------------------------------------
 
 
-# Best-effort technique → tactic mapping, primary tactic only. Unknown
+# Technique → primary tactic comes from app.services.attack_tactics. Unknown
 # techniques fall into "Other" so the summary stays useful when detection
-# content drifts ahead of the table in app.services.attack_tactics.
-_TECHNIQUE_TO_TACTIC: dict[str, str] = {tid: tactics[0] for tid, tactics in TECHNIQUE_TACTICS.items()}
+# content drifts ahead of that table.
 
 
 def _hours_between(later: datetime | None, earlier: datetime | None) -> float | None:
@@ -233,7 +232,7 @@ def _bucket_techniques(techniques: list[str]) -> dict[str, int]:
             continue
         # Use the parent (T1059.001 → T1059) for the lookup.
         root = parent_technique(tech)
-        tactic = _TECHNIQUE_TO_TACTIC.get(root, "Other")
+        tactic = TECHNIQUE_TACTICS.get(root, ("Other",))[0]
         buckets[tactic] += 1
     return dict(buckets)
 

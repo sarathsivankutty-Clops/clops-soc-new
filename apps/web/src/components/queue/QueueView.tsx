@@ -420,9 +420,6 @@ interface QueueRowProps {
 }
 
 function QueueRow({ item, generatedAt, isMine, busyAction, onClaim, onRelease, onSnooze }: QueueRowProps) {
-  const remaining = computeRemainingSeconds(item, generatedAt);
-  const breached = remaining < 0;
-
   return (
     <Link
       href={`/alerts/${item.id}`}
@@ -430,7 +427,6 @@ function QueueRow({ item, generatedAt, isMine, busyAction, onClaim, onRelease, o
       // tinted every breached row red; with most rows past SLA the list read as one red wash and severity was lost.
       // Rows are neutral now: the SLA chip carries the breach, the left rule carries severity.]
       className="group relative flex items-start gap-3 px-4 py-3.5 transition-colors hover:bg-surface-elevated"
-      data-breached={breached || undefined}
       aria-label={`Investigate ${item.title}`}
     >
       <span aria-hidden className={clsx('absolute inset-y-0 left-0 w-0.5', (SEVERITY_CONFIG[item.severity] ?? SEVERITY_CONFIG.info).dot)} />

@@ -65,6 +65,28 @@ export function KpiStrip({ items, cols = 4, className, dense = false }: KpiStrip
         const tone = item.tone ?? 'default';
         const clickable = typeof item.onClick === 'function';
         const Comp = clickable ? 'button' : 'div';
+        const label = (
+          <p
+            className={clsx(
+              'font-medium truncate',
+              dense ? 'text-control text-fg-secondary' : 'text-caption text-fg-muted',
+              clickable && 'pr-12',
+            )}
+          >
+            {item.label}
+          </p>
+        );
+        const value = (
+          <p
+            className={clsx(
+              'font-mono tabular-nums leading-tight',
+              dense ? 'text-page-title font-semibold' : 'text-kpi font-bold',
+              dense && tone !== 'default' ? TONE_TEXT[tone] : 'text-fg-primary',
+            )}
+          >
+            {item.value}
+          </p>
+        );
         return (
           <Comp
             key={item.id ?? `${item.label}-${idx}`}
@@ -72,7 +94,7 @@ export function KpiStrip({ items, cols = 4, className, dense = false }: KpiStrip
             className={clsx(
               'relative bg-surface-card text-left flex min-w-0 transition-colors',
               // [HIDDEN-UI ALERTS-G2 dense was 'items-baseline justify-between gap-3 px-4 py-2.5': label far left, value far right]
-              dense ? 'flex-row-reverse items-baseline justify-end gap-2.5 px-5 py-3' : 'flex-col justify-between gap-1.5 p-5',
+              dense ? 'items-baseline gap-2.5 px-5 py-3' : 'flex-col justify-between gap-1.5 p-5',
               clickable && 'cursor-pointer hover:bg-surface-elevated',
               item.active && 'bg-nav-active-bg',
             )}
@@ -85,24 +107,18 @@ export function KpiStrip({ items, cols = 4, className, dense = false }: KpiStrip
                 {item.active ? 'Active' : 'Filter'}
               </span>
             )}
-            <p
-              className={clsx(
-                'font-medium truncate',
-                dense ? 'text-control text-fg-secondary' : 'text-caption text-fg-muted',
-                clickable && 'pr-12',
-              )}
-            >
-              {item.label}
-            </p>
-            <p
-              className={clsx(
-                'font-mono tabular-nums leading-tight',
-                dense ? 'text-page-title font-semibold' : 'text-kpi font-bold',
-                dense && tone !== 'default' ? TONE_TEXT[tone] : 'text-fg-primary',
-              )}
-            >
-              {item.value}
-            </p>
+            {/* Dense tiles read value first ("25 Critical"), in DOM order as well as on screen. */}
+            {dense ? (
+              <>
+                {value}
+                {label}
+              </>
+            ) : (
+              <>
+                {label}
+                {value}
+              </>
+            )}
             {item.sub && (
               /* [HIDDEN-UI AUDIT-P2 `truncate` clipped sub-lines such as "1 in progress · 0 opened / ..."] */
               <div className={clsx('text-caption break-words', TONE_TEXT[tone])}>
