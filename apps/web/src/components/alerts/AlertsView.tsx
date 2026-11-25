@@ -252,6 +252,9 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
+const SELECT_CLS =
+  'text-control-sm bg-surface-elevated text-fg-primary border border-surface-border rounded-control px-2 py-1 min-h-8 focus:outline-none focus:border-accent';
+
 function FiltersBar({
   filters,
   timeWindow,
@@ -297,7 +300,7 @@ function FiltersBar({
                 page: 1,
               })
             }
-            className="text-control-sm bg-surface-elevated text-fg-primary border border-surface-border rounded-control px-2 py-1 min-h-8 focus:outline-none focus:border-accent"
+            className={SELECT_CLS}
           >
             {severities.map((s) => (
               <option key={s} value={s}>
@@ -337,7 +340,7 @@ function FiltersBar({
             onChange={(e) =>
               onChange({ ...filters, status: e.target.value || undefined, page: 1 })
             }
-            className="text-control-sm bg-surface-elevated text-fg-primary border border-surface-border rounded-control px-2 py-1 min-h-8 focus:outline-none focus:border-accent"
+            className={SELECT_CLS}
           >
             <option value="">All statuses</option>
             {ALERT_STATUS_GROUPS.map((group) => (
@@ -358,7 +361,7 @@ function FiltersBar({
             aria-label="Time window"
             value={timeWindow}
             onChange={(e) => onTimeWindowChange(e.target.value as AlertsTimeWindow)}
-            className="text-control-sm bg-surface-elevated text-fg-primary border border-surface-border rounded-control px-2 py-1 min-h-8 focus:outline-none focus:border-accent"
+            className={SELECT_CLS}
           >
             <option value="all">All time</option>
             {TIME_WINDOWS.map((w) => (
@@ -382,7 +385,7 @@ function FiltersBar({
                 page: 1,
               })
             }
-            className="text-control-sm bg-surface-elevated text-fg-primary border border-surface-border rounded-control px-2 py-1 min-h-8 focus:outline-none focus:border-accent"
+            className={SELECT_CLS}
           >
             <option value="priority">Priority</option>
             <option value="newest">Newest</option>
@@ -398,7 +401,7 @@ function FiltersBar({
             onChange={(e) =>
               onChange({ ...filters, connectorType: e.target.value || undefined, page: 1 })
             }
-            className="text-control-sm bg-surface-elevated text-fg-primary border border-surface-border rounded-control px-2 py-1 min-h-8 focus:outline-none focus:border-accent"
+            className={SELECT_CLS}
           >
             <option value="">All sources</option>
             <option value="aws_cloudtrail">AWS CloudTrail</option>

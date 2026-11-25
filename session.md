@@ -340,3 +340,40 @@ Preserved inside `[HIDDEN-UI CHROME-2 ...]` comments:
 - P2-4/5: modal backdrops use `bg-black/60` (repo convention, `surface-overlay` is not a token); arbitrary sizes removed; `packHelpers` badges use pill/severity tokens; stale palette keywords hidden under `[HIDDEN-UI UI-OVERHAUL-1]`; retired Overview/pipeline blocks restored verbatim as line comments. `text-white` on accent buttons kept (no on-accent token exists).
 - P2-6: `docs/openapi.yaml` gained the Keycloak paths and schemas (additions only, merged from the container export because the image's other routes differ from HEAD).
 - Skipped: `LegacyConnectorCard` stays an exported function (renamed, not deleted); native `window.prompt/confirm` in UsersView (UX scope).
+
+
+## 13. Overview fixes, UI layout audit and audit-fix branch (2026-11-24)
+
+### 13.1 Overview and Settings (pushed to `origin/main`, `0367e2c94`)
+- Root cause of the empty EC2 alert chart: the API buckets `alertsTrend` by minute (1h), hour (24h) or day (7d/30d), and the chart drew too few rows. `buildVolumeBuckets` in `DashboardView.tsx` now builds fixed slots per window with tooltips, start/end labels and a peak label.
+- Time window selector at the top right of Overview; the window is part of the SWR key.
+- KPI subtitle reads "N new in last <window>". SOC Operations nav icon is now a clock (was the same as Overview).
+- Settings: General and Roles & Permissions tabs hidden (`SettingsTabs.tsx`, `Sidebar.tsx`); default tab is `deployment`.
+- Tests: `VolumeBuckets.test.ts` (new), `Sidebar.test.tsx`, `SettingsView.navigation.test.tsx`.
+
+### 13.2 Layout audit and Playwright toolkit
+- `docs/ui-review/LAYOUT-AUDIT.md` (untracked): measured audit at 1440x900 and 1366x768, screenshots in `docs/ui-review/shots2/`.
+- `playwright/` (untracked): `lib.cjs`, `discover.cjs`, `layout-audit.cjs`, `login-check.cjs`, README. Read-only; credentials come from `PW_PASS` in the environment only.
+- Gotchas: `/operations` is the real SOC Operations route (`/dashboards?tab=operations` renders Overview); case tabs are URL driven (`?tab=`); the local stack uses a self-signed cert, so scripts need `ignoreHTTPSErrors`.
+
+### 13.3 Audit-fix branch `ui/audit-fixes-p1-p5` (pushed, not merged)
+| Commit | Work |
+| --- | --- |
+| `f14a8b506` | Primary Investigate button in the alert detail header and rail (one label: Investigate / Starting investigation… / View investigation); "no baseline" shown once under the funnel |
+| `3788f6bf1` | `PipelineHealth` `variant="table"` for SOC Operations (Overview keeps the 5-column rail); `items-start` grids |
+| `0e124f2c1` | Alerts toolbar (severity dropdown, search first), dense `KpiStrip`, `text-eyebrow` and `text-caption` raised to 12px |
+| `d5d31d8de` | Sticky severity/title/status strip above case tabs |
+- Old code hidden with `[HIDDEN-UI AUDIT-P*]` comments, nothing deleted.
+- Side effect caught in review: `PipelineHealth` is shared; unconditional table layout had changed Overview. Fixed with the `variant` prop (default `rail`).
+- Verified: `tsc` 0 errors, ESLint 0 errors, affected vitest suites pass except the 2 known `MitrePanelWording` CRLF failures; Docker `next build` passed; live Playwright on `https://localhost`.
+- Measured after: Investigate button top y 838 to about 128; operations truncated elements 5 to 0; empty-container flags 2 to 0; alerts first row 451 to 333; rows visible 6 to 9 (1440x900); text under 12px on /alerts 25 to 0.
+- `/simplify` run: one fix, shared `SELECT_CLS` in `AlertsView.tsx`. **Uncommitted** on top of the branch.
+
+### 13.4 Pending
+- **Phase 5 incomplete:** sticky strip also shows at scroll 0 (duplicates the header); collapsible Recon/Forensic/Response sections, verdict-first block and section index not built; space above first finding still about 457px (target 200px). Local findings are all "not measured", so verify against a case with real findings.
+- **Audit targets unmet:** `/operations` height 2291 (target 1300 or less); `/alerts` rows visible at 1366x768 is 6 (target 7); controls under 32px on /alerts 9 (target 0); small text on /operations 18 (target 10 or fewer).
+- Commit the `SELECT_CLS` simplify change; decide whether to merge the branch.
+- Deferred simplify items: shared Investigate label/launcher between `AlertDetailView` and `InvestigationRail`; double error display (card plus toast); `Badge` for the case severity chip; redundant `caption`/`eyebrow`/`control-sm` tokens; `PipelineHealth` variant vs a single responsive component.
+- Local-only edits not to commit: `apps/web/next-env.d.ts`, `infra/nginx/snippets/server-name-soc.conf`. Untracked: `docs/` audit files, `playwright/`, `ops.json`, `clopsoc-ui-redesign-preview.html`.
+- Security (open from `docs/audit/AUDIT-REPORT.md`, no fixes made): DS-1 (a `.env` committed to history) and IN-1 (placeholder secret on the `clopssoc-sync` client).
+- Local stack: `.env.secrets` is missing, so `docker compose` needs dummy `KEYCLOAK_*` values to rebuild only `web` (`--no-deps`). `agents` and `clickhouse` are not running, so `/api/v1/contextual/actions` and `/api/v1/playbooks` return 500 locally (stack gap, not a UI regression).
