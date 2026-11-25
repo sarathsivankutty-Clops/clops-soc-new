@@ -159,7 +159,7 @@ function meets(value: number | null, floor: number): boolean | null {
 function Shell({ children }: { children: React.ReactNode }) {
   return (
     <section
-      className="rounded-container border border-surface-border bg-surface-card p-5 shadow-card"
+      className="h-full rounded-container border border-surface-border bg-surface-card p-5 shadow-card"
       aria-label="Agreement with analysts"
     >
       <header className="mb-3">

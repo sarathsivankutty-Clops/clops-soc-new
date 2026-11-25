@@ -65,7 +65,7 @@ export function ResponseActionsPanel() {
   return (
     <section
       aria-labelledby="ops-approvals-heading"
-      className="rounded-container border border-surface-border bg-surface-card shadow-card overflow-hidden"
+      className="h-full rounded-container border border-surface-border bg-surface-card shadow-card overflow-hidden"
     >
       <div className="flex items-baseline justify-between px-5 py-4 border-b border-surface-divider">
         <div>

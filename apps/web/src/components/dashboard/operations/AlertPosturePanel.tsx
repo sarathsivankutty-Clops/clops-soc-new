@@ -72,7 +72,7 @@ export function AlertPosturePanel() {
   return (
     <section
       aria-labelledby="ops-posture-heading"
-      className="rounded-container border border-surface-border bg-surface-card shadow-card overflow-hidden"
+      className="h-full rounded-container border border-surface-border bg-surface-card shadow-card overflow-hidden"
     >
       <div className="px-5 py-4 border-b border-surface-divider">
         <h2 id="ops-posture-heading" className="text-card-title font-semibold text-fg-primary">

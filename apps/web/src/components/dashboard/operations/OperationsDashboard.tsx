@@ -58,6 +58,8 @@ export function OperationsDashboard() {
         </div>
       </div>
       */}
+      {/* [HIDDEN-UI OPS-G4 Connector fleet + Rejected stacked beside the pipeline table, then Posture | Coverage:
+          the columns ended at different heights and left gaps under the shorter side]
       <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-2">
         <div className="space-y-4">
           <ConnectorFleetPanel />
@@ -70,6 +72,20 @@ export function OperationsDashboard() {
         <AlertPosturePanel />
         <DetectionCoveragePanel />
       </div>
+      */}
+      {/* [OPS-G4] Pipeline full width, then same-height pairs, then the three mostly-empty panels together.
+          Grid rows stretch and every panel is h-full, so paired cards end on one line. */}
+      <PipelineHealth variant="table" />
+
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+        <ConnectorFleetPanel />
+        <DetectionCoveragePanel />
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+        <AlertPosturePanel />
+        <AgentThroughputPanel />
+      </div>
 
       {/* [HIDDEN-UI AUDIT-B Agreement had its own full-width row under a 2-col Throughput/Actions grid; three columns cut about 350px]
       <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-2">
@@ -79,8 +95,9 @@ export function OperationsDashboard() {
 
       <AgreementPanel />
       */}
-      <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-3">
-        <AgentThroughputPanel />
+      {/* [HIDDEN-UI OPS-G4 <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-3"> Throughput | Actions | Agreement] */}
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
+        <RejectedEventsPanel />
         <ResponseActionsPanel />
         <AgreementPanel />
       </div>

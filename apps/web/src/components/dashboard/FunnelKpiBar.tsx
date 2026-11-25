@@ -276,16 +276,17 @@ export function FunnelKpiBar({
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-3">
-        <div>
+      {/* [HIDDEN-UI OPS-G4 "Last {period}" sat at the far right edge, detached from the heading it qualifies] */}
+      <div className="mb-3">
+        <div className="flex items-baseline gap-2">
           <h2 className="text-card-title font-semibold text-fg-primary">
             Operations Funnel
           </h2>
-          <p className="text-xs text-fg-muted mt-0.5">
-            Live tenant pipeline: events → correlations → alerts
-          </p>
+          <span className="text-caption text-fg-muted">Last {period}</span>
         </div>
-        <span className="text-xs text-fg-muted">Last {period}</span>
+        <p className="text-xs text-fg-muted mt-0.5">
+          Live tenant pipeline: events → correlations → alerts
+        </p>
       </div>
 
       {/* [HIDDEN-UI DASH-1 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">] */}
