@@ -385,10 +385,39 @@ Measured with `playwright/layout-audit.cjs` and the new `playwright/case-fixture
 
   The side panel's `text-[11px]` labels are now `text-caption`, and its title wraps to two lines instead of truncating. The audit now reports 0 short controls, 0 sub-12px text and 0 truncations on all 21 measured screens.
 
-### 13.5 Pending
-- `/operations` is still 1898px against the old 1300 target; reaching it needs tabs or collapsed panels (product decision).
+### 13.5 G1–G6 UI & Runbooks fixes (2026-11-25, `ui/audit-fixes-p1-p5`)
+Commits `G1`–`G6`, the queue 32px follow-up and a simplify pass (ahead 8 of `origin/ui/audit-fixes-p1-p5`):
+- `3e881fc7f` — `ui(overview): fixed widget order, lean pipeline rail, healthy sources, derived tactics`
+- `8a2c9ed99` — `ui(alerts): aligned row columns, no row Case link, readable KPI bar`
+- `0c55d4ae6` — `ui(queue): open on All; neutral rows with a severity rule`
+- `3e2041ec2` — `fix(runbooks): pack toggle works per tenant; switch reports failures`
+- `805bd44f8` — `ui(operations): full-width pipeline, same-height panel pairs`
+- `321eeb4d7` — `ui(settings): BYOK first in AI settings; connectors table fits without scrolling`
+- `09801c0ac` — `ui(queue): 32px floor on Claim, Release, Snooze and paging`
+- `8b63315e6` — `refactor: simplify round-2 UI fixes` (tactic spellings normalised via `display_tactic`, SQL skips alerts with no MITRE data, atomic `pack_overrides.json`, toggle derives state from the prop)
+
+Notes:
+- MITRE tactics are derived from technique ids at read time in `/metrics` (`services/api/app/services/attack_tactics.py`). Locally the panel stays empty: only 2 of 180 synthetic alerts carry technique ids. Proper fix: fusion stamps `mitre_tactics` at alert creation; then the read-time fallback can go.
+- Runbook pack on/off is per tenant in the agents store dir (`pack_overrides.json`), so it lasts as long as that volume.
+
+Verification results:
+- Browser checks:
+  - Overview: no drag handle, and sources show `Healthy` (3 connected).
+  - Settings / Connectors: connectors table has no horizontal overflow at 1366 or 1440.
+  - Runbooks: pack toggle saves (`PUT` 200) and survives a reload.
+  - Operations: height is 2029px at 1440.
+- Static & unit checks (`apps/web`):
+  - `pnpm --filter @aisoc/web type-check`: 0 errors.
+  - `pnpm --filter @aisoc/web lint`: 0 errors, 94 warnings.
+  - `pnpm --filter @aisoc/web test`: 140/144 files passed, 1,308/1,315 tests passed (2 pre-existing `MitrePanelWording` CRLF failures; `a11y.test.tsx` `AlertsView` 5s timeout and 2 `ThreatIntelLookupHonesty` parallel-run flakes; 2 `storybook-snapshots.test.tsx` `EmptyState` snapshot mismatches).
+
+### 13.6 Pending
+- Push `ui/audit-fixes-p1-p5` (8 commits ahead of `origin/ui/audit-fixes-p1-p5`), then on EC2: `git pull`, rebuild `web api agents`, `docker exec clopsoc-nginx-1 nginx -s reload`.
+- `EmptyState` snapshot mismatches in `apps/web/src/test/storybook-snapshots.test.tsx` appear only in the full parallel run; the file passes alone (33/33). Treat as a flake unless it reproduces serially.
+- Follow-ups from the simplify review: one shared `ui/Switch` (four hand-rolled switches), normalise `SourceStat.status` in `/metrics/dashboard`, fusion writing tactics.
+- `/operations` is still 2029px at 1440 against the old 1300 target; reaching it needs tabs or collapsed panels (product decision).
 - Decide whether to merge `ui/audit-fixes-p1-p5`.
 - Local-only, do not commit: `apps/web/next-env.d.ts`, `infra/nginx/snippets/server-name-soc.conf`, `.env.secrets` (dummy values, gitignored).
-- Local stack: rebuild web with `docker compose --env-file .env --env-file .env.secrets up -d --build --no-deps web`. After a Docker restart, start existing containers with `docker start` (keeps Keycloak's original passwords). `agents` and `clickhouse` are not running, so `/api/v1/contextual/actions`, `/api/v1/playbooks` and the investigation run GET return 500/503.
+- Local stack: rebuild web with `docker compose --env-file .env --env-file .env.secrets up -d --build --no-deps web`. After a Docker restart, start existing containers with `docker start` (keeps Keycloak's original passwords). `agents` now runs locally (rebuilt 2026-11-25); `clickhouse` is still down.
 - A case `4ca1d0f0-…` was created on 2026-11-25 at 09:26 with no run; the Playwright scripts are read-only, so its source is unknown.
 - Security (open from `docs/audit/AUDIT-REPORT.md`, no fixes made): DS-1 (a `.env` committed to history) and IN-1 (placeholder secret on the `clopssoc-sync` client).
