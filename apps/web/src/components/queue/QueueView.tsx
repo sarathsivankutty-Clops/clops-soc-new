@@ -347,7 +347,7 @@ function QueueRowActions({
             onClaim(item.id);
           }}
           disabled={busyAction === 'claim'}
-          className="text-caption font-semibold px-2.5 py-1 rounded-control border border-accent/30 bg-pill-info-bg text-accent hover:bg-nav-active-bg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="min-h-8 text-caption font-semibold px-2.5 py-1 rounded-control border border-accent/30 bg-pill-info-bg text-accent hover:bg-nav-active-bg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {busyAction === 'claim' ? 'Claiming…' : 'Claim'}
         </button>
@@ -362,7 +362,7 @@ function QueueRowActions({
             onRelease(item.id);
           }}
           disabled={busyAction === 'release'}
-          className="text-caption font-medium px-2.5 py-1 rounded-control border border-surface-border bg-surface-card text-fg-secondary hover:bg-surface-hover hover:text-fg-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="min-h-8 text-caption font-medium px-2.5 py-1 rounded-control border border-surface-border bg-surface-card text-fg-secondary hover:bg-surface-hover hover:text-fg-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {busyAction === 'release' ? 'Releasing…' : 'Release'}
         </button>
@@ -373,7 +373,7 @@ function QueueRowActions({
           onClick={(e) => {
             e.stopPropagation();
           }}
-          className="list-none cursor-pointer text-caption font-medium px-2.5 py-1 rounded-control border border-surface-border bg-surface-card text-fg-secondary hover:bg-surface-hover hover:text-fg-primary transition-colors select-none"
+          className="inline-flex min-h-8 items-center list-none cursor-pointer text-caption font-medium px-2.5 py-1 rounded-control border border-surface-border bg-surface-card text-fg-secondary hover:bg-surface-hover hover:text-fg-primary transition-colors select-none"
           aria-label="Snooze options"
         >
           {busyAction === 'snooze' ? 'Snoozing…' : 'Snooze'}
@@ -773,7 +773,7 @@ function Pagination({
           type="button"
           onClick={() => onChange(Math.max(1, page - 1))}
           disabled={page <= 1}
-          className="px-2.5 py-1 rounded-control border border-surface-border bg-surface-card text-fg-secondary hover:bg-surface-hover hover:text-fg-primary disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          className="min-h-8 px-2.5 py-1 rounded-control border border-surface-border bg-surface-card text-fg-secondary hover:bg-surface-hover hover:text-fg-primary disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
         >
           ← Prev
         </button>
@@ -784,7 +784,7 @@ function Pagination({
           type="button"
           onClick={() => onChange(Math.min(totalPages, page + 1))}
           disabled={page >= totalPages}
-          className="px-2.5 py-1 rounded-control border border-surface-border bg-surface-card text-fg-secondary hover:bg-surface-hover hover:text-fg-primary disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          className="min-h-8 px-2.5 py-1 rounded-control border border-surface-border bg-surface-card text-fg-secondary hover:bg-surface-hover hover:text-fg-primary disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
         >
           Next →
         </button>
