@@ -303,7 +303,8 @@ function BucketBadge({ bucket }: { bucket: 'mine' | 'unassigned' }) {
     );
   }
   return (
-    <span className="inline-flex items-center gap-1.5 text-caption font-medium text-fg-muted bg-pill-neutral-bg px-2.5 py-0.5 rounded-pill">
+    // [HIDDEN-UI QUEUE-G3 Unassigned was a filled pill beside the severity and SLA pills; plain muted text keeps the row calmer]
+    <span className="inline-flex items-center text-caption font-medium text-fg-muted">
       Unassigned
     </span>
   );
@@ -425,14 +426,14 @@ function QueueRow({ item, generatedAt, isMine, busyAction, onClaim, onRelease, o
   return (
     <Link
       href={`/alerts/${item.id}`}
-      className={clsx(
-        'group flex items-start gap-3 px-4 py-3.5 transition-colors',
-        breached
-          ? 'bg-pill-danger-bg hover:bg-surface-hover border-l-2 border-l-dot-danger'
-          : 'hover:bg-surface-elevated',
-      )}
+      // [HIDDEN-UI QUEUE-G3 breached ? 'bg-pill-danger-bg hover:bg-surface-hover border-l-2 border-l-dot-danger' : ...
+      // tinted every breached row red; with most rows past SLA the list read as one red wash and severity was lost.
+      // Rows are neutral now: the SLA chip carries the breach, the left rule carries severity.]
+      className="group relative flex items-start gap-3 px-4 py-3.5 transition-colors hover:bg-surface-elevated"
+      data-breached={breached || undefined}
       aria-label={`Investigate ${item.title}`}
     >
+      <span aria-hidden className={clsx('absolute inset-y-0 left-0 w-0.5', (SEVERITY_CONFIG[item.severity] ?? SEVERITY_CONFIG.info).dot)} />
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <SeverityBadge severity={item.severity} />
@@ -521,7 +522,8 @@ function QueueSkeleton() {
 // ─── Main View ────────────────────────────────────────────────────────────────
 
 export function QueueView() {
-  const [owner, setOwner] = useState<QueueOwner>('me');
+  // [HIDDEN-UI QUEUE-G3 useState<QueueOwner>('me'): the queue opened on an empty Mine tab; All is the default view]
+  const [owner, setOwner] = useState<QueueOwner>('all');
   const [period, setPeriod] = useState<QueuePeriod>('all');
   const [page, setPage] = useState(1);
   // Map of alert ids to "we have an in-flight mutation against this row" so we

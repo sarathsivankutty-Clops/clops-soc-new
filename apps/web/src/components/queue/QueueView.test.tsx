@@ -224,10 +224,15 @@ describe('QueueView', () => {
     expect(screen.queryByText('Suspicious PowerShell encoded command')).not.toBeInTheDocument();
   });
 
-  it('renders the empty state for an empty Mine bucket', () => {
+  it('renders the empty state for an empty Mine bucket', async () => {
     swrState.data = makeResponse([], { owner: 'me' });
 
+    const user = userEvent.setup();
     render(<QueueView />);
+    // [QUEUE-G3] The queue opens on All; Mine is one click away.
+    await act(async () => {
+      await user.click(screen.getByRole('tab', { name: /Mine/i }));
+    });
 
     expect(screen.getByText(/Nothing in your queue/i)).toBeInTheDocument();
     expect(
@@ -416,6 +421,12 @@ describe('QueueView', () => {
     expect(mineTab.textContent).toContain('3');
     expect(unassignedTab.textContent).toContain('7');
     expect(allTab.textContent).toContain('12');
+  });
+
+  it('opens on the All tab', () => {
+    swrState.data = makeResponse([makeItem({ bucket: 'unassigned' })]);
+    render(<QueueView />);
+    expect(screen.getByRole('tab', { name: /^All/i })).toHaveAttribute('aria-selected', 'true');
   });
 
   it('switches owner tab on click', async () => {
