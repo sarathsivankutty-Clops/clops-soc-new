@@ -81,13 +81,13 @@ afterEach(() => {
 });
 
 describe('PR2: correlation display across list, rail, and detail', () => {
-  it('shows +N correlated badge and Case link in AlertsView', async () => {
+  it('shows +N correlated badge and no row Case link in AlertsView', async () => {
     render(<AlertsView />);
 
     expect(await screen.findByText('IAM Policy Modified')).toBeInTheDocument();
     expect(screen.getByText('+2 correlated')).toBeInTheDocument();
-    const caseLink = screen.getByRole('link', { name: 'Case' });
-    expect(caseLink).toHaveAttribute('href', '/cases/case-99');
+    // [ALERTS-G2] The row Case link was removed; the case opens from the rail.
+    expect(screen.queryByRole('link', { name: 'Case' })).not.toBeInTheDocument();
   });
 
   it('shows Why grouped, sibling link, and Open case in InvestigationRail', async () => {

@@ -23,6 +23,16 @@ const TONE_TEXT: Record<KpiTone, string> = {
   purple: 'text-tone-purple',
 };
 
+// Dense tiles carry their tone as a left rule and a tinted value instead of a sub-line.
+const TONE_BAR: Record<KpiTone, string | null> = {
+  default: null,
+  ok: 'bg-dot-success',
+  warn: 'bg-dot-warning',
+  bad: 'bg-dot-danger',
+  info: 'bg-dot-info',
+  purple: 'bg-dot-purple',
+};
+
 const COLS_CLASS: Record<2 | 3 | 4 | 5, string> = {
   2: 'grid-cols-1 sm:grid-cols-2',
   3: 'grid-cols-1 sm:grid-cols-3',
@@ -61,20 +71,36 @@ export function KpiStrip({ items, cols = 4, className, dense = false }: KpiStrip
             {...(clickable ? { type: 'button' as const, onClick: item.onClick } : {})}
             className={clsx(
               'relative bg-surface-card text-left flex min-w-0 transition-colors',
-              dense ? 'items-baseline justify-between gap-3 px-4 py-2.5' : 'flex-col justify-between gap-1.5 p-5',
+              // [HIDDEN-UI ALERTS-G2 dense was 'items-baseline justify-between gap-3 px-4 py-2.5': label far left, value far right]
+              dense ? 'flex-row-reverse items-baseline justify-end gap-2.5 px-5 py-3' : 'flex-col justify-between gap-1.5 p-5',
               clickable && 'cursor-pointer hover:bg-surface-elevated',
               item.active && 'bg-nav-active-bg',
             )}
           >
+            {dense && TONE_BAR[tone] && (
+              <span aria-hidden className={clsx('absolute inset-y-3 left-0 w-0.5 rounded-pill', TONE_BAR[tone])} />
+            )}
             {clickable && (
               <span className="absolute top-5 right-5 text-eyebrow font-semibold text-accent shrink-0">
                 {item.active ? 'Active' : 'Filter'}
               </span>
             )}
-            <p className={clsx('text-caption font-medium text-fg-muted truncate', clickable && 'pr-12')}>
+            <p
+              className={clsx(
+                'font-medium truncate',
+                dense ? 'text-control text-fg-secondary' : 'text-caption text-fg-muted',
+                clickable && 'pr-12',
+              )}
+            >
               {item.label}
             </p>
-            <p className="text-kpi font-bold font-mono tabular-nums text-fg-primary leading-tight">
+            <p
+              className={clsx(
+                'font-mono tabular-nums leading-tight',
+                dense ? 'text-page-title font-semibold' : 'text-kpi font-bold',
+                dense && tone !== 'default' ? TONE_TEXT[tone] : 'text-fg-primary',
+              )}
+            >
               {item.value}
             </p>
             {item.sub && (

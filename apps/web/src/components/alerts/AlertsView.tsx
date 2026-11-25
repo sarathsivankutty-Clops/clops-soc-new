@@ -588,11 +588,18 @@ function AlertRow({
         </div>
       </div>
 
+      {/* [HIDDEN-UI ALERTS-G2 free flex cluster: rows with/without a confidence pill or Case link shifted every chip, so columns did not line up] */}
       {!compact && (
         <div className="flex items-center gap-2 shrink-0">
-          {alert.confidenceLabel && <ConfidencePill label={alert.confidenceLabel} />}
-          <SeverityBadge severity={alert.severity} />
-          <StatusBadge status={alert.status} />
+          <span className="flex w-32 justify-end">
+            {alert.confidenceLabel && <ConfidencePill label={alert.confidenceLabel} />}
+          </span>
+          <span className="flex w-20">
+            <SeverityBadge severity={alert.severity} />
+          </span>
+          <span className="flex w-28">
+            <StatusBadge status={alert.status} />
+          </span>
           <span
             className="text-caption font-mono text-fg-muted w-28 text-right"
             title={isIngestFallback ? `Ingest time (event_time missing): ${displayTs}` : `Event time: ${displayTs}`}
@@ -606,6 +613,7 @@ function AlertRow({
         </div>
       )}
       </Link>
+      {/* [HIDDEN-UI ALERTS-G2 row "Case" link (href /cases/${alert.caseId}, title "Open linked case") removed from the list; the case opens from the alert rail and detail page]
       {alert.caseId && (
         <Link
           href={`/cases/${alert.caseId}`}
@@ -615,6 +623,7 @@ function AlertRow({
           Case
         </Link>
       )}
+      */}
     </div>
   );
 }
@@ -993,8 +1002,11 @@ function AlertsTableGrid({
           ALERT
           <span className="ml-2 font-mono font-normal normal-case tracking-normal">{total} total</span>
         </span>
+        {/* [ALERTS-G2] Same widths and gap as the row's column cluster so headers sit over their columns. */}
+        <div className="flex shrink-0 items-center gap-2">
         {!selectedAlertId && (
           <>
+            <span className="w-32" aria-hidden />
             <button
               type="button"
               onClick={() => onFilterChange({ ...filters, sort: 'priority', page: 1 })}
@@ -1006,7 +1018,7 @@ function AlertsTableGrid({
             >
               {t('alerts.severity')} {activeSort === 'priority' ? '↓' : ''}
             </button>
-            <span className="text-eyebrow font-bold uppercase tracking-wider text-fg-muted w-24">{t('alerts.status')}</span>
+            <span className="text-eyebrow font-bold uppercase tracking-wider text-fg-muted w-28">{t('alerts.status')}</span>
           </>
         )}
         <button
@@ -1026,6 +1038,7 @@ function AlertsTableGrid({
         >
           TIME {activeSort === 'newest' ? '↓' : activeSort === 'oldest' ? '↑' : ''}
         </button>
+        </div>
       </div>
 
       {isLoading ? (
