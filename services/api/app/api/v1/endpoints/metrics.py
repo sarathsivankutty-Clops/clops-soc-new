@@ -41,6 +41,7 @@ from app.models.sla import AlertSLAEvent
 from app.services import case_status
 from app.services.alert_disposition import decided_filter
 from app.services.alert_status import resolved_filter, unresolved_filter
+from app.services.attack_tactics import tactics_for_techniques
 from app.services.resolution_time import (
     MTTR_WINDOW,
     tenant_case_mttr_minutes,
@@ -507,14 +508,15 @@ async def get_dashboard_metrics(
     # (typically <10k alerts/tenant). Driver tests proved a SQL-level
     # jsonb_array_elements_text + GROUP BY in the same SELECT 500s on some
     # Postgres builds.
+    # Detection engines tag techniques only, so an alert without tactics gets
+    # them derived from its techniques; otherwise this panel is always empty.
     tactic_rows = (
-        await db.execute(select(Alert.mitre_tactics).where(and_(Alert.tenant_id == tenant_id, Alert.mitre_tactics.isnot(None), _in_window)))
+        await db.execute(select(Alert.mitre_tactics, Alert.mitre_techniques).where(and_(Alert.tenant_id == tenant_id, _in_window)))
     ).all()
 
     tactic_counts: dict[str, int] = {}
-    for (tactics,) in tactic_rows:
-        if not tactics:
-            continue
+    for tactics, techniques in tactic_rows:
+        tactics = tactics or tactics_for_techniques(techniques or [])
         for t in tactics:
             if isinstance(t, str) and t:
                 tactic_counts[t] = tactic_counts.get(t, 0) + 1
@@ -858,7 +860,6 @@ async def get_soc_metrics(
             select(Alert.mitre_tactics, Alert.mitre_techniques).where(
                 and_(
                     Alert.tenant_id == tenant_id,
-                    Alert.mitre_tactics.isnot(None),
                     Alert.mitre_techniques.isnot(None),
                 )
             )
@@ -867,13 +868,15 @@ async def get_soc_metrics(
 
     pair_counts: dict[tuple[str, str], int] = {}
     for tactics, techniques in heatmap_src_rows:
-        if not tactics or not techniques:
+        if not techniques:
             continue
-        for tactic in tactics:
-            if not isinstance(tactic, str) or not tactic:
+        for technique in techniques:
+            if not isinstance(technique, str) or not technique:
                 continue
-            for technique in techniques:
-                if not isinstance(technique, str) or not technique:
+            # Tagged tactics pair with every technique (as before); derived ones
+            # only with the technique they came from.
+            for tactic in tactics or tactics_for_techniques([technique]):
+                if not isinstance(tactic, str) or not tactic:
                     continue
                 key = (tactic, technique)
                 pair_counts[key] = pair_counts.get(key, 0) + 1

@@ -273,12 +273,15 @@ function bucketTooltip(bucket: VolumeBucket, window: TimeWindow): string {
 
 function sourceMeta(status: string): { status: StatusKind; label: string } {
   switch (status) {
+    // `healthy`/`unhealthy` are what /metrics/dashboard actually sends (Connector.health_status).
     case 'active':
+    case 'healthy':
       return { status: 'completed', label: 'Healthy' };
     case 'ingesting':
       return { status: 'running', label: 'Delivering' };
     case 'error':
     case 'failed':
+    case 'unhealthy':
       return { status: 'failed', label: 'Error' };
     case 'stale':
     case 'degraded':
@@ -447,10 +450,14 @@ function useDashboardLayout() {
  * nothing does not — otherwise the tile silently becomes a count of
  * configured integrations, which answers a different question.
  */
+// `healthy` is the health_status value the API sends; `active` the older poller value.
+const isConnected = (s: DashboardMetrics['sources'][number]) =>
+  s.status === 'active' || s.status === 'healthy' || s.count > 0;
+
 export function countConnectedSources(
   sources: DashboardMetrics['sources'],
 ): number {
-  return sources.filter((s) => s.status === 'active' || s.count > 0).length;
+  return sources.filter(isConnected).length;
 }
 
 /**
@@ -465,7 +472,7 @@ export function describeConnectedSources(
   sources: DashboardMetrics['sources'],
 ): string {
   const named = sources
-    .filter((s) => s.status === 'active' || s.count > 0)
+    .filter(isConnected)
     .map((s) => s.name)
     .filter(Boolean);
   if (named.length === 0) return 'no source has produced an alert yet';
@@ -561,8 +568,8 @@ export function DashboardView() {
   const createdInWindow = (metrics?.alertsTrend ?? []).reduce((sum, p) => sum + p.count, 0);
   const maxTactic = Math.max(1, ...topMitre.map((t) => t.count));
 
-  // WS-F3: drag-and-drop widget reordering
-  const { order, dragState, handleDragStart, handleDragOver, handleDrop } = useDashboardLayout();
+  // [HIDDEN-UI OVERVIEW-G1 drag-and-drop reordering disabled; widgets render in DEFAULT_WIDGET_ORDER]
+  // const { order, dragState, handleDragStart, handleDragOver, handleDrop } = useDashboardLayout();
 
   /** Map each widget ID to its rendered section. */
   const widgetContent: Record<WidgetId, ReactNode> = {
@@ -794,7 +801,7 @@ export function DashboardView() {
             pending={metricsPending}
             onRetry={retryMetrics}
             emptyTitle="No tactic coverage yet"
-            emptyDescription="Ranks ATT&CK tactics by alert count. Alerts tagged only with technique IDs do not appear here."
+            emptyDescription="Ranks ATT&CK tactics by alert count. Tactics are taken from each alert's tags, or from its technique IDs when it has none."
           />
         ) : (
           <ul className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -843,17 +850,9 @@ export function DashboardView() {
             </p>
           </div>
         )}
-        {order.map((id) => (
-          <DraggableWidget
-            key={id}
-            id={id}
-            dragState={dragState}
-            onDragStart={handleDragStart}
-            onDragOver={handleDragOver}
-            onDrop={handleDrop}
-          >
-            {widgetContent[id]}
-          </DraggableWidget>
+        {/* [HIDDEN-UI OVERVIEW-G1 order.map((id) => <DraggableWidget key={id} id={id} dragState={dragState} onDragStart={handleDragStart} onDragOver={handleDragOver} onDrop={handleDrop}>{widgetContent[id]}</DraggableWidget>)] */}
+        {DEFAULT_WIDGET_ORDER.map((id) => (
+          <div key={id}>{widgetContent[id]}</div>
         ))}
       </div>
     </DashboardErrorBoundary>

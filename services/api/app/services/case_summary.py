@@ -41,6 +41,8 @@ from pydantic import BaseModel, Field
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.services.attack_tactics import TECHNIQUE_TACTICS, parent_technique
+
 # ---------------------------------------------------------------------------
 # Output schemas (Pydantic) — what the endpoint actually returns.
 # ---------------------------------------------------------------------------
@@ -210,36 +212,10 @@ class CaseSummaryInputs:
 # ---------------------------------------------------------------------------
 
 
-# Best-effort technique → tactic mapping. We only group what we know about;
-# unknown techniques fall into "Other" so the summary stays useful even when
-# the detection content drifts ahead of this static map.
-#
-# Source: MITRE ATT&CK Enterprise tactics. We deliberately keep a small,
-# stable set here rather than pulling in a heavy dependency — the summary
-# is meant to be deterministic and cheap to render.
-_TECHNIQUE_TO_TACTIC: dict[str, str] = {
-    "T1078": "Initial Access",
-    "T1059": "Execution",
-    "T1547": "Persistence",
-    "T1098": "Persistence",
-    "T1068": "Privilege Escalation",
-    "T1055": "Privilege Escalation",
-    "T1036": "Defense Evasion",
-    "T1027": "Defense Evasion",
-    "T1110": "Credential Access",
-    "T1003": "Credential Access",
-    "T1018": "Discovery",
-    "T1057": "Discovery",
-    "T1082": "Discovery",
-    "T1021": "Lateral Movement",
-    "T1005": "Collection",
-    "T1119": "Collection",
-    "T1071": "Command and Control",
-    "T1105": "Command and Control",
-    "T1041": "Exfiltration",
-    "T1486": "Impact",
-    "T1490": "Impact",
-}
+# Best-effort technique → tactic mapping, primary tactic only. Unknown
+# techniques fall into "Other" so the summary stays useful when detection
+# content drifts ahead of the table in app.services.attack_tactics.
+_TECHNIQUE_TO_TACTIC: dict[str, str] = {tid: tactics[0] for tid, tactics in TECHNIQUE_TACTICS.items()}
 
 
 def _hours_between(later: datetime | None, earlier: datetime | None) -> float | None:
@@ -256,7 +232,7 @@ def _bucket_techniques(techniques: list[str]) -> dict[str, int]:
         if not isinstance(tech, str):
             continue
         # Use the parent (T1059.001 → T1059) for the lookup.
-        root = tech.split(".")[0].strip().upper()
+        root = parent_technique(tech)
         tactic = _TECHNIQUE_TO_TACTIC.get(root, "Other")
         buckets[tactic] += 1
     return dict(buckets)

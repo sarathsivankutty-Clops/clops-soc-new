@@ -276,6 +276,8 @@ describe('EfficiencyReport', () => {
   });
 });
 
+// The Overview rail shows backlog and errors only; latency and stage detail are
+// asserted on the Operations table variant, which still carries them.
 describe('PipelineHealth', () => {
   beforeEach(() => {
     swrData.clear();
@@ -285,7 +287,7 @@ describe('PipelineHealth', () => {
 
   it('renders all five pipeline stages with formatted latency + backlog', () => {
     swrData.set(PIPELINE_KEY, SAMPLE_PIPELINE);
-    render(<PipelineHealth />);
+    render(<PipelineHealth variant="table" />);
 
     // Each stage card has a unique subtitle — use those to assert the
     // five-card rail is present without colliding with the header subtitle.
@@ -331,14 +333,14 @@ describe('PipelineHealth', () => {
       ),
     });
 
-    render(<PipelineHealth />);
+    render(<PipelineHealth variant="table" />);
 
     expect(screen.getByText('7 of 9 alerts absorbed exactly one event')).toBeInTheDocument();
   });
 
   it('renders a cell the endpoint could not measure as n/a, not as a number', () => {
     swrData.set(PIPELINE_KEY, SAMPLE_PIPELINE);
-    render(<PipelineHealth />);
+    render(<PipelineHealth variant="table" />);
 
     // Four stages declare an unmeasured cell; six cells in total.
     expect(screen.getAllByText('n/a')).toHaveLength(6);
@@ -355,7 +357,7 @@ describe('PipelineHealth', () => {
       ...SAMPLE_PIPELINE,
       stages: [{ stage: 'ingest' as const, backlog: 0, p95_latency_ms: 0, error_rate: 0, status: 'green' as const }],
     });
-    render(<PipelineHealth />);
+    render(<PipelineHealth variant="table" />);
     // Nothing declared unmeasured, so a genuine zero must survive: an
     // over-eager n/a would be the same defect pointing the other way.
     expect(screen.getByText('0%')).toBeInTheDocument();

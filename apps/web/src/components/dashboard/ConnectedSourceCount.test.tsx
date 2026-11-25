@@ -127,6 +127,10 @@ describe('a source is connected when it is healthy or delivering', () => {
     expect(countConnectedSources([{ name: 'Prod Okta', count: 0, status: 'active' }])).toBe(1);
   });
 
+  it('counts `healthy`, the health_status value /metrics/dashboard actually sends', () => {
+    expect(countConnectedSources([{ name: 'AWS CloudTrail', count: 0, status: 'healthy' }])).toBe(1);
+  });
+
   it('does not count a dead connector delivering nothing', () => {
     // The negative control: counting every row would turn the tile into a
     // count of configured integrations, which is a different question.

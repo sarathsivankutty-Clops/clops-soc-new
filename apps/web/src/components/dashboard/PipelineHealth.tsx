@@ -189,12 +189,7 @@ function StageCell({
         </p>
         <StatusPill status={meta.pill} label={meta.label} />
       </div>
-      <p
-        className="mt-1 truncate text-caption text-fg-muted leading-snug"
-        title={STAGE_DESCRIPTIONS[stage.stage]}
-      >
-        {stage.detail ?? STAGE_DESCRIPTIONS[stage.stage]}
-      </p>
+      {/* [HIDDEN-UI OVERVIEW-G1 stage description line ({stage.detail ?? STAGE_DESCRIPTIONS[stage.stage]}) removed from the rail: backlog and errors only] */}
 
       <div className="mt-3">
         <div className="flex items-baseline justify-between gap-2 text-caption">
@@ -212,16 +207,7 @@ function StageCell({
       </div>
 
       <dl className="mt-2 space-y-1 text-caption">
-        <div className="flex items-baseline justify-between gap-2">
-          <dt className="text-fg-muted">p95</dt>
-          <dd className="text-right font-mono font-medium tabular-nums text-fg-primary">
-            {unmeasured.has('p95_latency_ms') ? (
-              <NotMeasured />
-            ) : (
-              formatLatency(stage.p95_latency_ms)
-            )}
-          </dd>
-        </div>
+        {/* [HIDDEN-UI OVERVIEW-G1 p95 row (formatLatency(stage.p95_latency_ms)) removed from the rail; the Operations table keeps it] */}
         <div className="flex items-baseline justify-between gap-2">
           <dt className="text-fg-muted">Errors</dt>
           <dd
@@ -319,9 +305,12 @@ export function PipelineHealth({ variant = 'rail' }: { variant?: 'rail' | 'table
           <h2 className="text-card-title font-semibold text-fg-primary">
             Ingestion &amp; Detection Flow
           </h2>
-          <span className="text-caption text-fg-muted">
-            Events in to alerts out
-          </span>
+          {/* [HIDDEN-UI OVERVIEW-G1 "Events in to alerts out" subtitle dropped from the Overview rail] */}
+          {table && (
+            <span className="text-caption text-fg-muted">
+              Events in to alerts out
+            </span>
+          )}
         </div>
         {error ? (
           <span className="text-caption font-medium text-tone-danger">

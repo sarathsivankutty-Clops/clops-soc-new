@@ -87,6 +87,13 @@ const ChartBarIcon = () => (
   </svg>
 );
 
+// Overview is the console's landing page, so it gets a home glyph rather than a chart.
+const HomeIcon = () => (
+  <svg className="w-5 h-5" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.25 12l8.954-8.955a1.126 1.126 0 011.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+  </svg>
+);
+
 /* [HIDDEN-UI CHROME-1 SearchIcon retained for commented Hunt nav item]
 const SearchIcon = () => (
   <svg className="w-5 h-5" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -166,7 +173,8 @@ const navSections: NavSection[] = [
       // seven-tab destination. The remaining dashboard tabs were retired and
       // the operations views moved to their own rail destination below.]
       // { label: 'Dashboards', href: '/dashboards', icon: <ChartBarIcon /> },
-      { label: 'Overview', href: '/dashboards', icon: <ChartBarIcon /> },
+      // [HIDDEN-UI OVERVIEW-G1 { label: 'Overview', href: '/dashboards', icon: <ChartBarIcon /> }, chart glyph read as analytics]
+      { label: 'Overview', href: '/dashboards', icon: <HomeIcon /> },
       // [HIDDEN-UI OVERVIEW-FIX-1 SOC Operations shared Overview's ChartBarIcon]
       // { label: 'SOC Operations', href: '/operations', icon: <ChartBarIcon /> },
       { label: 'SOC Operations', href: '/operations', icon: <ClockIcon /> },
