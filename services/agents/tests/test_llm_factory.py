@@ -161,6 +161,29 @@ def test_make_chat_model_reaches_the_gateway_from_compose_alone(monkeypatch):
     assert llm.openai_api_key.get_secret_value() == "sk-aisoc-local"
 
 
+def test_make_chat_model_is_bounded_by_default(monkeypatch):
+    """A BYOK base_url bypasses the gateway's timeout, so the client itself
+    must not inherit the SDK's ~10 minute default."""
+    monkeypatch.setenv("LLM_GATEWAY_URL", "http://litellm:4000/v1")
+    monkeypatch.setenv("LITELLM_MASTER_KEY", "sk-aisoc-local")
+    monkeypatch.delenv("AISOC_LLM_TIMEOUT_SECONDS", raising=False)
+    monkeypatch.delenv("AISOC_LLM_MAX_RETRIES", raising=False)
+    llm = make_chat_model("triage")
+    assert llm.request_timeout == 60.0
+    assert llm.max_retries == 2
+
+
+def test_make_chat_model_timeout_is_configurable_and_callers_win(monkeypatch):
+    monkeypatch.setenv("LLM_GATEWAY_URL", "http://litellm:4000/v1")
+    monkeypatch.setenv("LITELLM_MASTER_KEY", "sk-aisoc-local")
+    monkeypatch.setenv("AISOC_LLM_TIMEOUT_SECONDS", "15")
+    monkeypatch.setenv("AISOC_LLM_MAX_RETRIES", "0")
+    llm = make_chat_model("triage")
+    assert (llm.request_timeout, llm.max_retries) == (15.0, 0)
+    llm = make_chat_model("copilot", timeout=20, max_retries=1)
+    assert (llm.request_timeout, llm.max_retries) == (20, 1)
+
+
 def test_make_chat_model_refuses_an_alias_with_no_gateway(monkeypatch):
     monkeypatch.setenv("OPENAI_API_KEY", "sk-test")
     with pytest.raises(UnroutableModelError, match="aisoc-triage"):

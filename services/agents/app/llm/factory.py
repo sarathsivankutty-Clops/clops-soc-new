@@ -234,6 +234,11 @@ def make_chat_model(
     # billing a free local run. See app/core/gateway_cost.py.
     if INCLUDE_HEADERS_PARAM in getattr(ChatOpenAI, "model_fields", {}):
         params.setdefault(INCLUDE_HEADERS_PARAM, True)
+    # Bounded by default. The gateway has its own timeout, but a BYOK base_url
+    # goes straight to the provider, where the SDK default waits ~10 minutes
+    # per attempt. A caller's own `timeout`/`max_retries` still wins.
+    params["timeout"] = float(os.getenv("AISOC_LLM_TIMEOUT_SECONDS", "60"))
+    params["max_retries"] = int(os.getenv("AISOC_LLM_MAX_RETRIES", "2"))
     params.update(kwargs)
     return ChatOpenAI(**params)
 
