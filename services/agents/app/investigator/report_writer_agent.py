@@ -29,6 +29,7 @@ from .prompt_sanitizer import (
     sanitize_iterable_of_strings,
     sanitize_text,
 )
+from .safe_markdown import render_markdown
 from .state import InvestigatorState, StepKind
 from .tools import sha256_of
 
@@ -110,11 +111,9 @@ def _build_context(state: InvestigatorState) -> str:
 
 
 def _md_to_html(md: str, case_id: str) -> str:
-    """Lightweight Markdown → HTML converter (no external deps required for basic output)."""
+    """Markdown → HTML through the sanitiser; escaped `<pre>` if `markdown` is missing."""
     try:
-        import markdown
-
-        body = markdown.markdown(md, extensions=["tables", "fenced_code"])
+        body = render_markdown(md)
     except ImportError:
         # Escaped, because a raw `<pre>` wrap leaks HTML through unchanged and
         # this report carries model output and connector-supplied entity names.

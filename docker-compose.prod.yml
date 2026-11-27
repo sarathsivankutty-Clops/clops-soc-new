@@ -73,8 +73,11 @@ services:
   # exists that the preflight never sees.
   # ---------------------------------------------------------------------------
   preflight-secrets:
-    image: clopsoc-core-api:${AISOC_VERSION:-latest}
-    pull_policy: missing
+    # The api image this stack builds (docker-compose.yml `api.image`). The
+    # upstream name `clopsoc-core-api:${AISOC_VERSION}` is never built here,
+    # and `missing` then tried to pull it, so the overlay could not start.
+    image: clopsoc-api:${TAG:-local}
+    pull_policy: never
     restart: "no"
     entrypoint: ["python3", "/repo/scripts/check_published_secrets.py", "--check-env"]
     # Read-only, and the whole tree rather than the four files the harvest

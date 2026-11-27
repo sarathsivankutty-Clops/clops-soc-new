@@ -31,7 +31,7 @@
 | `honeytokens` | `extras` | `HONEYTOKENS_PORT` | `18008` | `8005` | `127.0.0.1` |
 | `slack-bot` | `chatops` | `SLACK_BOT_PORT` | `18009` | `8089` | `127.0.0.1` |
 | `teams-bot` | `chatops` | `TEAMS_BOT_PORT` | `18010` | `8090` | `127.0.0.1` |
-| `osquery-tls` | `osquery` | `OSQUERY_TLS_PORT` | `18091` | `9001` | `127.0.0.1` |
+| `osquery-tls` | `osquery` | `OSQUERY_TLS_PORT` | `18092` | `9001` | `127.0.0.1` |
 | `mcp` | `mcp` | `MCP_PORT` | `18096` | `8096` | `127.0.0.1` |
 | `prometheus` | `monitoring` | `PROMETHEUS_PORT` | `19091` | `9090` | `127.0.0.1` |
 | `alertmanager` | `monitoring` | `ALERTMANAGER_PORT` | `19094` | `9093` | `127.0.0.1` |

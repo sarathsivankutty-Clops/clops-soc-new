@@ -141,11 +141,30 @@ volumes:
   # volume with the application tables.
   clops_soc_keycloak_db_data:
 
+# Log rotation for every service. Docker's json-file driver keeps logs
+# forever by default, and a single host that fills its disk stops Postgres
+# and Kafka with it. 5 x 20 MB per container.
+# Timing for the per-service HTTP healthchecks below.
+x-healthcheck: &default-healthcheck
+  interval: 10s
+  timeout: 5s
+  retries: 5
+  start_period: 60s
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "20m"
+    max-file: "5"
+
 services:
 
   # ─── Infrastructure ─────────────────────────────────────────────────────────
 
   postgres:
+    logging: *default-logging
+    mem_limit: 768m
+    restart: unless-stopped
     image: postgres:16-alpine
     environment:
       # The OWNER / migration role. Superuser, because that is what the
@@ -179,6 +198,9 @@ services:
       retries: 5
 
   redis:
+    logging: *default-logging
+    mem_limit: 512m
+    restart: unless-stopped
     image: redis:7-alpine
     command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis_dev_secret}
     volumes:
@@ -192,6 +214,9 @@ services:
       retries: 5
 
   zookeeper:
+    logging: *default-logging
+    mem_limit: 640m
+    restart: unless-stopped
     image: confluentinc/cp-zookeeper:7.5.0
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
@@ -222,6 +247,8 @@ services:
       retries: 5
 
   kafka:
+    logging: *default-logging
+    restart: unless-stopped
     image: confluentinc/cp-kafka:7.5.0
     depends_on:
       zookeeper:
@@ -250,6 +277,8 @@ services:
       retries: 5
 
   kafka-ui:
+    logging: *default-logging
+    mem_limit: 320m
     # full profile — Kafka topic browser. A debugging convenience, not a pipeline component.
     profiles: ["full"]
     image: provectuslabs/kafka-ui:latest
@@ -265,6 +294,8 @@ services:
       - clops-soc
 
   clickhouse:
+    logging: *default-logging
+    restart: unless-stopped
     # full profile — Event lake. Backs /lake/sql and the hunt surface; alerting does not read it.
     profiles: ["full"]
     image: clickhouse/clickhouse-server:23.8
@@ -289,6 +320,8 @@ services:
     mem_reservation: 768m
 
   opensearch:
+    logging: *default-logging
+    restart: unless-stopped
     # full profile — Full-text search over archived events. No CORE code path queries it.
     profiles: ["full"]
     image: opensearchproject/opensearch:2.11.0
@@ -331,6 +364,9 @@ services:
     mem_reservation: 1g
 
   qdrant:
+    logging: *default-logging
+    mem_limit: 384m
+    restart: unless-stopped
     # CORE — the store `services/threatintel` writes collected indicators to,
     # and the one the console's /threat-intel page is served from. It moved in
     # with threatintel: see that service's comment for the reasoning.
@@ -358,6 +394,8 @@ services:
       start_period: 20s
 
   neo4j:
+    logging: *default-logging
+    restart: unless-stopped
     # full profile — Entity graph. Backs graph traversals and blast radius, not alert generation.
     profiles: ["full"]
     image: neo4j:5.15-community
@@ -386,6 +424,8 @@ services:
   # ─── Application Services ────────────────────────────────────────────────────
 
   api:
+    logging: *default-logging
+    mem_limit: 640m
     build:
       context: ./services/api
       dockerfile: Dockerfile
@@ -560,6 +600,11 @@ services:
       # deployment that is not a laptop printed the wrong address.
       AISOC_CONSOLE_URL: ${AISOC_CONSOLE_URL:-${PUBLIC_SCHEME:-http}://${PUBLIC_HOST:-localhost}${PUBLIC_PORT_SUFFIX-}}
       AISOC_CORS_ORIGINS: ${AISOC_CORS_ORIGINS:-${PUBLIC_SCHEME:-http}://${PUBLIC_HOST:-localhost}${PUBLIC_PORT_SUFFIX-}}
+      # WebAuthn binds a passkey to the console's hostname and origin. The
+      # settings defaulted to localhost and nothing passed them in, so
+      # passkeys could not work on a deployed host.
+      PASSKEY_RP_ID: ${PASSKEY_RP_ID:-${PUBLIC_HOST:-localhost}}
+      PASSKEY_RP_ORIGINS: ${PASSKEY_RP_ORIGINS:-${PUBLIC_SCHEME:-http}://${PUBLIC_HOST:-localhost}${PUBLIC_PORT_SUFFIX-}}
       REALTIME_BASE_URL: ${REALTIME_BASE_URL:-http://realtime:4000}
       # Was a bare literal, so `.env`'s documented ENVIRONMENT was ignored and
       # `production` changed nothing — including the dev auth bypass in
@@ -685,6 +730,7 @@ services:
   # to sign in with when the operator supplied a password, which is the state
   # this service exists to end.
   bootstrap:
+    logging: *default-logging
     image: clopsoc-api:${TAG:-local}
     # The image is built here; a pull would replace it with a tag nobody
     # published.
@@ -710,6 +756,13 @@ services:
       - clops-soc
 
   ingest-worker:
+    logging: *default-logging
+    mem_limit: 192m
+    healthcheck:
+      <<: *default-healthcheck
+      test:
+        - CMD-SHELL
+        - "wget -qO- http://127.0.0.1:8080/health >/dev/null || exit 1"
     build:
       context: ./services/ingest
       dockerfile: Dockerfile
@@ -792,6 +845,8 @@ services:
     restart: unless-stopped
 
   enrichment:
+    logging: *default-logging
+    mem_limit: 192m
     # full profile — Fuse-time threat-intel and vulnerability enrichment. Alerts fire without it.
     profiles: ["full"]
     build:
@@ -823,6 +878,8 @@ services:
     restart: unless-stopped
 
   fusion:
+    logging: *default-logging
+    mem_limit: 640m
     build:
       context: ./services/fusion
       dockerfile: Dockerfile
@@ -893,6 +950,13 @@ services:
     restart: unless-stopped
 
   agents:
+    logging: *default-logging
+    mem_limit: 768m
+    healthcheck:
+      <<: *default-healthcheck
+      test:
+        - CMD-SHELL
+        - "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8084/health', timeout=2)\""
     build:
       context: ./services/agents
       dockerfile: Dockerfile
@@ -1025,6 +1089,8 @@ services:
   # unless a service is pointed at it via OPENAI_BASE_URL — see the note on the
   # `agents` service above.
   ollama:
+    logging: *default-logging
+    mem_limit: 512m
     # CORE — the model behind the gateway.
     #
     # The gateway shipped in CORE and the models it pointed at did not: every
@@ -1060,6 +1126,7 @@ services:
     restart: unless-stopped
 
   ollama-pull:
+    logging: *default-logging
     # One-shot: pull the pinned model, then exit. A cache hit is a no-op, so
     # this costs one `ollama show` on every `up` after the first.
     #
@@ -1163,6 +1230,8 @@ services:
     restart: "no"
 
   litellm:
+    logging: *default-logging
+    mem_limit: 768m
     # CORE, deliberately — see docs/decisions/0006-llm-gateway-in-core.md.
     #
     # This was `profiles: ["full"]` on the reasoning that the gateway is "only
@@ -1266,6 +1335,7 @@ services:
     restart: unless-stopped
 
   osquery-tls:
+    logging: *default-logging
     build:
       context: ./services/osquery-tls
       dockerfile: Dockerfile
@@ -1284,7 +1354,7 @@ services:
     # `running`. Found by adding the healthcheck below and watching it sit
     # at `starting` against a port with no server on it.
     ports:
-      - "${AISOC_BIND_ADDR:-127.0.0.1}:${OSQUERY_TLS_PORT:-18091}:9001"
+      - "${AISOC_BIND_ADDR:-127.0.0.1}:${OSQUERY_TLS_PORT:-18092}:9001"
     profiles:
       - osquery
     environment:
@@ -1330,6 +1400,13 @@ services:
     restart: unless-stopped
 
   actions:
+    logging: *default-logging
+    mem_limit: 192m
+    healthcheck:
+      <<: *default-healthcheck
+      test:
+        - CMD-SHELL
+        - "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8085/health', timeout=2)\""
     # Response execution, and the only service that holds the read-only vendor
     # verbs an investigation pivots through.
     #
@@ -1379,6 +1456,13 @@ services:
     restart: unless-stopped
 
   connectors:
+    logging: *default-logging
+    mem_limit: 256m
+    healthcheck:
+      <<: *default-healthcheck
+      test:
+        - CMD-SHELL
+        - "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8003/health', timeout=2)\""
     # Scheduled vendor polling, the 84-connector registry, and the fan-out
     # target for federated SIEM search.
     #
@@ -1474,6 +1558,13 @@ services:
     restart: unless-stopped
 
   threatintel:
+    logging: *default-logging
+    mem_limit: 320m
+    healthcheck:
+      <<: *default-healthcheck
+      test:
+        - CMD-SHELL
+        - "curl -fsS -o /dev/null http://127.0.0.1:8005/health"
     # CORE — the only thing in the default install that puts *real*, externally
     # sourced security data in front of a new user on day one.
     #
@@ -1541,6 +1632,8 @@ services:
     restart: unless-stopped
 
   ueba:
+    logging: *default-logging
+    mem_limit: 384m
     # full profile — Behavioural baselining. Consumes its own topic; see docs/audit/REPOSITORY_REALITY.md.
     profiles: ["full"]
     build:
@@ -1596,6 +1689,7 @@ services:
     restart: unless-stopped
 
   honeytokens:
+    logging: *default-logging
     # Opt in with `--profile extras`, and deliberately so. The note that used
     # to sit here justified the profile with "image isn't published to GHCR
     # yet" and then contradicted itself three lines later; the image is
@@ -1682,6 +1776,7 @@ services:
     restart: unless-stopped
 
   purple-team:
+    logging: *default-logging
     # Gated behind the `extras` profile: image isn't published to GHCR yet, so
     # `aisoc serve` skips it by default. Opt in with `--profile extras`.
     # `pull_policy: build` used to be the only thing that worked here,
@@ -1739,6 +1834,13 @@ services:
     restart: unless-stopped
 
   realtime:
+    logging: *default-logging
+    mem_limit: 160m
+    healthcheck:
+      <<: *default-healthcheck
+      test:
+        - CMD-SHELL
+        - "wget -qO- http://127.0.0.1:4000/health >/dev/null || exit 1"
     build:
       context: ./services/realtime
       dockerfile: Dockerfile
@@ -1775,6 +1877,7 @@ services:
   # under the `chatops` profile so a default `docker compose up` doesn't fail
   # when the operator has not yet provisioned a Slack app or service tokens.
   slack-bot:
+    logging: *default-logging
     build:
       context: ./services/slack-bot
       dockerfile: Dockerfile
@@ -1819,6 +1922,7 @@ services:
   # slack-bot: a default `docker compose up` must not fail because an
   # operator has not provisioned a Teams channel.
   teams-bot:
+    logging: *default-logging
     build:
       context: ./services/teams-bot
       dockerfile: Dockerfile
@@ -1881,6 +1985,7 @@ services:
   #   docker compose --profile escalations up -d
   # and set AISOC_ESCALATION_TEAMS_URL in .env (a Power Automate Teams webhook).
   escalations:
+    logging: *default-logging
     build:
       context: ./services/escalations
     profiles:
@@ -1905,6 +2010,7 @@ services:
     restart: unless-stopped
 
   mcp:
+    logging: *default-logging
     build:
       context: .
       dockerfile: services/mcp/Dockerfile
@@ -1931,6 +2037,8 @@ services:
     restart: unless-stopped
 
   web:
+    logging: *default-logging
+    mem_limit: 256m
     build:
       context: .
       dockerfile: apps/web/Dockerfile
@@ -1941,8 +2049,10 @@ services:
     image: clopsoc-web:${TAG:-local}
     pull_policy: never
     depends_on:
-      - api
-      - realtime
+      api:
+        condition: service_healthy
+      realtime:
+        condition: service_healthy
     # No host port. `nginx` is now the only published surface (80/443) and
     # reaches this server as `web:3000` over the compose network, forwarding
     # `/ws/` and `/sse` to `realtime:4000` itself. Two published ports meant a
@@ -1991,6 +2101,8 @@ services:
   # ─── Identity Provider (Keycloak) ───────────────────────────────────────────
 
   keycloak-db:
+    logging: *default-logging
+    mem_limit: 192m
     image: postgres:16-alpine
     environment:
       POSTGRES_DB: keycloak
@@ -2008,6 +2120,7 @@ services:
       retries: 5
 
   keycloak:
+    logging: *default-logging
     image: quay.io/keycloak/keycloak:26.8@sha256:b0f60d489d51c5d113390bdf5461d4c06e6051be026c05549f2e1e10ec352bcc
     command:
       - start
@@ -2053,6 +2166,8 @@ services:
   # ─── TLS edge ───────────────────────────────────────────────────────────────
 
   nginx:
+    logging: *default-logging
+    mem_limit: 64m
     image: nginx:1.28-alpine
     # The two configs are directories rather than one file so the switch from
     # HTTP-only to TLS is an env change (`NGINX_CONF_DIR=tls`) and a recreate,
@@ -2105,6 +2220,7 @@ services:
   # limit for an hour. `--force-renewal` is deliberately absent everywhere — a
   # re-run of the real command is a no-op until the certificate is near expiry.
   certbot:
+    logging: *default-logging
     image: certbot/certbot:v2.11.0
     profiles:
       - certbot
@@ -2132,6 +2248,7 @@ services:
   # ─── Observability ────────────────────────────────────────────────────────────
 
   prometheus:
+    logging: *default-logging
     image: prom/prometheus:v2.48.0
     ports:
       - "${AISOC_BIND_ADDR:-127.0.0.1}:${PROMETHEUS_PORT:-19091}:9090"
@@ -2167,6 +2284,7 @@ services:
   # default surface so a stock `aisoc serve` doesn't fail when the
   # operator hasn't provisioned downstream alerting.
   alertmanager:
+    logging: *default-logging
     image: prom/alertmanager:v0.27.0
     ports:
       - "${AISOC_BIND_ADDR:-127.0.0.1}:${ALERTMANAGER_PORT:-19094}:9093"
@@ -2210,6 +2328,7 @@ services:
   # ueba and honeytokens are instrumented. ingest (Go) and realtime
   # (TypeScript) are not, and they are the two ends of the Kafka spine.
   otel-collector:
+    logging: *default-logging
     image: otel/opentelemetry-collector-contrib:0.109.0
     command: ["--config=/etc/otel/collector.yaml"]
     depends_on:
@@ -2230,6 +2349,7 @@ services:
       - monitoring
 
   tempo:
+    logging: *default-logging
     image: grafana/tempo:2.6.0
     command: ["-config.file=/etc/tempo/tempo.yaml"]
     user: "0:0"
@@ -2244,6 +2364,7 @@ services:
       - monitoring
 
   grafana:
+    logging: *default-logging
     image: grafana/grafana:10.2.0
     depends_on:
       - prometheus

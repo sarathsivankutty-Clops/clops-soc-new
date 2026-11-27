@@ -82,6 +82,15 @@ COPY . .
 ARG AISOC_VERSION=""
 ENV AISOC_VERSION=${AISOC_VERSION}
 
+# Run unprivileged; the code stays root-owned and read-only to the process.
+# The plugins mount point is the user's, so a fresh clops_soc_plugins volume
+# inherits that owner and plugin installs can write. plugin-keys stays
+# root-owned: it is the signature trust anchor, readable but not writable.
+RUN useradd --system --create-home --uid 10001 aisoc \
+    && mkdir -p /opt/aisoc/plugins /opt/aisoc/plugin-keys \
+    && chown aisoc /opt/aisoc/plugins
+USER aisoc
+
 EXPOSE 8000
 
 # Use a tiny Python wrapper (app.scripts.serve) that pre-binds a dual-stack

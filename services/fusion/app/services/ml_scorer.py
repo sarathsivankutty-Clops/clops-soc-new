@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import asyncio
 import math
+from collections import deque
 from datetime import datetime
 from typing import Any
 
@@ -107,6 +108,9 @@ def _heuristic_priority(alert: RawAlert) -> float:
 
 _MIN_SAMPLES_FOR_TRAINING = 50
 _MIN_FEEDBACK_FOR_RANKER = 30
+#: Training window. One feature vector is buffered per scored alert, so an
+#: unbounded list grew for the life of the process.
+_BUFFER_MAX = 10_000
 
 
 class MLScorer:
@@ -124,8 +128,13 @@ class MLScorer:
         self._lgbm_trained = False
 
         # Rolling in-memory training buffers
-        self._feature_buffer: list[list[float]] = []
-        self._feedback_buffer: list[dict[str, Any]] = []
+        self._feature_buffer: deque[list[float]] = deque(maxlen=_BUFFER_MAX)
+        self._feedback_buffer: deque[dict[str, Any]] = deque(maxlen=_BUFFER_MAX)
+        # Totals ever buffered. A full deque's length is constant, so the
+        # periodic retrain cadence counts these instead.
+        self._features_seen = 0
+        self._feedback_seen = 0
+        self._retrain_task: asyncio.Task[None] | None = None
 
         self._lock = asyncio.Lock()
 
@@ -139,6 +148,7 @@ class MLScorer:
         # Buffer features for future training
         async with self._lock:
             self._feature_buffer.append(features)
+            self._features_seen += 1
 
         if self._iso_trained and self._iso_forest is not None:
             anomaly_score = await asyncio.get_event_loop().run_in_executor(None, self._predict_anomaly, features)
@@ -167,6 +177,7 @@ class MLScorer:
         """Record analyst feedback and trigger re-training if threshold reached."""
         async with self._lock:
             self._feedback_buffer.append(feedback.model_dump(mode="json"))
+            self._feedback_seen += 1
 
         # Trigger background re-training checks
         await self._maybe_retrain()
@@ -324,18 +335,23 @@ class MLScorer:
 
     async def _maybe_retrain(self) -> None:
         """Trigger retraining if thresholds are met."""
+        # One retrain at a time; a running one already trains on fresh data.
+        if self._retrain_task is not None and not self._retrain_task.done():
+            return
         async with self._lock:
-            n_features = len(self._feature_buffer)
-            n_feedback = len(self._feedback_buffer)
+            n_features = self._features_seen
+            n_feedback = self._feedback_seen
 
         should_iso = (not self._iso_trained and n_features >= _MIN_SAMPLES_FOR_TRAINING) or (self._iso_trained and n_features % 500 == 0)
         should_lgbm = (not self._lgbm_trained and n_feedback >= _MIN_FEEDBACK_FOR_RANKER) or (self._lgbm_trained and n_feedback % 100 == 0)
 
         if should_iso or should_lgbm:
-            asyncio.create_task(self._retrain_background(should_iso, should_lgbm))
+            self._retrain_task = asyncio.create_task(self._retrain_background(should_iso, should_lgbm))
 
     async def _retrain_background(self, do_iso: bool, do_lgbm: bool) -> None:
         """Background task: run training without blocking request handling."""
+        # Copy before handing to the worker thread: the event loop keeps
+        # appending, and iterating a deque mid-append raises RuntimeError.
         async with self._lock:
             features = list(self._feature_buffer)
             feedback = list(self._feedback_buffer)

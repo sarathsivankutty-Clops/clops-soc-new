@@ -36,5 +36,9 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev
 COPY --from=builder /app/dist ./dist
+
+# Run unprivileged as the base image's `node` user (uid 1000); the code
+# stays root-owned and read-only to the process.
+USER node
 EXPOSE 8086
 CMD ["node", "dist/index.js"]

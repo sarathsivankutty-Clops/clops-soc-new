@@ -28,6 +28,7 @@ from pydantic import BaseModel
 
 from app.graph.runner import default_budget
 from app.investigator import InvestigatorOrchestrator, ledger
+from app.investigator.safe_markdown import REPORT_CSP, report_url_fetcher
 from app.llm.factory import llm_override
 from app.orchestrator.router import RouterOrchestrator
 from app.security.llm_resolver import resolve_llm_config
@@ -444,7 +445,10 @@ async def get_report_html(run_id: str, principal: ScopedPrincipal):
         raise HTTPException(status_code=404, detail="Run not found")
     if run["status"] != "completed":
         raise HTTPException(status_code=409, detail=f"Investigation is {run['status']}")
-    return run.get("report_html", "<html><body>No report yet.</body></html>")
+    return HTMLResponse(
+        run.get("report_html", "<html><body>No report yet.</body></html>"),
+        headers={"Content-Security-Policy": REPORT_CSP},
+    )
 
 
 @router.get("/investigations/{run_id}/report.pdf")
@@ -465,7 +469,11 @@ async def get_report_pdf(run_id: str, principal: ScopedPrincipal):
     try:
         import weasyprint  # type: ignore
 
-        pdf_bytes: bytes = weasyprint.HTML(string=html_content).write_pdf()
+        # Off the event loop: a render takes seconds and this process serves
+        # every agent route. The fetcher keeps the render from reaching IMDS
+        # or any internal host a model-written URL names.
+        document = weasyprint.HTML(string=html_content, url_fetcher=report_url_fetcher())
+        pdf_bytes: bytes = await asyncio.to_thread(document.write_pdf)
         return FastAPIResponse(
             content=pdf_bytes,
             media_type="application/pdf",

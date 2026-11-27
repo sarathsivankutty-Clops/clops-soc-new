@@ -59,6 +59,11 @@ COPY pyproject.toml poetry.lock ./
 
 COPY app/ ./app/
 
+# Run unprivileged. The code stays root-owned (read-only to the process);
+# /app itself is writable for the relative lake spool (.aisoc/lake-spool).
+RUN useradd --system --create-home --uid 10001 aisoc && chown aisoc /app
+USER aisoc
+
 EXPOSE 8003
 
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8003"]

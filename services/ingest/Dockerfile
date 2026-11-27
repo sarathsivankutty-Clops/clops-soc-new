@@ -14,6 +14,10 @@ RUN apk add --no-cache ca-certificates tzdata
 WORKDIR /app
 COPY --from=builder /ingest-service .
 
+# Run unprivileged; the code stays root-owned and read-only to the process.
+RUN adduser -S -D -H -u 10001 aisoc && mkdir -p /data && chown aisoc /data
+USER aisoc
+
 EXPOSE 8080
 
 CMD ["./ingest-service"]
