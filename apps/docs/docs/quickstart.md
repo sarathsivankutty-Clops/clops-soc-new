@@ -269,7 +269,7 @@ does not.
 | `extras` | **honeytokens** (18008) · **purple-team** (18006) |
 | `chatops` | **slack-bot** (18009) · **teams-bot** (18010) |
 | `monitoring` | **prometheus** (19091) · **grafana** (13001) · **alertmanager** (19094) · **tempo** (13200) · **otel-collector** (14317/14318) |
-| `osquery` | **osquery-tls** (18091) |
+| `osquery` | **osquery-tls** (18092) |
 | `mcp` | **mcp** (18096, streamable-HTTP MCP server, off by default) |
 | `escalations` | **escalations** (ack-clock bridge: Teams cards for unacknowledged CRITICAL/HIGH cases; off by default, needs `AISOC_ESCALATION_TEAMS_URL`) |
 
