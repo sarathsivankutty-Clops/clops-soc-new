@@ -744,6 +744,14 @@ services:
 
   ingest-worker:
     logging: *default-logging
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - "wget -qO- http://127.0.0.1:8080/health >/dev/null || exit 1"
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
     build:
       context: ./services/ingest
       dockerfile: Dockerfile
@@ -930,6 +938,14 @@ services:
 
   agents:
     logging: *default-logging
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - "python -c \"import urllib.request,sys; r=urllib.request.urlopen('http://127.0.0.1:8084/health',timeout=2); sys.exit(0 if r.status==200 else 1)\" || exit 1"
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
     build:
       context: ./services/agents
       dockerfile: Dockerfile
@@ -1372,6 +1388,14 @@ services:
 
   actions:
     logging: *default-logging
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - "python -c \"import urllib.request,sys; r=urllib.request.urlopen('http://127.0.0.1:8085/health',timeout=2); sys.exit(0 if r.status==200 else 1)\" || exit 1"
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
     # Response execution, and the only service that holds the read-only vendor
     # verbs an investigation pivots through.
     #
@@ -1422,6 +1446,14 @@ services:
 
   connectors:
     logging: *default-logging
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - "python -c \"import urllib.request,sys; r=urllib.request.urlopen('http://127.0.0.1:8003/health',timeout=2); sys.exit(0 if r.status==200 else 1)\" || exit 1"
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
     # Scheduled vendor polling, the 84-connector registry, and the fan-out
     # target for federated SIEM search.
     #
@@ -1518,6 +1550,14 @@ services:
 
   threatintel:
     logging: *default-logging
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - "python -c \"import urllib.request,sys; r=urllib.request.urlopen('http://127.0.0.1:8005/health',timeout=2); sys.exit(0 if r.status==200 else 1)\" || exit 1"
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
     # CORE — the only thing in the default install that puts *real*, externally
     # sourced security data in front of a new user on day one.
     #
@@ -1787,6 +1827,14 @@ services:
 
   realtime:
     logging: *default-logging
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - "wget -qO- http://127.0.0.1:4000/health >/dev/null || exit 1"
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
     build:
       context: ./services/realtime
       dockerfile: Dockerfile
@@ -1994,8 +2042,10 @@ services:
     image: clopsoc-web:${TAG:-local}
     pull_policy: never
     depends_on:
-      - api
-      - realtime
+      api:
+        condition: service_healthy
+      realtime:
+        condition: service_healthy
     # No host port. `nginx` is now the only published surface (80/443) and
     # reaches this server as `web:3000` over the compose network, forwarding
     # `/ws/` and `/sse` to `realtime:4000` itself. Two published ports meant a
