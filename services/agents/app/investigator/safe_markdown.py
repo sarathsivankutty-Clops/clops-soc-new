@@ -29,8 +29,7 @@ REPORT_CSP = "default-src 'none'; style-src 'unsafe-inline'; img-src data:; sand
 def _classify(url: str) -> tuple[str, bool]:
     """Return ``(scheme, is_relative)`` for a URL as a browser would read it."""
     cleaned = _IGNORED.sub("", url or "").replace("\\", "/")
-    if cleaned.startswith("#"):
-        return "", True
+    # A `#fragment` parses with no scheme and no netloc, so it is relative.
     parts = urlsplit(cleaned)
     # `//host/x` has no scheme but is external.
     return parts.scheme.lower(), not parts.scheme and not parts.netloc

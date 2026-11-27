@@ -111,7 +111,7 @@ def _build_context(state: InvestigatorState) -> str:
 
 
 def _md_to_html(md: str, case_id: str) -> str:
-    """Lightweight Markdown → HTML converter (no external deps required for basic output)."""
+    """Markdown → HTML through the sanitiser; escaped `<pre>` if `markdown` is missing."""
     try:
         body = render_markdown(md)
     except ImportError:
