@@ -350,9 +350,8 @@ class MLScorer:
 
     async def _retrain_background(self, do_iso: bool, do_lgbm: bool) -> None:
         """Background task: run training without blocking request handling."""
-        # Snapshot under the lock: training runs in a worker thread while the
-        # event loop keeps appending, and iterating a deque that is being
-        # appended to raises RuntimeError.
+        # Copy before handing to the worker thread: the event loop keeps
+        # appending, and iterating a deque mid-append raises RuntimeError.
         async with self._lock:
             features = list(self._feature_buffer)
             feedback = list(self._feedback_buffer)
