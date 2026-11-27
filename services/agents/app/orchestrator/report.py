@@ -230,9 +230,9 @@ def render_router_report_html(report_md: str, *, case_id: str) -> str:
     operator-supplied case ID can never break out of the ``<title>``.
     """
     try:
-        import markdown
+        from app.investigator.safe_markdown import render_markdown
 
-        body = markdown.markdown(report_md, extensions=["tables", "fenced_code"])
+        body = render_markdown(report_md)
     except ImportError:
         # Fallback: keep the report ship-able even when ``markdown`` is
         # unavailable. The unit tests exercise both branches. We escape
