@@ -156,6 +156,7 @@ services:
 
   postgres:
     logging: *default-logging
+    mem_limit: 768m
     restart: unless-stopped
     image: postgres:16-alpine
     environment:
@@ -191,6 +192,7 @@ services:
 
   redis:
     logging: *default-logging
+    mem_limit: 512m
     restart: unless-stopped
     image: redis:7-alpine
     command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis_dev_secret}
@@ -206,6 +208,7 @@ services:
 
   zookeeper:
     logging: *default-logging
+    mem_limit: 640m
     restart: unless-stopped
     image: confluentinc/cp-zookeeper:7.5.0
     environment:
@@ -268,6 +271,7 @@ services:
 
   kafka-ui:
     logging: *default-logging
+    mem_limit: 320m
     # full profile — Kafka topic browser. A debugging convenience, not a pipeline component.
     profiles: ["full"]
     image: provectuslabs/kafka-ui:latest
@@ -354,6 +358,7 @@ services:
 
   qdrant:
     logging: *default-logging
+    mem_limit: 384m
     restart: unless-stopped
     # CORE — the store `services/threatintel` writes collected indicators to,
     # and the one the console's /threat-intel page is served from. It moved in
@@ -413,6 +418,7 @@ services:
 
   api:
     logging: *default-logging
+    mem_limit: 640m
     build:
       context: ./services/api
       dockerfile: Dockerfile
@@ -744,6 +750,7 @@ services:
 
   ingest-worker:
     logging: *default-logging
+    mem_limit: 192m
     healthcheck:
       test:
         - CMD-SHELL
@@ -835,6 +842,7 @@ services:
 
   enrichment:
     logging: *default-logging
+    mem_limit: 192m
     # full profile — Fuse-time threat-intel and vulnerability enrichment. Alerts fire without it.
     profiles: ["full"]
     build:
@@ -867,6 +875,7 @@ services:
 
   fusion:
     logging: *default-logging
+    mem_limit: 640m
     build:
       context: ./services/fusion
       dockerfile: Dockerfile
@@ -938,6 +947,7 @@ services:
 
   agents:
     logging: *default-logging
+    mem_limit: 768m
     healthcheck:
       test:
         - CMD-SHELL
@@ -1079,6 +1089,7 @@ services:
   # `agents` service above.
   ollama:
     logging: *default-logging
+    mem_limit: 512m
     # CORE — the model behind the gateway.
     #
     # The gateway shipped in CORE and the models it pointed at did not: every
@@ -1219,6 +1230,7 @@ services:
 
   litellm:
     logging: *default-logging
+    mem_limit: 768m
     # CORE, deliberately — see docs/decisions/0006-llm-gateway-in-core.md.
     #
     # This was `profiles: ["full"]` on the reasoning that the gateway is "only
@@ -1388,6 +1400,7 @@ services:
 
   actions:
     logging: *default-logging
+    mem_limit: 192m
     healthcheck:
       test:
         - CMD-SHELL
@@ -1446,6 +1459,7 @@ services:
 
   connectors:
     logging: *default-logging
+    mem_limit: 256m
     healthcheck:
       test:
         - CMD-SHELL
@@ -1550,6 +1564,7 @@ services:
 
   threatintel:
     logging: *default-logging
+    mem_limit: 320m
     healthcheck:
       test:
         - CMD-SHELL
@@ -1626,6 +1641,7 @@ services:
 
   ueba:
     logging: *default-logging
+    mem_limit: 384m
     # full profile — Behavioural baselining. Consumes its own topic; see docs/audit/REPOSITORY_REALITY.md.
     profiles: ["full"]
     build:
@@ -1827,6 +1843,7 @@ services:
 
   realtime:
     logging: *default-logging
+    mem_limit: 160m
     healthcheck:
       test:
         - CMD-SHELL
@@ -2032,6 +2049,7 @@ services:
 
   web:
     logging: *default-logging
+    mem_limit: 256m
     build:
       context: .
       dockerfile: apps/web/Dockerfile
@@ -2095,6 +2113,7 @@ services:
 
   keycloak-db:
     logging: *default-logging
+    mem_limit: 192m
     image: postgres:16-alpine
     environment:
       POSTGRES_DB: keycloak
@@ -2159,6 +2178,7 @@ services:
 
   nginx:
     logging: *default-logging
+    mem_limit: 64m
     image: nginx:1.28-alpine
     # The two configs are directories rather than one file so the switch from
     # HTTP-only to TLS is an env change (`NGINX_CONF_DIR=tls`) and a recreate,
