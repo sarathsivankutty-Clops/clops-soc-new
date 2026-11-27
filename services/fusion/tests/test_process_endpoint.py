@@ -34,6 +34,9 @@ from app.security.tenant_scope import TenantPrincipal, require_console_or_servic
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 
+#: The tenant the test principal holds, and the one payloads name by default.
+_TENANT = UUID("11111111-1111-1111-1111-111111111111")
+
 
 def _raw_alert_payload(**overrides: Any) -> dict[str, Any]:
     """Build a ``RawAlert``-shaped JSON payload for ``POST /process``.
@@ -44,7 +47,7 @@ def _raw_alert_payload(**overrides: Any) -> dict[str, Any]:
     is also a passing test of the wire-level contract.
     """
     base: dict[str, Any] = {
-        "tenant_id": str(UUID("11111111-1111-1111-1111-111111111111")),
+        "tenant_id": str(_TENANT),
         "source": "edr",
         "title": "Suspicious PowerShell execution",
         "severity": "high",
@@ -96,9 +99,7 @@ def _make_app(worker: Any | None) -> FastAPI:
     # and it runs the fusion pipeline. These tests are about the pipeline's
     # response envelope, so they supply a resolved principal; the refusal of
     # an anonymous caller is asserted by scripts/check_route_auth.py.
-    app.dependency_overrides[require_console_or_service_auth] = lambda: TenantPrincipal(
-        tenant_ids=frozenset({UUID("aaaaaaaa-0000-0000-0000-00000000000a")}), subject="test"
-    )
+    app.dependency_overrides[require_console_or_service_auth] = lambda: TenantPrincipal(tenant_ids=frozenset({_TENANT}), subject="test")
     return app
 
 
@@ -203,6 +204,25 @@ async def test_process_returns_duplicate_envelope(client_factory):
     assert body["fusion_decision"] == FusionDecision.DUPLICATE.value
     assert body["incident_id"] is None
     assert body["duplicate_of"] == str(original_id)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Tenant scope (403)
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_process_refuses_an_alert_for_a_tenant_the_caller_does_not_hold(client_factory):
+    """The body's ``tenant_id`` is checked against the credential, and the
+    engine never sees an alert for a foreign tenant."""
+    engine_process = AsyncMock()
+    worker = _stub_worker(engine_process)
+    foreign = "22222222-2222-2222-2222-222222222222"
+    async with client_factory(worker) as client:
+        resp = await client.post("/process", json=_raw_alert_payload(tenant_id=foreign))
+
+    assert resp.status_code == 403
+    engine_process.assert_not_awaited()
 
 
 # ─────────────────────────────────────────────────────────────────────────────

@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Annotated
 from uuid import UUID
 
+import structlog
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
@@ -22,6 +23,7 @@ from app.workers.consumer import FusionWorker
 ScopedPrincipal = Annotated[TenantPrincipal, Depends(require_console_or_service_auth)]
 
 router = APIRouter()
+logger = structlog.get_logger()
 
 _worker_ref: FusionWorker | None = None
 
@@ -132,6 +134,8 @@ async def process_alert(alert: RawAlert, principal: ScopedPrincipal) -> FusedAle
     consumer. A duplicate alert returns a ``FusionDecision.DUPLICATE``
     envelope; a new alert returns a fully scored ``FusedAlert``.
     """
+    # The body names the tenant; the credential decides whether that is allowed.
+    scoped_tenant_or_403(principal, alert.tenant_id)
     if _worker_ref is None or _worker_ref.engine is None:
         raise HTTPException(status_code=503, detail="Fusion worker not ready")
     return await _worker_ref.engine.process(alert)
@@ -289,6 +293,13 @@ async def replay_dead_letters(request: DlqReplayRequest, principal: ScopedPrinci
     than produced. That is the property that stops a replay reproducing the
     outage that filled the queue.
     """
+    # Service token only: the API door holds the permission and the audit row,
+    # and this route is reachable from the browser through the fusion rewrite.
+    if not principal.delegated:
+        raise HTTPException(
+            status_code=403,
+            detail="dead-letter replay is service-only; use POST /api/v1/health/dead-letters/replay",
+        )
     try:
         outcome = await replay_from_offset(
             topic=request.topic,
@@ -300,5 +311,6 @@ async def replay_dead_letters(request: DlqReplayRequest, principal: ScopedPrinci
     except ReplayRefused as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     except Exception as exc:  # noqa: BLE001 — a broker fault is a 502, not a 500
-        raise HTTPException(status_code=502, detail=f"replay could not run: {type(exc).__name__}: {exc}") from exc
+        logger.error("dlq_replay.failed", error_type=type(exc).__name__, error=str(exc))
+        raise HTTPException(status_code=502, detail="replay could not run; see fusion logs") from exc
     return outcome.as_dict()
