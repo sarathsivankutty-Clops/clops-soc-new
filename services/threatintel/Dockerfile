@@ -63,6 +63,10 @@ COPY pyproject.toml poetry.lock ./
 
 COPY app ./app
 
+# Run unprivileged; the code stays root-owned and read-only to the process.
+RUN useradd --system --create-home --uid 10001 aisoc
+USER aisoc
+
 EXPOSE 8005
 
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8005"]
