@@ -184,6 +184,16 @@ def test_make_chat_model_timeout_is_configurable_and_callers_win(monkeypatch):
     assert (llm.request_timeout, llm.max_retries) == (20, 1)
 
 
+@pytest.mark.parametrize("timeout,retries", [("", ""), ("abc", "x"), ("0", "-1"), ("nan", "1.5")])
+def test_make_chat_model_ignores_a_bad_timeout_setting(monkeypatch, timeout, retries):
+    monkeypatch.setenv("LLM_GATEWAY_URL", "http://litellm:4000/v1")
+    monkeypatch.setenv("LITELLM_MASTER_KEY", "sk-aisoc-local")
+    monkeypatch.setenv("AISOC_LLM_TIMEOUT_SECONDS", timeout)
+    monkeypatch.setenv("AISOC_LLM_MAX_RETRIES", retries)
+    llm = make_chat_model("triage")
+    assert (llm.request_timeout, llm.max_retries) == (60.0, 2)
+
+
 def test_make_chat_model_refuses_an_alias_with_no_gateway(monkeypatch):
     monkeypatch.setenv("OPENAI_API_KEY", "sk-test")
     with pytest.raises(UnroutableModelError, match="aisoc-triage"):

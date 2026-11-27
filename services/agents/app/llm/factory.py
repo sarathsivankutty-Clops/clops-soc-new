@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import contextlib
 import contextvars
+import math
 import os
 import re
 from collections.abc import Iterator
@@ -159,6 +160,19 @@ def _needs_legacy_max_tokens(base_url: str | None) -> bool:
     return "api.openai.com" not in base_url.lower()
 
 
+def _env_number(name: str, default: Any, cast: Any, *, minimum: float) -> Any:
+    """A numeric env var; blank, malformed or out-of-range values give the default.
+
+    A typo must not break every model construction, nor unbound the client
+    (same rule as app/investigator/limits.py).
+    """
+    try:
+        value = cast(os.getenv(name) or default)
+    except ValueError:
+        return default
+    return value if minimum <= value < math.inf else default
+
+
 def make_chat_model(
     role: str,
     *,
@@ -237,8 +251,8 @@ def make_chat_model(
     # Bounded by default. The gateway has its own timeout, but a BYOK base_url
     # goes straight to the provider, where the SDK default waits ~10 minutes
     # per attempt. A caller's own `timeout`/`max_retries` still wins.
-    params["timeout"] = float(os.getenv("AISOC_LLM_TIMEOUT_SECONDS", "60"))
-    params["max_retries"] = int(os.getenv("AISOC_LLM_MAX_RETRIES", "2"))
+    params["timeout"] = _env_number("AISOC_LLM_TIMEOUT_SECONDS", 60.0, float, minimum=1)
+    params["max_retries"] = _env_number("AISOC_LLM_MAX_RETRIES", 2, int, minimum=0)
     params.update(kwargs)
     return ChatOpenAI(**params)
 
