@@ -133,6 +133,12 @@ sys.exit(0 if n > 0 else 1)"
 ARG AISOC_VERSION=""
 ENV AISOC_VERSION=${AISOC_VERSION}
 
+# Run unprivileged. The code stays root-owned (read-only to the process);
+# /app is writable for the playbook store (data/playbooks) and /data for
+# the cached MITRE ATT&CK bundle (ATTCK_DATA_PATH).
+RUN useradd --system --create-home --uid 10001 aisoc && mkdir -p /data && chown aisoc /app /data
+USER aisoc
+
 EXPOSE 8084
 
 # Dual-stack entrypoint — see app/scripts/serve.py and the matching CMD in
