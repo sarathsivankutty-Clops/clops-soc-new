@@ -587,6 +587,11 @@ services:
       # deployment that is not a laptop printed the wrong address.
       AISOC_CONSOLE_URL: ${AISOC_CONSOLE_URL:-${PUBLIC_SCHEME:-http}://${PUBLIC_HOST:-localhost}${PUBLIC_PORT_SUFFIX-}}
       AISOC_CORS_ORIGINS: ${AISOC_CORS_ORIGINS:-${PUBLIC_SCHEME:-http}://${PUBLIC_HOST:-localhost}${PUBLIC_PORT_SUFFIX-}}
+      # WebAuthn binds a passkey to the console's hostname and origin. The
+      # settings defaulted to localhost and nothing passed them in, so
+      # passkeys could not work on a deployed host.
+      PASSKEY_RP_ID: ${PASSKEY_RP_ID:-${PUBLIC_HOST:-localhost}}
+      PASSKEY_RP_ORIGINS: ${PASSKEY_RP_ORIGINS:-${PUBLIC_SCHEME:-http}://${PUBLIC_HOST:-localhost}${PUBLIC_PORT_SUFFIX-}}
       REALTIME_BASE_URL: ${REALTIME_BASE_URL:-http://realtime:4000}
       # Was a bare literal, so `.env`'s documented ENVIRONMENT was ignored and
       # `production` changed nothing — including the dev auth bypass in
