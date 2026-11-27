@@ -65,6 +65,10 @@ COPY alembic.ini .
 COPY alembic/ alembic/
 COPY app/ app/
 
+# Run unprivileged; the code stays root-owned and read-only to the process.
+RUN useradd --system --create-home --uid 10001 aisoc
+USER aisoc
+
 EXPOSE 8004
 
 # The chain runs on the way up, then this process is replaced by the server.
